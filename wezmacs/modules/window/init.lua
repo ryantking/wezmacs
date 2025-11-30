@@ -18,30 +18,24 @@ local M = {}
 
 M._NAME = "window"
 M._CATEGORY = "ui"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Window behavior, padding, and cursor settings"
 M._EXTERNAL_DEPS = {}
-M._FEATURE_FLAGS = {}
+M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   padding = 16,
   scrollback_lines = 5000,
 }
 
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
+function M.apply_to_config(config)
+  -- Get configuration
+  local mod_config = wezmacs.get_config(M._NAME)
 
-function M.apply_to_config(config, state)
   -- Window decorations and behavior
   config.window_decorations = "RESIZE"
   config.window_close_confirmation = "NeverPrompt"
 
   -- Window padding (equal on all sides)
-  local p = state.config.padding
+  local p = mod_config.padding
   config.window_padding = {
     left = p,
     right = p,
@@ -50,7 +44,7 @@ function M.apply_to_config(config, state)
   }
 
   -- Scrolling behavior
-  config.scrollback_lines = state.config.scrollback_lines
+  config.scrollback_lines = mod_config.scrollback_lines
   config.enable_scroll_bar = true
 
   -- Cursor configuration
