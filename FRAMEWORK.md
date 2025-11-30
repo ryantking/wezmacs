@@ -123,20 +123,20 @@ wezterm.lua
   ↓
 wezmacs.setup(config, opts)
   ↓
-Load user config (user/config.lua)
+Load user modules (user/modules.lua or ~/.config/wezmacs/modules.lua)
   ↓
-Merge with defaults
+Load user config (user/config.lua or ~/.config/wezmacs/config.lua)
   ↓
 For each enabled module:
-  ├─ Load module
-  ├─ Call init() phase → get state
+  ├─ Load module file
+  ├─ Extract enabled_flags from modules.lua
+  ├─ Extract user_config for module from config.lua
+  ├─ Call init(enabled_flags, user_config, log) → get state
   └─ Store state
   ↓
 For each enabled module:
-  ├─ Call apply_to_config(config, flags, state)
-  └─ State was computed in init phase
-  ↓
-Call user overrides function (if provided)
+  ├─ Call apply_to_config(config, state)
+  └─ State contains merged config and flags
   ↓
 Return configured wezterm.config object
 ```
