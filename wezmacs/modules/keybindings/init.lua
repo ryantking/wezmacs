@@ -64,30 +64,6 @@ function M.apply_to_config(config, flags, state)
 
   config.keys = config.keys or {}
 
-  -- File managers & system
-  table.insert(config.keys, { key = "y", mods = "LEADER", action = act.SpawnCommandInNewTab({ args = { "yazi" } }) })
-  table.insert(config.keys, { key = "Y", mods = "LEADER", action = act.SpawnCommandInNewTab({ args = { "sudo", "yazi", "/" } }) })
-  table.insert(config.keys, { key = "h", mods = "LEADER", action = act.SpawnCommandInNewTab({ args = { "btm" } }) })
-
-  -- DevOps & Infrastructure
-  table.insert(config.keys, { key = "k", mods = "LEADER", action = act.SpawnCommandInNewTab({ args = { "k9s" } }) })
-  table.insert(config.keys, { key = "D", mods = "LEADER", action = act.SpawnCommandInNewTab({ args = { "lazydocker" } }) })
-
-  -- Editors & Development
-  table.insert(config.keys, { key = "E", mods = "LEADER", action = act.SpawnCommandInNewTab({ args = { "fish", "-c", "hx ." } }) })
-  table.insert(config.keys, {
-    key = "C",
-    mods = "LEADER",
-    action = wezterm.action_callback(function(_, pane)
-      local cwd_uri = pane:get_current_working_dir()
-      local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
-      wezterm.background_child_process({ "cursor", cwd })
-    end),
-  })
-
-  -- Media & Entertainment
-  table.insert(config.keys, { key = "m", mods = "LEADER", action = act.SpawnCommandInNewTab({ args = { "spotify_player" } }) })
-
   -- Pane Management
   table.insert(config.keys, { key = "-", mods = "LEADER", action = act.SplitPane({ direction = "Down", size = { Percent = 30 } }) })
   table.insert(config.keys, { key = "|", mods = "LEADER|SHIFT", action = act.SplitPane({ direction = "Right", size = { Percent = 25 } }) })
