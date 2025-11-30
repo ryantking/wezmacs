@@ -40,17 +40,17 @@ end
 
 function M.apply_to_config(config, state)
   -- Get builtin color scheme
-  local theme = wezterm.get_builtin_color_schemes()[state.theme_name]
+  local theme = wezterm.get_builtin_color_schemes()[state.config.theme]
   if not theme then
-    wezterm.log_error("WezMacs: Color scheme '" .. state.theme_name .. "' not found, using default")
+    wezterm.log_error("WezMacs: Color scheme '" .. state.config.theme .. "' not found, using default")
     theme = wezterm.get_builtin_color_schemes()["Horizon Dark (Gogh)"]
   end
 
   -- Font configuration
   config.font = wezterm.font_with_fallback({
-    { family = state.font_family, weight = "Medium" },
+    { family = state.config.font, weight = "Medium" },
   })
-  config.font_size = state.font_size
+  config.font_size = state.config.font_size
   config.warn_about_missing_glyphs = false
 
   -- Font features: ligatures + stylistic sets
