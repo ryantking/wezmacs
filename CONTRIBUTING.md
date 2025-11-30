@@ -506,19 +506,32 @@ M._CATEGORY = "workflows"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Example module"
 M._EXTERNAL_DEPS = {}
-M._FLAGS_SCHEMA = {
-  some_flag = "string description",
+
+M._FEATURE_FLAGS = { "feature1" }
+M._CONFIG_SCHEMA = {
+  some_option = "default_value",
 }
 
-function M.init(flags, log)
+function M.init(enabled_flags, user_config, log)
   log("Example init phase")
-  return {
-    configured_value = flags.some_flag or "default",
-  }
+
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+
+  return { config = config, flags = enabled_flags or {} }
 end
 
-function M.apply_to_config(config, flags, state)
-  -- Apply configuration
+function M.apply_to_config(config, state)
+  -- Check feature flags
+  for _, flag in ipairs(state.flags) do
+    if flag == "feature1" then
+      -- Enable feature1
+    end
+  end
+
+  -- Use configuration values
   config.keys = config.keys or {}
   table.insert(config.keys, {
     key = "a",
