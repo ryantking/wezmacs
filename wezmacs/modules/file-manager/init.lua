@@ -29,34 +29,35 @@ M._CONFIG_SCHEMA = {
   leader_mod = "LEADER",
 }
 
-function M.apply_to_config(wezterm_config, state)
+function M.apply_to_config(wezterm_config)
+  local mod_config = wezmacs.get_config(M._NAME)
   local split = require("wezmacs.utils.split")
 
   -- File manager in smart split
   local function file_manager_split(window, pane)
-    split.smart_split(pane, { state.config.file_manager })
+    split.smart_split(pane, { mod_config.file_manager })
   end
 
   -- File manager with sudo in smart split
   local function file_manager_sudo_split(window, pane)
-    split.smart_split(pane, { "sudo", state.config.file_manager, "/" })
+    split.smart_split(pane, { "sudo", mod_config.file_manager, "/" })
   end
 
   -- Create file-manager key table
   wezterm_config.key_tables = wezterm_config.key_tables or {}
   wezterm_config.key_tables["file-manager"] = {
     { key = "f", action = wezterm.action_callback(file_manager_split) },
-    { key = "F", action = act.SpawnCommandInNewTab({ args = { state.config.file_manager } }) },
+    { key = "F", action = act.SpawnCommandInNewTab({ args = { mod_config.file_manager } }) },
     { key = "s", action = wezterm.action_callback(file_manager_sudo_split) },
-    { key = "S", action = act.SpawnCommandInNewTab({ args = { "sudo", state.config.file_manager, "/" } }) },
+    { key = "S", action = act.SpawnCommandInNewTab({ args = { "sudo", mod_config.file_manager, "/" } }) },
     { key = "Escape", action = "PopKeyTable" },
   }
 
   -- Add keybinding to activate file-manager menu
   wezterm_config.keys = wezterm_config.keys or {}
   table.insert(wezterm_config.keys, {
-    key = state.config.leader_key,
-    mods = state.config.leader_mod,
+    key = mod_config.leader_key,
+    mods = mod_config.leader_mod,
     action = act.ActivateKeyTable({
       name = "file-manager",
       one_shot = false,
