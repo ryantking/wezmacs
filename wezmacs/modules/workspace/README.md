@@ -4,13 +4,19 @@ Provides workspace switching and management with fuzzy search and Claude workspa
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-flags = {
-  workflows = {
-    workspace = {
-      leader_key = "s",        -- Workspace switcher key
-      leader_mod = "LEADER"    -- Modifier for workspace menu
-    }
+return {
+  "workspace"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  workspace = {
+    leader_key = "s",        -- Workspace switcher key
+    leader_mod = "LEADER"    -- Modifier for workspace menu
   }
 }
 ```
