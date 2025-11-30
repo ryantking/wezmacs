@@ -23,26 +23,20 @@ local M = {}
 
 M._NAME = "keybindings"
 M._CATEGORY = "editing"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Core keyboard bindings for pane and tab management"
 M._EXTERNAL_DEPS = {}
-M._FEATURE_FLAGS = {}
+M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   leader_key = "Space",
   leader_mod = "CMD",
 }
 
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
+function M.apply_to_config(config)
+  -- Get configuration
+  local mod_config = wezmacs.get_config(M._NAME)
 
-function M.apply_to_config(config, state)
   config.disable_default_key_bindings = false
-  config.leader = { key = state.config.leader_key, mods = state.config.leader_mod, timeout_milliseconds = 5000 }
+  config.leader = { key = mod_config.leader_key, mods = mod_config.leader_mod, timeout_milliseconds = 5000 }
 
   -- ============================================================================
   -- KEY TABLES (Modal/Submenu Keybindings)
