@@ -501,32 +501,30 @@ local M = {}
 
 M._NAME = "example"
 M._CATEGORY = "workflows"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Example module"
 M._EXTERNAL_DEPS = {}
 
-M._FEATURE_FLAGS = { "feature1" }
+M._FEATURES = {
+  feature1 = true,
+  advanced = {
+    config_schema = {
+      advanced_option = "default",
+    },
+  },
+}
+
 M._CONFIG_SCHEMA = {
   some_option = "default_value",
 }
 
-function M.init(enabled_flags, user_config, log)
-  log("Example init phase")
+function M.apply_to_config(config)
+  -- Get merged configuration from framework
+  local cfg = wezmacs.get_config("example")
+  local flags = wezmacs.get_enabled_flags("example")
 
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-
-  return { config = config, flags = enabled_flags or {} }
-end
-
-function M.apply_to_config(config, state)
   -- Check feature flags
-  for _, flag in ipairs(state.flags) do
-    if flag == "feature1" then
-      -- Enable feature1
-    end
+  if flags.feature1 then
+    -- Enable feature1
   end
 
   -- Use configuration values
@@ -536,6 +534,12 @@ function M.apply_to_config(config, state)
     mods = "CMD",
     action = wezterm.action.SomeAction(),
   })
+
+  -- Feature-specific config
+  if flags.advanced then
+    local advanced_cfg = config.features.advanced
+    -- Use advanced_cfg.advanced_option
+  end
 end
 
 return M
