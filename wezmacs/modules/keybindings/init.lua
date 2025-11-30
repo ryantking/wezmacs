@@ -50,7 +50,7 @@ function M.apply_to_config(config, state)
 
   config.key_tables = config.key_tables or {}
 
-  -- Resize pane mode: LEADER+SHIFT+Arrow activates, then use arrows to resize
+  -- Resize pane mode: CMD+R activates, then use arrows to resize
   config.key_tables.resize_pane = {
     { key = "LeftArrow", action = act.AdjustPaneSize({ "Left", 2 }) },
     { key = "RightArrow", action = act.AdjustPaneSize({ "Right", 2 }) },
