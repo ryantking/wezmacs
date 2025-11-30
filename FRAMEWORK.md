@@ -153,37 +153,50 @@ M._CATEGORY      -- string: ui|behavior|editing|integration|workflows
 M._VERSION       -- string: semantic version (e.g., "0.1.0")
 M._DESCRIPTION   -- string: one-line description
 M._EXTERNAL_DEPS -- table: list of external tools/dependencies
-M._FLAGS_SCHEMA  -- table: map of flag_name = "type description"
+M._FEATURE_FLAGS -- table: array of optional feature flags (e.g., {"smartsplit", "diff-viewer"})
+M._CONFIG_SCHEMA -- table: map of config_key = default_value
 ```
 
 ### Init Function (Optional)
 
 ```lua
-function M.init(flags, log)
-  -- flags: table of configuration for this module's category
+function M.init(enabled_flags, user_config, log)
+  -- enabled_flags: array of flags from modules.lua (e.g., {"smartsplit"})
+  -- user_config: table of configuration from config.lua (e.g., {leader_key = "g"})
   -- log: function(msg) for logging (INFO level)
 
-  -- Return table with state that will be passed to apply_to_config
-  -- Can be empty {}
-  return {
-    computed_value = flags.some_flag or "default",
-  }
+  -- Merge user config with defaults
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+
+  -- Return state containing config and flags
+  return { config = config, flags = enabled_flags or {} }
 end
 ```
 
 ### Apply Function (Required)
 
 ```lua
-function M.apply_to_config(config, flags, state)
+function M.apply_to_config(config, state)
   -- config: WezTerm config object (from config_builder())
-  -- flags: table of flags for this module's category
   -- state: table returned from init() phase (or {} if no init)
+  --        state.config contains merged configuration values
+  --        state.flags contains enabled feature flags
 
-  -- Modify config object directly
+  -- Check for enabled feature flags
+  for _, flag in ipairs(state.flags) do
+    if flag == "smartsplit" then
+      -- Enable smart-split functionality
+    end
+  end
+
+  -- Use configuration values from state.config
   config.keys = config.keys or {}
   table.insert(config.keys, {
-    key = "a",
-    mods = "CMD",
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
     action = wezterm.action.SomeAction(),
   })
 end
