@@ -20,27 +20,23 @@ local M = {}
 
 M._NAME = "appearance"
 M._CATEGORY = "ui"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Color scheme, fonts, visual styling"
 M._EXTERNAL_DEPS = {}
-M._FEATURE_FLAGS = {
-  enable_ligatures = false,
+M._FEATURES = {
+  {
+    name = "ligatures",
+    config_schema = {
+      harfbuzz_features = nil,
+    },
+    deps = {},
+  },
 }
 M._CONFIG_SCHEMA = {
   theme = nil,
   font = nil,
   font_size = nil,
-  harfbuzz_features = nil,
   window_decorations = "RESIZE",
 }
-
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
 
 function M.apply_to_config(config, state)
   -- Only apply theme if configured
