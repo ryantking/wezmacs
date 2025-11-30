@@ -12,12 +12,18 @@ Configures mouse bindings and behavior for text selection, link opening, and int
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-flags = {
-  behavior = {
-    mouse = {
-      leader_mod = "CMD"  -- Modifier for link opening
-    }
+return {
+  "mouse"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  mouse = {
+    leader_mod = "CMD"  -- Modifier for link opening
   }
 }
 ```
