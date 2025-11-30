@@ -214,7 +214,7 @@ local function delete_claudectl_session(window, pane)
   )
 end
 
-function M.apply_to_config(config, flags, state)
+function M.apply_to_config(config, state)
   -- Plugin setup
   workspace_switcher.apply_to_config(config)
 
@@ -223,15 +223,15 @@ function M.apply_to_config(config, flags, state)
 
   -- Workspace switcher
   table.insert(config.keys, {
-    key = state.leader_key,
-    mods = state.leader_mod,
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
     action = workspace_switcher.switch_workspace(),
   })
 
   -- Switch to previous workspace
   table.insert(config.keys, {
     key = "S",
-    mods = state.leader_mod,
+    mods = state.config.leader_mod,
     action = workspace_switcher.switch_to_prev_workspace(),
   })
 
