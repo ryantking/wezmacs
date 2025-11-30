@@ -22,7 +22,12 @@ M._CATEGORY = "ui"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Custom tab bar with process icons and decorative separators"
 M._EXTERNAL_DEPS = {}
-M._FLAGS_SCHEMA = {}
+M._FEATURE_FLAGS = {}
+M._CONFIG_SCHEMA = {}
+
+function M.init(enabled_flags, user_config, log)
+  return { config = {}, flags = enabled_flags or {} }
+end
 
 M.arrow_solid = ""
 M.arrow_thin = ""
