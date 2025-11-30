@@ -21,19 +21,21 @@ M._CATEGORY = "ui"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Window behavior, padding, and cursor settings"
 M._EXTERNAL_DEPS = {}
-M._FLAGS_SCHEMA = {
-  padding = "number (pixels)",
-  scrollback_lines = "number (lines)",
+M._FEATURE_FLAGS = {}
+M._CONFIG_SCHEMA = {
+  padding = 16,
+  scrollback_lines = 5000,
 }
 
-function M.init(flags, log)
-  return {
-    padding = flags.padding or 16,
-    scrollback_lines = flags.scrollback_lines or 5000,
-  }
+function M.init(enabled_flags, user_config, log)
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+  return { config = config, flags = enabled_flags or {} }
 end
 
-function M.apply_to_config(config, flags, state)
+function M.apply_to_config(config, state)
   -- Window decorations and behavior
   config.window_decorations = "RESIZE"
   config.window_close_confirmation = "NeverPrompt"
