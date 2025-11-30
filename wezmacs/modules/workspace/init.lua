@@ -238,7 +238,7 @@ function M.apply_to_config(config, state)
   -- Jump to System workspace
   table.insert(config.keys, {
     key = "B",
-    mods = state.leader_mod,
+    mods = state.config.leader_mod,
     action = wezterm.action_callback(function(window, pane)
       window:perform_action(
         act.SwitchToWorkspace({
@@ -257,14 +257,14 @@ function M.apply_to_config(config, state)
     -- Create claudectl workspace
     table.insert(config.keys, {
       key = "C",
-      mods = state.leader_mod,
+      mods = state.config.leader_mod,
       action = wezterm.action_callback(create_claudectl_workspace),
     })
 
     -- List and select claudectl workspace
     table.insert(config.keys, {
       key = "c",
-      mods = state.leader_mod,
+      mods = state.config.leader_mod,
       action = wezterm.action_callback(list_claudectl_sessions),
     })
 
@@ -273,8 +273,8 @@ function M.apply_to_config(config, state)
   end
 
   -- Domain management (optional)
-  table.insert(config.keys, { key = "a", mods = state.leader_mod, action = act.AttachDomain("unix") })
-  table.insert(config.keys, { key = "d", mods = state.leader_mod, action = act.DetachDomain({ DomainName = "unix" }) })
+  table.insert(config.keys, { key = "a", mods = state.config.leader_mod, action = act.AttachDomain("unix") })
+  table.insert(config.keys, { key = "d", mods = state.config.leader_mod, action = act.DetachDomain({ DomainName = "unix" }) })
 end
 
 return M
