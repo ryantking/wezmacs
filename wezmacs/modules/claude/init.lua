@@ -219,6 +219,9 @@ function M.apply_to_config(config, state)
   config.key_tables = config.key_tables or {}
   config.key_tables.claude = {
     { key = "c", action = act.SpawnCommandInNewTab({ args = { "fish", "-c", "claude" } }) },
+    { key = "C", action = wezterm.action_callback(create_claudectl_workspace) },
+    { key = "s", action = wezterm.action_callback(list_claudectl_sessions) },
+    { key = "d", action = wezterm.action_callback(delete_claudectl_session) },
     { key = "Escape", action = "PopKeyTable" },
   }
 
