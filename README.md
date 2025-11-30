@@ -200,12 +200,13 @@ This separation keeps configuration clean and maintainable.
 
 WezMacs follows a pragmatic hybrid approach inspired by Doom Emacs and LazyVim:
 
-- **Module System**: Each module exports metadata and lifecycle functions (init, apply_to_config)
+- **Module System**: Each module exports metadata and a single `apply_to_config` function
 - **Flat Structure**: No categories in code - just `wezmacs/modules/modulename/`
 - **Dual Configuration**: Separate files for module selection (modules.lua) and configuration (config.lua)
-- **Two-Phase Loading**: Init phase merges config and returns state, apply phase modifies WezTerm config
-- **Feature Flags**: Optional per-module flags in modules.lua (e.g., { name = "git", flags = {"smartsplit"} })
-- **Schema-Driven**: Modules declare _CONFIG_SCHEMA and _FEATURE_FLAGS for validation
+- **Framework-Managed Config**: The framework handles config merging and provides it via global API
+- **Feature Flags**: Optional per-module flags, either simple flags or complex objects with config_schema and deps
+- **Schema-Driven**: Modules declare _CONFIG_SCHEMA and _FEATURES for validation
+- **Global API**: Modules use `wezmacs.get_config()` and `wezmacs.get_enabled_flags()` to access configuration
 - **Custom Modules**: Users can add modules to `~/.config/wezmacs/custom-modules/`
 
 See [FRAMEWORK.md](FRAMEWORK.md) for architectural details.
