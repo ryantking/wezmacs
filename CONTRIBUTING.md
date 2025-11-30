@@ -1,0 +1,472 @@
+# Contributing to WezMacs
+
+Thank you for your interest in contributing! This guide will help you create new modules or improve existing ones.
+
+## Table of Contents
+
+- [Module Creation Guide](#module-creation-guide)
+- [Module Anatomy](#module-anatomy)
+- [Writing Good Modules](#writing-good-modules)
+- [Documentation Standards](#documentation-standards)
+- [Testing Your Module](#testing-your-module)
+- [Submitting a Pull Request](#submitting-a-pull-request)
+
+## Module Creation Guide
+
+### Step 1: Create Module Directory
+
+Create a new directory for your module in `wezmacs/modules/`:
+
+```bash
+mkdir -p wezmacs/modules/your-module-name
+```
+
+### Step 2: Create init.lua
+
+Start with the template from `wezmacs/templates/module.lua`:
+
+```lua
+-- wezmacs/modules/your-module-name/init.lua
+local wezterm = require("wezterm")
+local M = {}
+
+-- Metadata
+M._NAME = "your-module-name"
+M._CATEGORY = "workflows"  -- or ui, behavior, editing, integration
+M._VERSION = "0.1.0"
+M._DESCRIPTION = "What this module does"
+M._EXTERNAL_DEPS = { "tool1", "tool2" }  -- External tool dependencies
+M._FLAGS_SCHEMA = {
+  option_name = "string | number | table description",
+}
+
+-- Init phase (optional)
+function M.init(flags, log)
+  log("Initializing your-module-name")
+
+  return {
+    computed_value = flags.option_name or "default",
+  }
+end
+
+-- Apply phase (required)
+function M.apply_to_config(config, flags, state)
+  -- Implement your module here
+  config.keys = config.keys or {}
+  -- ... add keybindings, etc
+end
+
+return M
+```
+
+### Step 3: Create README.md
+
+Document your module in `wezmacs/modules/your-module-name/README.md`:
+
+```markdown
+# your-module-name module
+
+Brief description of what this module does.
+
+## Features
+
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Configuration
+
+```lua
+flags = {
+  category = {
+    your-module-name = {
+      option_name = "value",
+    }
+  }
+}
+```
+
+## Keybindings
+
+| Binding | Action |
+|---------|--------|
+| LEADER+x | Description |
+
+## External Dependencies
+
+- **tool1**: What it does
+- **tool2**: What it does
+
+## Installation
+
+```bash
+brew install tool1 tool2
+```
+
+## Related Modules
+
+- Other related modules
+```
+
+### Step 4: Test Your Module
+
+Test locally before submitting:
+
+```bash
+# Edit user/config.lua to include your module
+return {
+  modules = {
+    category = { "your-module-name" },
+  },
+}
+
+# Reload WezTerm to test
+```
+
+### Step 5: Submit Pull Request
+
+See [Submitting a Pull Request](#submitting-a-pull-request).
+
+## Module Anatomy
+
+### Required Elements
+
+1. **Metadata Fields**
+   - `_NAME`: Must match directory name
+   - `_CATEGORY`: One of ui, behavior, editing, integration, workflows
+   - `_VERSION`: Semantic version
+   - `_DESCRIPTION`: One-line description
+   - `_EXTERNAL_DEPS`: List of external tools
+   - `_FLAGS_SCHEMA`: Map of configurable options
+
+2. **apply_to_config Function**
+   - Always required
+   - Receives: config, flags, state
+   - Modifies config object
+   - No return value
+
+### Optional Elements
+
+1. **init Function**
+   - Called before apply_to_config
+   - Receives: flags, log
+   - Returns: state table (can be empty)
+   - Use for: flag validation, early setup, derived values
+
+2. **Public Functions**
+   - Functions other modules might call
+   - Document as part of module API
+
+## Writing Good Modules
+
+### 1. Single Responsibility
+
+Each module should do ONE thing well:
+
+```lua
+-- ✓ Good: Focused module
+M._DESCRIPTION = "Git workflow integration (lazygit, diff)"
+
+-- ✗ Bad: Too many concerns
+M._DESCRIPTION = "Git, SSH, Docker, and Kubernetes management"
+```
+
+### 2. Clear Dependencies
+
+Always declare external dependencies:
+
+```lua
+M._EXTERNAL_DEPS = { "lazygit", "git", "delta" }
+```
+
+### 3. Sensible Defaults
+
+Don't require users to configure everything:
+
+```lua
+function M.init(flags, log)
+  return {
+    leader_key = flags.leader_key or "g",
+    leader_mod = flags.leader_mod or "LEADER",
+  }
+end
+```
+
+### 4. Safe Table Operations
+
+Always check tables exist before modifying:
+
+```lua
+config.keys = config.keys or {}
+table.insert(config.keys, binding)
+
+config.key_tables = config.key_tables or {}
+config.key_tables.my_table = { ... }
+```
+
+### 5. Handle Missing Dependencies
+
+Gracefully degrade if tools aren't available:
+
+```lua
+function M.apply_to_config(config, flags, state)
+  local has_lazygit = wezterm.run_child_process({ "which", "lazygit" })
+  if not has_lazygit then
+    log("warn", "lazygit not found, skipping git shortcuts")
+    return
+  end
+
+  -- Add git keybindings
+end
+```
+
+### 6. Use Helper Functions
+
+Use utilities from `wezmacs/utils/`:
+
+```lua
+local keys_util = require("wezmacs.utils.keys")
+local colors_util = require("wezmacs.utils.colors")
+
+-- Create keybindings using helpers
+table.insert(config.keys, keys_util.chord("g", "LEADER", action))
+
+-- Manipulate colors
+local dark_bg = colors_util.darken(theme.background, 0.2)
+```
+
+### 7. Logging for Debugging
+
+Use provided log function:
+
+```lua
+function M.init(flags, log)
+  log("Initializing module")
+  if not flags.option then
+    log("warn", "option not specified, using default")
+  end
+end
+```
+
+### 8. Documentation in Code
+
+Comment complex logic:
+
+```lua
+-- Smart orientation: split horizontally if portrait, vertically if landscape
+local direction = dims.pixel_height > dims.pixel_width and "Bottom" or "Right"
+```
+
+## Documentation Standards
+
+### README Structure
+
+Every module README should include (in order):
+
+1. **Title & Description** (one line)
+2. **Features** (bulleted list)
+3. **Configuration** (code example)
+4. **Keybindings** (table if applicable)
+5. **External Dependencies** (bulleted list with links)
+6. **Installation** (bash commands)
+7. **Related Modules** (references to complementary modules)
+
+### Quality Standards
+
+- Clear, concise language
+- Real examples users can copy-paste
+- Accurate descriptions
+- Links to external tools
+- Installation commands for macOS (Homebrew) minimum
+
+## Testing Your Module
+
+### Local Testing
+
+1. Create `user/config.lua`:
+   ```lua
+   return {
+     modules = {
+       category = { "your-module-name" },
+     },
+   }
+   ```
+
+2. Reload WezTerm configuration
+
+3. Test all features:
+   - Try keybindings
+   - Check logs for errors
+   - Verify colors/styling applied
+   - Test with/without flags
+
+### Syntax Validation
+
+Use `luacheck`:
+
+```bash
+luacheck wezmacs/modules/your-module-name/init.lua
+```
+
+### Manual Review Checklist
+
+- [ ] Metadata fields complete
+- [ ] Dependencies declared
+- [ ] Defaults provided
+- [ ] Safe table operations
+- [ ] Error handling for missing deps
+- [ ] Comments for complex logic
+- [ ] README documented
+- [ ] No external Lua dependencies (use wezterm APIs)
+- [ ] Follows existing module patterns
+- [ ] Works in test config
+
+## Submitting a Pull Request
+
+### Before Submitting
+
+1. **Verify module works locally** (see Testing Your Module)
+2. **Review module naming** - should be kebab-case
+3. **Check README quality** - use the standards above
+4. **Validate Lua syntax** - use luacheck if available
+5. **Update documentation** - reference new module in README if needed
+
+### PR Title Format
+
+```
+feat(modules): add [module-name] for [feature description]
+```
+
+Examples:
+```
+feat(modules): add rainbow-parens for colorful bracket matching
+feat(modules): add tmux-navigation for tmux pane integration
+```
+
+### PR Description Template
+
+```markdown
+## Summary
+Brief description of what this module does.
+
+## Features
+- Feature 1
+- Feature 2
+- Feature 3
+
+## Configuration Example
+```lua
+modules = {
+  category = { "module-name" },
+},
+
+flags = {
+  category = {
+    module-name = {
+      option = "value",
+    }
+  }
+}
+```
+```
+
+## External Dependencies
+- tool1 (link)
+- tool2 (link)
+
+## Testing
+- [x] Tested locally with config
+- [x] README documentation complete
+- [x] Keybindings verified
+- [x] External deps declared
+
+## Checklist
+- [x] Follows module template
+- [x] Metadata fields complete
+- [x] Safe table operations
+- [x] Sensible defaults
+- [x] README formatted correctly
+- [x] No lint errors
+```
+
+### What We Look For
+
+1. **Clarity**: Is the module's purpose clear?
+2. **Quality**: Does it follow WezMacs patterns?
+3. **Documentation**: Is it well-documented?
+4. **Testing**: Has the author tested it?
+5. **Scope**: Does it do one thing well?
+
+### Feedback & Revision
+
+We may ask for:
+- Refactoring for clarity
+- Better defaults
+- More comprehensive documentation
+- Testing confirmation
+- Naming improvements
+
+Please be open to feedback - we want WezMacs modules to be excellent!
+
+## Module Naming
+
+Good names are:
+
+- **Descriptive**: `mouse-bindings` not `mb`
+- **Lowercase**: `my-feature` not `MyFeature`
+- **Kebab-case**: `my-feature-name` not `my_feature_name`
+- **Specific**: `workspace-switcher` not `workspace-management`
+- **Concise**: `git-shortcuts` not `git-workflow-integration-shortcuts`
+
+## Code Style
+
+Follow the style of existing modules:
+
+- **Indentation**: 2 spaces
+- **Line Length**: ~100 chars (reasonable wrapping)
+- **Comments**: Use for complex logic, not obvious code
+- **Naming**: Use descriptive names, avoid abbreviations
+- **Structure**: metadata → init → apply
+
+### Example Style
+
+```lua
+local wezterm = require("wezterm")
+local M = {}
+
+M._NAME = "example"
+M._CATEGORY = "workflows"
+M._VERSION = "0.1.0"
+M._DESCRIPTION = "Example module"
+M._EXTERNAL_DEPS = {}
+M._FLAGS_SCHEMA = {
+  some_flag = "string description",
+}
+
+function M.init(flags, log)
+  log("Example init phase")
+  return {
+    configured_value = flags.some_flag or "default",
+  }
+end
+
+function M.apply_to_config(config, flags, state)
+  -- Apply configuration
+  config.keys = config.keys or {}
+  table.insert(config.keys, {
+    key = "a",
+    mods = "CMD",
+    action = wezterm.action.SomeAction(),
+  })
+end
+
+return M
+```
+
+## Questions?
+
+- See [FRAMEWORK.md](FRAMEWORK.md) for architecture details
+- See [README.md](README.md) for usage examples
+- Review existing modules in `wezmacs/modules/` for reference
+
+Thank you for contributing to WezMacs! 🎉
