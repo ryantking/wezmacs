@@ -172,11 +172,12 @@ See [Submitting a Pull Request](#submitting-a-pull-request).
    - `_VERSION`: Semantic version
    - `_DESCRIPTION`: One-line description
    - `_EXTERNAL_DEPS`: List of external tools
-   - `_FLAGS_SCHEMA`: Map of configurable options
+   - `_FEATURE_FLAGS`: Array of optional feature flags (e.g., {"smartsplit"})
+   - `_CONFIG_SCHEMA`: Map of config_key = default_value
 
 2. **apply_to_config Function**
    - Always required
-   - Receives: config, flags, state
+   - Receives: config (WezTerm config), state (from init)
    - Modifies config object
    - No return value
 
@@ -184,9 +185,9 @@ See [Submitting a Pull Request](#submitting-a-pull-request).
 
 1. **init Function**
    - Called before apply_to_config
-   - Receives: flags, log
-   - Returns: state table (can be empty)
-   - Use for: flag validation, early setup, derived values
+   - Receives: enabled_flags (array), user_config (table), log (function)
+   - Returns: state table with merged config and flags
+   - Use for: merging user config with defaults, validation
 
 2. **Public Functions**
    - Functions other modules might call
