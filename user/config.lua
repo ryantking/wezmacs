@@ -1,90 +1,102 @@
 --[[
-  User Configuration for WezMacs
+  WezMacs User Configuration
 
-  This file controls which modules are enabled and how they are configured.
-  Edit this file to customize your WezTerm setup.
+  This file contains PER-MODULE CONFIGURATION (values and options).
 
-  Module Categories:
-    - ui: Visual styling, colors, fonts, tab bar
-    - behavior: Mouse, scrolling, window behavior
-    - editing: Keybindings, selection, input modes
-    - integration: Plugins, multiplexing
-    - workflows: Feature-specific workflows (git, workspace, etc)
+  Module selection and feature flags are specified in modules.lua.
+  This file specifies HOW each module should be configured.
+
+  Example:
+  ```lua
+  appearance = {
+    theme = "Horizon Dark (Gogh)",
+    font = "JetBrains Mono",
+    font_size = 16,
+  },
+  git = {
+    leader_key = "g",
+    leader_mod = "LEADER",
+  },
+  ```
 ]]
 
 return {
-  -- Module Selection
-  -- List the modules you want enabled. All other modules will be disabled.
-  modules = {
-    ui = {
-      "appearance",    -- Color scheme, fonts, visual styling
-      "tabbar",        -- Custom tab bar with icons
-    },
-    behavior = {
-      "mouse",         -- Mouse bindings and behavior
-    },
-    editing = {
-      "keybindings",   -- Keyboard shortcuts and key tables
-    },
-    workflows = {
-      "git",           -- Git integration (lazygit, diff, etc)
-      "workspace",     -- Workspace switching and management
-      "claude",        -- Claude integration
-    },
+  -- Appearance module configuration
+  appearance = {
+    theme = "Horizon Dark (Gogh)",  -- WezTerm builtin color scheme
+    font = "Iosevka Mono",
+    font_size = 16,
   },
 
-  -- Module Configuration (Flags)
-  -- Configure individual modules without editing their code.
-  -- Organization mirrors the modules structure above.
-  flags = {
-    ui = {
-      -- Appearance module flags
-      theme = "Horizon Dark (Gogh)",  -- WezTerm builtin color scheme
-      font = "Iosevka Mono",
-      font_size = 16,
-    },
-    behavior = {
-      -- Behavior module flags
-      -- (modules will define their own flags)
-    },
-    editing = {
-      -- Editing module flags
-      leader_key = "Space",
-      leader_mod = "CMD",
-    },
-    workflows = {
-      -- Workflow module flags (per-module)
-      git = {
-        leader_key = "g",
-        leader_mod = "LEADER",
-      },
-      workspace = {
-        leader_key = "s",
-        leader_mod = "LEADER",
-      },
-      claude = {
-        leader_key = "c",
-        leader_mod = "LEADER",
-      },
-    },
+  -- Keybindings module configuration
+  keybindings = {
+    leader_key = "Space",
+    leader_mod = "CMD",
   },
 
-  -- User Overrides
-  -- Apply final customizations after all modules are loaded.
-  -- This function is called last, so it takes highest priority.
-  overrides = function(config)
-    -- Example: Override font size
-    -- config.font_size = 18
+  -- Git module configuration
+  git = {
+    leader_key = "g",
+    leader_mod = "LEADER",
+  },
 
-    -- Example: Add custom keybindings
-    -- config.keys = config.keys or {}
-    -- table.insert(config.keys, {
-    --   key = "q",
-    --   mods = "CMD",
-    --   action = wezterm.action.QuitApplication,
-    -- })
+  -- Workspace module configuration
+  workspace = {
+    leader_key = "s",
+    leader_mod = "LEADER",
+  },
 
-    -- Example: Customize window appearance
-    -- config.window_padding = { left = 8, right = 8, top = 8, bottom = 8 }
-  end,
+  -- Claude module configuration
+  claude = {
+    leader_key = "c",
+    leader_mod = "LEADER",
+  },
+
+  -- Kubernetes module configuration
+  kubernetes = {
+    leader_key = "k",
+    leader_mod = "LEADER",
+  },
+
+  -- Docker module configuration
+  docker = {
+    leader_key = "D",
+    leader_mod = "LEADER",
+  },
+
+  -- File manager module configuration
+  ["file-manager"] = {
+    leader_key = "y",
+    leader_mod = "LEADER",
+    sudo_key = "Y",
+  },
+
+  -- Media module configuration
+  media = {
+    leader_key = "m",
+    leader_mod = "LEADER",
+  },
+
+  -- Editors module configuration
+  editors = {
+    helix_key = "E",
+    cursor_key = "C",
+    leader_mod = "LEADER",
+  },
+
+  -- System monitor module configuration
+  ["system-monitor"] = {
+    leader_key = "h",
+    leader_mod = "LEADER",
+  },
+
+  -- Domains module configuration
+  domains = {
+    attach_key = "t",
+    attach_mods = "ALT|SHIFT",
+    vsplit_key = "_",
+    vsplit_mods = "CTRL|SHIFT|ALT",
+    hsplit_key = "-",
+    hsplit_mods = "CTRL|ALT",
+  },
 }
