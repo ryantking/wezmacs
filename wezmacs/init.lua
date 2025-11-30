@@ -29,11 +29,8 @@ function M.setup(config, opts)
     end
   end
 
-  -- Load user configuration
-  local user_config = M.load_user_config(opts.user_config_path, log)
-  if not user_config then
-    user_config = {}
-  end
+  -- Use provided user_config or empty table as fallback
+  local user_config = opts.user_config or {}
 
   -- Merge with defaults
   local final_config = M.merge_configs(M.default_config(), user_config)
