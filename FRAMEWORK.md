@@ -1,0 +1,447 @@
+# WezMacs Framework Architecture
+
+This document describes the internal architecture of WezMacs for developers and advanced users.
+
+## Design Philosophy
+
+WezMacs uses a **pragmatic hybrid** approach:
+
+- **From Doom Emacs**: Declarative module selection, feature flags, clear lifecycle phases
+- **From LazyVim**: Plain Lua simplicity, straightforward module discovery, no complexity
+- **From WezTerm**: Uses the proven `apply_to_config` pattern across the ecosystem
+
+This balances power with simplicity: enough structure to keep configs organized, but simple enough that anyone can understand it.
+
+## Core Concepts
+
+### Modules
+
+Each module is a self-contained unit providing one feature or cohesive set of features.
+
+**Module Anatomy:**
+```
+wezmacs/modules/modulename/
+├── init.lua        # Module implementation
+└── README.md       # User documentation
+```
+
+**Module Structure:**
+```lua
+local M = {}
+
+-- Metadata (for discovery and documentation)
+M._NAME = "modulename"
+M._CATEGORY = "category"  -- For docs only
+M._VERSION = "0.1.0"
+M._DESCRIPTION = "What this does"
+M._EXTERNAL_DEPS = { "tool1", "tool2" }
+M._FLAGS_SCHEMA = {
+  option_name = "type description",
+}
+
+-- Init phase (optional) - validation and early setup
+function M.init(flags, log)
+  return {
+    -- Computed state for apply_to_config
+  }
+end
+
+-- Apply phase (required) - main configuration
+function M.apply_to_config(config, flags, state)
+  -- Modify config object
+end
+
+return M
+```
+
+### Two-Phase Loading
+
+**Phase 1: Init**
+- Called for each module in order
+- Receives user-provided flags for that module's category
+- Validates flags, performs early setup
+- Returns state that will be passed to apply_to_config
+- Optional - if not defined, skipped
+
+**Phase 2: Apply**
+- Called after all init phases complete
+- Receives wezterm config object, flags, and state from init
+- Modifies config object (add keybindings, set colors, register events, etc)
+- Required - every module must define this
+
+**Why Two Phases?**
+- Prevents circular dependencies
+- Ensures all modules can see each other's setup
+- Allows modules to generate derived values from flags
+- Matches Lua and WezTerm best practices
+
+### Categories (Documentation Only)
+
+Categories organize modules by concern. They exist **only for documentation** - the code is completely flat:
+
+- **UI**: Visual styling (appearance, tabbar, window)
+- **Behavior**: User interactions (mouse, scrolling)
+- **Editing**: Input modes (keybindings, selection)
+- **Integration**: External integrations (plugins, multiplexing)
+- **Workflows**: Feature-focused workflows (git, workspace, claude)
+
+The flat `wezmacs/modules/` directory contains ALL modules regardless of category.
+
+## Configuration Flow
+
+```
+wezterm.lua
+  ↓
+wezmacs.setup(config, opts)
+  ↓
+Load user config (user/config.lua)
+  ↓
+Merge with defaults
+  ↓
+For each enabled module:
+  ├─ Load module
+  ├─ Call init() phase → get state
+  └─ Store state
+  ↓
+For each enabled module:
+  ├─ Call apply_to_config(config, flags, state)
+  └─ State was computed in init phase
+  ↓
+Call user overrides function (if provided)
+  ↓
+Return configured wezterm.config object
+```
+
+## API Contract
+
+### Module Metadata
+
+Every module should export these fields (for documentation and discovery):
+
+```lua
+M._NAME          -- string: module name (must match directory name)
+M._CATEGORY      -- string: ui|behavior|editing|integration|workflows
+M._VERSION       -- string: semantic version (e.g., "0.1.0")
+M._DESCRIPTION   -- string: one-line description
+M._EXTERNAL_DEPS -- table: list of external tools/dependencies
+M._FLAGS_SCHEMA  -- table: map of flag_name = "type description"
+```
+
+### Init Function (Optional)
+
+```lua
+function M.init(flags, log)
+  -- flags: table of configuration for this module's category
+  -- log: function(msg) for logging (INFO level)
+
+  -- Return table with state that will be passed to apply_to_config
+  -- Can be empty {}
+  return {
+    computed_value = flags.some_flag or "default",
+  }
+end
+```
+
+### Apply Function (Required)
+
+```lua
+function M.apply_to_config(config, flags, state)
+  -- config: WezTerm config object (from config_builder())
+  -- flags: table of flags for this module's category
+  -- state: table returned from init() phase (or {} if no init)
+
+  -- Modify config object directly
+  config.keys = config.keys or {}
+  table.insert(config.keys, {
+    key = "a",
+    mods = "CMD",
+    action = wezterm.action.SomeAction(),
+  })
+end
+```
+
+## Module Loading
+
+The module loader (`wezmacs/module.lua`) handles:
+
+1. **Discovery**: Finding modules by name
+2. **Loading**: Using `require()` to load module code
+3. **Initialization**: Running init phases and collecting state
+4. **Application**: Running apply_to_config phases
+
+**Module Search Order:**
+1. `wezmacs.modules.modulename` (built-in modules)
+2. `user.custom-modules.modulename` (user custom modules)
+3. Error if not found
+
+## User Configuration
+
+User config goes in `user/config.lua`:
+
+```lua
+return {
+  -- Module selection
+  modules = {
+    ui = { "appearance", "tabbar" },
+    behavior = { "mouse" },
+    editing = { "keybindings" },
+    workflows = { "git", "workspace" },
+    integration = { "plugins" },
+  },
+
+  -- Module flags (optional)
+  flags = {
+    ui = {
+      theme = "Horizon Dark (Gogh)",
+      font = "Iosevka Mono",
+    },
+    workflows = {
+      git = {
+        leader_key = "g",
+      },
+    },
+  },
+
+  -- Final overrides (optional)
+  overrides = function(config)
+    config.font_size = 18
+  end,
+}
+```
+
+**Merge Behavior:**
+- User modules override defaults (empty defaults if not specified)
+- User flags merge deeply with default flags
+- Overrides function is called last, highest priority
+
+## Custom Modules
+
+Users can create custom modules in `~/.config/wezterm/user/custom-modules/`:
+
+```
+user/custom-modules/
+└── my-feature/
+    ├── init.lua          # Module implementation
+    └── README.md         # Documentation
+```
+
+Enable in config:
+```lua
+return {
+  modules = {
+    custom = { "my-feature" },
+  },
+}
+```
+
+## Framework Code
+
+### wezmacs/init.lua
+
+Main entry point. Exports `M.setup(config, opts)` function.
+
+Responsibilities:
+- Load user configuration
+- Merge with defaults
+- Orchestrate module loading via `module.lua`
+- Call init phases for all modules
+- Call apply_to_config phases for all modules
+- Apply user overrides
+
+### wezmacs/module.lua
+
+Module discovery and loading system.
+
+Key function: `M.load_all(config, module_spec, flags, log)`
+
+Responsibilities:
+- Discover and load modules by name
+- Run init() phases and store state
+- Handle errors gracefully
+
+### wezmacs/utils/keys.lua
+
+Helper functions for keybinding modules:
+- `mod_name()` - Convert modifier strings
+- `chord()` - Create keybinding tuples
+- `key_table()` - Create key tables with boilerplate
+- `apply_to_keys()` - Safe key insertion
+- `spawn_chord()` - Spawn command helpers
+- `pane_nav()` - Pane navigation helpers
+- `split_pane_action()` - Split pane helpers
+- `tab_action()` - Tab management helpers
+
+### wezmacs/utils/colors.lua
+
+Color manipulation utilities:
+- `parse_hex()` - Parse hex colors
+- `to_hex()` - Convert RGB to hex
+- `blend()` - Blend two colors
+- `darken()` / `lighten()` - Adjust brightness
+- `rgb_to_hsl()` / `hsl_to_rgb()` - Color space conversion
+- `rotate_hue()` - Rotate hue
+- `saturate()` - Adjust saturation
+- `invert()` / `complement()` - Advanced color ops
+
+## Design Patterns
+
+### Safe Table Appending
+
+Always check table exists before appending:
+
+```lua
+config.keys = config.keys or {}
+table.insert(config.keys, binding)
+
+config.key_tables = config.key_tables or {}
+config.key_tables.my_table = { ... }
+```
+
+### Action Callbacks
+
+For complex actions, use wezterm.action_callback:
+
+```lua
+config.keys = config.keys or {}
+table.insert(config.keys, {
+  key = "a",
+  mods = "CMD",
+  action = wezterm.action_callback(function(window, pane)
+    local dims = pane:get_dimensions()
+    -- Complex logic here
+  end),
+})
+```
+
+### Event Handlers
+
+Register events (can be called multiple times - handlers stack):
+
+```lua
+wezterm.on("event-name", function(window, pane, ...)
+  -- Handle event
+end)
+```
+
+### Conditional Logic
+
+Only add features if dependencies available:
+
+```lua
+local has_feature = wezterm.run_child_process({ "which", "tool" })
+if has_feature then
+  -- Add keybindings for tool
+end
+```
+
+## Performance Considerations
+
+- **No lazy-loading**: Modules load instantly (WezTerm startup is already fast)
+- **Stateless loading**: Each module load is independent
+- **Simple require**: No caching issues or side effects
+- **No external dependencies**: Framework uses only Lua stdlib + wezterm
+
+## Testing Modules
+
+You can test a module independently:
+
+```lua
+local wezterm = require("wezterm")
+local config = wezterm.config_builder()
+local module = require("wezmacs.modules.modulename")
+
+module.apply_to_config(config, {}, {})
+
+-- config now has module's settings applied
+```
+
+## Common Patterns
+
+### Leader Key Submenus
+
+```lua
+config.key_tables = config.key_tables or {}
+config.key_tables.my_menu = {
+  { key = "a", action = wezterm.action.SomeAction() },
+  { key = "b", action = wezterm.action.OtherAction() },
+  { key = "Escape", action = "PopKeyTable" },
+}
+
+config.keys = config.keys or {}
+table.insert(config.keys, {
+  key = "m",
+  mods = "LEADER",
+  action = wezterm.action.ActivateKeyTable({
+    name = "my_menu",
+    one_shot = false,
+    until_unknown = true,
+  }),
+})
+```
+
+### Smart Orientation
+
+Split panes based on window aspect ratio:
+
+```lua
+local function my_action(window, pane)
+  local dims = pane:get_dimensions()
+  local direction = dims.pixel_height > dims.pixel_width and "Bottom" or "Right"
+  pane:split({
+    direction = direction,
+    size = 0.5,
+    args = { "command" },
+  })
+end
+```
+
+### Toast Notifications
+
+Provide user feedback:
+
+```lua
+window:toast_notification("WezMacs", "Operation completed", nil, 3000)
+```
+
+### Working Directory Detection
+
+Get current working directory:
+
+```lua
+local cwd_uri = pane:get_current_working_dir()
+local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
+```
+
+## Extending WezMacs
+
+To add a new built-in module:
+
+1. Create `wezmacs/modules/modulename/`
+2. Write `init.lua` with metadata and phases
+3. Write `README.md` with features and dependencies
+4. Document in main README.md
+5. Update examples/
+
+To use as a user:
+
+1. Create `user/custom-modules/modulename/`
+2. Write `init.lua` with metadata and phases
+3. Write optional README.md
+4. Enable in `user/config.lua`
+
+## FAQ
+
+**Q: Can modules depend on other modules?**
+A: Not directly. Modules are independent units. Share state via flags or communicate through wezterm events.
+
+**Q: Can I override a built-in module?**
+A: Yes! Create a module with the same name in `user/custom-modules/` and it will be found first.
+
+**Q: What if I don't want to use modules?**
+A: You can still use WezTerm directly - just avoid loading wezmacs and write your own config.
+
+**Q: How do I debug module loading?**
+A: Use `log_level = "debug"` in wezmacs.setup() call in wezterm.lua. Check WezTerm logs.
+
+**Q: Can I use external Lua libraries?**
+A: Yes, but you'll need to bundle them or ensure they're in Lua's package.path.
