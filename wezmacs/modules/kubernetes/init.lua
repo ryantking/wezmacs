@@ -19,22 +19,13 @@ local M = {}
 
 M._NAME = "kubernetes"
 M._CATEGORY = "devops"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Kubernetes cluster management with k9s"
 M._EXTERNAL_DEPS = { "k9s" }
-M._FEATURE_FLAGS = {}
+M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   keybinding = "k",
   modifier = "LEADER",
 }
-
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
 
 function M.apply_to_config(wezterm_config, state)
   wezterm_config.keys = wezterm_config.keys or {}
