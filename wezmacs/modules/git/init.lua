@@ -38,30 +38,25 @@ function M.init(enabled_flags, user_config, log)
   return { config = config, flags = enabled_flags or {} }
 end
 
+local split = require("wezmacs.utils.split")
+
 -- Lazygit in smart split (auto-orientation based on window aspect ratio)
 local function lazygit_smart_split(window, pane)
-  local dims = pane:get_dimensions()
-  local direction = dims.pixel_height > dims.pixel_width and "Bottom" or "Right"
-  pane:split({
-    direction = direction,
-    size = 0.5,
-    args = { "lazygit", "-sm", "half" },
-  })
+  split.smart_split(pane, { "lazygit", "-sm", "half" })
 end
 
 -- Git diff with smart split orientation
 local function git_diff_smart_split(window, pane)
-  local dims = pane:get_dimensions()
-  local direction = dims.pixel_height > dims.pixel_width and "Bottom" or "Right"
-  pane:split({
-    direction = direction,
-    size = 0.5,
-    args = {
-      os.getenv("SHELL") or "/bin/bash",
-      "-lc",
-      "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status",
-    },
+  split.smart_split(pane, {
+    os.getenv("SHELL") or "/bin/bash",
+    "-lc",
+    "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status",
   })
+end
+
+-- Riff in smart split (if enabled)
+local function riff_smart_split(window, pane)
+  split.smart_split(pane, { "riff" })
 end
 
 -- Git diff in new window
