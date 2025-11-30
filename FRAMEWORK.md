@@ -218,43 +218,58 @@ The module loader (`wezmacs/module.lua`) handles:
 
 ## User Configuration
 
-User config goes in `user/config.lua`:
+WezMacs uses two configuration files:
+
+### modules.lua - Module Selection
+
+Located at `user/modules.lua` or `~/.config/wezmacs/modules.lua`:
 
 ```lua
 return {
-  -- Module selection
-  modules = {
-    ui = { "appearance", "tabbar" },
-    behavior = { "mouse" },
-    editing = { "keybindings" },
-    workflows = { "git", "workspace" },
-    integration = { "plugins" },
-  },
+  -- Simple string: load with defaults
+  "appearance",
+  "tabbar",
+  "window",
+  "mouse",
+  "keybindings",
 
-  -- Module flags (optional)
-  flags = {
-    ui = {
-      theme = "Horizon Dark (Gogh)",
-      font = "Iosevka Mono",
-    },
-    workflows = {
-      git = {
-        leader_key = "g",
-      },
-    },
-  },
+  -- Table with flags: enable optional features
+  { name = "git", flags = { "smartsplit" } },
+  { name = "workspace", flags = {} },
 
-  -- Final overrides (optional)
-  overrides = function(config)
-    config.font_size = 18
-  end,
+  "claude",
+  "domains",
 }
 ```
 
-**Merge Behavior:**
-- User modules override defaults (empty defaults if not specified)
-- User flags merge deeply with default flags
-- Overrides function is called last, highest priority
+### config.lua - Module Configuration
+
+Located at `user/config.lua` or `~/.config/wezmacs/config.lua`:
+
+```lua
+return {
+  -- Per-module configuration values
+  appearance = {
+    theme = "Horizon Dark (Gogh)",
+    font = "Iosevka Mono",
+    font_size = 16,
+  },
+
+  keybindings = {
+    leader_key = "Space",
+    leader_mod = "CMD",
+  },
+
+  git = {
+    leader_key = "g",
+    leader_mod = "LEADER",
+  },
+}
+```
+
+**Configuration Pattern:**
+- **modules.lua**: WHAT to load (module names + feature flags)
+- **config.lua**: HOW to configure (settings for each module)
 
 ## Custom Modules
 
