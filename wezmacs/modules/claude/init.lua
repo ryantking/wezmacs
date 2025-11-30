@@ -51,8 +51,8 @@ function M.apply_to_config(config, state)
   -- Add keybinding to activate claude menu
   config.keys = config.keys or {}
   table.insert(config.keys, {
-    key = state.leader_key,
-    mods = state.leader_mod,
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
     action = act.ActivateKeyTable({
       name = "claude",
       one_shot = false,
