@@ -41,7 +41,7 @@ function M.apply_to_config(config, state)
   config.window_close_confirmation = "NeverPrompt"
 
   -- Window padding (equal on all sides)
-  local p = state.padding
+  local p = state.config.padding
   config.window_padding = {
     left = p,
     right = p,
@@ -50,7 +50,7 @@ function M.apply_to_config(config, state)
   }
 
   -- Scrolling behavior
-  config.scrollback_lines = state.scrollback_lines
+  config.scrollback_lines = state.config.scrollback_lines
   config.enable_scroll_bar = true
 
   -- Cursor configuration
