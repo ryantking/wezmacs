@@ -4,13 +4,19 @@ Provides git workflow integration with lazygit and git diff utilities.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-flags = {
-  workflows = {
-    git = {
-      leader_key = "g",        -- Git submenu key
-      leader_mod = "LEADER"    -- Modifier for git submenu
-    }
+return {
+  { name = "git", flags = { "lazygit", "git_diff" } }
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  git = {
+    leader_key = "g",        -- Git submenu key
+    leader_mod = "LEADER"    -- Modifier for git submenu
   }
 }
 ```
