@@ -282,11 +282,19 @@ user/custom-modules/
     └── README.md         # Documentation
 ```
 
-Enable in config:
+Enable in modules.lua:
 ```lua
 return {
-  modules = {
-    custom = { "my-feature" },
+  "appearance",
+  { name = "my-feature", flags = {} },
+}
+```
+
+Configure in config.lua:
+```lua
+return {
+  ["my-feature"] = {
+    some_option = "value",
   },
 }
 ```
