@@ -41,24 +41,39 @@ function M.init(enabled_flags, user_config, log)
 end
 
 function M.apply_to_config(wezterm_config, state)
+  local split = require("wezmacs.utils.split")
+
+  -- Terminal editor in smart split
+  local function terminal_editor_split(window, pane)
+    split.smart_split(pane, { state.config.terminal_editor, "." })
+  end
+
+  -- IDE launcher
+  local function launch_ide(window, pane)
+    local cwd_uri = pane:get_current_working_dir()
+    local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
+    wezterm.background_child_process({ state.config.ide, cwd })
+  end
+
+  -- Create editors key table
+  wezterm_config.key_tables = wezterm_config.key_tables or {}
+  wezterm_config.key_tables.editors = {
+    { key = "t", action = wezterm.action_callback(terminal_editor_split) },
+    { key = "T", action = act.SpawnCommandInNewTab({ args = { state.config.terminal_editor, "." } }) },
+    { key = "i", action = wezterm.action_callback(launch_ide) },
+    { key = "Escape", action = "PopKeyTable" },
+  }
+
+  -- Add keybinding to activate editors menu
   wezterm_config.keys = wezterm_config.keys or {}
-
-  -- Helix editor launcher
   table.insert(wezterm_config.keys, {
-    key = state.config.helix_keybinding,
-    mods = state.config.modifier,
-    action = act.SpawnCommandInNewTab({ args = { "fish", "-c", "hx ." } })
-  })
-
-  -- Cursor editor launcher
-  table.insert(wezterm_config.keys, {
-    key = state.config.cursor_keybinding,
-    mods = state.config.modifier,
-    action = wezterm.action_callback(function(_, pane)
-      local cwd_uri = pane:get_current_working_dir()
-      local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
-      wezterm.background_child_process({ "cursor", cwd })
-    end)
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
+    action = act.ActivateKeyTable({
+      name = "editors",
+      one_shot = false,
+      until_unknown = true,
+    }),
   })
 end
 
