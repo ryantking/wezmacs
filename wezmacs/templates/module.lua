@@ -39,9 +39,19 @@ M._EXTERNAL_DEPS = {
   -- "git",      -- Example: tool name
 }
 
--- Define configurable flags (schema)
-M._FLAGS_SCHEMA = {
-  -- example_flag = "string or number or table",  -- description
+-- Feature flags: optional features users can enable in modules.lua
+-- Example: { name = "your-module-name", flags = { "smartsplit", "diff-viewer" } }
+M._FEATURE_FLAGS = {
+  -- "smartsplit",   -- Example: optional smart-split feature
+  -- "diff-viewer",  -- Example: optional diff viewer feature
+}
+
+-- Configuration schema: default values for all configuration options
+-- Users can override these in config.lua
+M._CONFIG_SCHEMA = {
+  -- leader_key = "y",        -- Example: default keybinding
+  -- leader_mod = "LEADER",   -- Example: default modifier
+  -- timeout = 5000,          -- Example: default timeout in ms
 }
 
 -- ============================================================================
