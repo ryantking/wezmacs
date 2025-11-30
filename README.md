@@ -2,29 +2,79 @@
 
 A modular, Doom Emacs-inspired configuration framework for WezTerm. Mix and match features to build your perfect terminal setup.
 
-## Quick Start
+## Installation
 
-1. **Clone to your WezTerm config directory:**
-   ```bash
-   git clone https://github.com/yourusername/wezmacs.git ~/.config/wezterm
-   ```
+### 1. Clone the Repository
 
-2. **Edit your configuration** (`~/.config/wezterm/user/config.lua`):
-   ```lua
-   return {
-     modules = {
-       ui = { "appearance", "tabbar", "window" },
-       behavior = { "mouse" },
-       editing = { "keybindings" },
-       workflows = { "git", "workspace" },
-       integration = { "plugins" },
-     },
-   }
-   ```
+Clone WezMacs to your WezTerm configuration directory:
 
-3. **Reload WezTerm** - configuration loads automatically
+```bash
+git clone https://github.com/yourusername/wezmacs.git ~/.config/wezterm
+```
 
-That's it! 🎉
+### 2. Initialize Your Configuration
+
+Set up the user configuration directory and default config:
+
+```bash
+cd ~/.config/wezterm
+just install
+```
+
+This creates `~/.config/wezmacs/config.lua` with a starter configuration.
+
+**Manual Setup** (if not using `just`):
+
+```bash
+mkdir -p ~/.config/wezmacs/custom-modules
+cp user/config.lua ~/.config/wezmacs/config.lua
+```
+
+### 3. Customize Your Setup
+
+Edit `~/.config/wezmacs/config.lua` to select which modules to enable:
+
+```lua
+return {
+  modules = {
+    ui = { "appearance", "tabbar", "window" },
+    behavior = { "mouse" },
+    editing = { "keybindings" },
+    workflows = { "git", "workspace" },
+    integration = { "plugins" },
+  },
+  flags = {
+    ui = { theme = "Horizon Dark (Gogh)" },
+  },
+}
+```
+
+### 4. Reload WezTerm
+
+WezTerm automatically reloads your configuration. You can manually reload with **Cmd+Option+R** on macOS (or your configured reload key).
+
+### Updating WezMacs
+
+To update the framework to the latest version:
+
+```bash
+cd ~/.config/wezterm
+git pull origin main
+just update
+```
+
+Your `~/.config/wezmacs/config.lua` configuration is preserved.
+
+### Uninstalling WezMacs
+
+To remove WezMacs and restore your original configuration:
+
+```bash
+cd ~/.config/wezterm
+just uninstall
+```
+
+Your user configuration at `~/.config/wezmacs/` is preserved for reference.
 
 ## What's Inside
 
