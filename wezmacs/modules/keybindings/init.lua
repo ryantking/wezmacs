@@ -122,14 +122,6 @@ function M.apply_to_config(config, state)
       },
     }),
   })
-  table.insert(config.keys, {
-    key = "e",
-    mods = "LEADER",
-    action = act.CharSelect({
-      copy_on_select = true,
-      copy_to = "ClipboardAndPrimarySelection",
-    }),
-  })
 
   -- Scrolling & Misc
   table.insert(config.keys, { key = "UpArrow", mods = "SHIFT", action = act.ScrollToPrompt(-1) })
