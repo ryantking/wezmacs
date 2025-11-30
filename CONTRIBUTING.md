@@ -337,22 +337,32 @@ Every module README should include (in order):
 
 ### Local Testing
 
-1. Create `user/config.lua`:
+1. Create `user/modules.lua`:
    ```lua
    return {
-     modules = {
-       category = { "your-module-name" },
+     "appearance",
+     { name = "your-module-name", flags = { "feature1" } },
+   }
+   ```
+
+2. Create `user/config.lua`:
+   ```lua
+   return {
+     ["your-module-name"] = {
+       leader_key = "y",
+       leader_mod = "LEADER",
      },
    }
    ```
 
-2. Reload WezTerm configuration
+3. Reload WezTerm configuration
 
-3. Test all features:
+4. Test all features:
    - Try keybindings
    - Check logs for errors
    - Verify colors/styling applied
    - Test with/without flags
+   - Test with default config vs custom config
 
 ### Syntax Validation
 
