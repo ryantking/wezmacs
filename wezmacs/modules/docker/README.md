@@ -10,13 +10,19 @@ Docker container and image management through lazydocker terminal UI.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-config = {
-  devops = {
-    docker = {
-      keybinding = "D",      -- Key to launch lazydocker (uppercase D)
-      modifier = "LEADER",   -- Modifier key
-    }
+return {
+  "docker"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  docker = {
+    keybinding = "D",      -- Key to launch lazydocker (uppercase D)
+    modifier = "LEADER",   -- Modifier key
   }
 }
 ```
