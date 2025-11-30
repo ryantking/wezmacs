@@ -11,14 +11,20 @@ File management and browsing through yazi terminal file manager.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-config = {
-  tools = {
-    file_manager = {
-      keybinding = "y",           -- Key to launch yazi
-      sudo_keybinding = "Y",      -- Key to launch yazi with sudo
-      modifier = "LEADER",        -- Modifier key
-    }
+return {
+  "file-manager"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  file_manager = {
+    keybinding = "y",           -- Key to launch yazi
+    sudo_keybinding = "Y",      -- Key to launch yazi with sudo
+    modifier = "LEADER",        -- Modifier key
   }
 }
 ```
