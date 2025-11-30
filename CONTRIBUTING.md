@@ -419,19 +419,22 @@ Brief description of what this module does.
 - Feature 3
 
 ## Configuration Example
-```lua
-modules = {
-  category = { "module-name" },
-},
 
-flags = {
-  category = {
-    module-name = {
-      option = "value",
-    }
-  }
+Enable in `~/.config/wezmacs/modules.lua`:
+```lua
+return {
+  "appearance",
+  { name = "module-name", flags = { "feature1" } },
 }
 ```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  ["module-name"] = {
+    option = "value",
+  },
+}
 ```
 
 ## External Dependencies
