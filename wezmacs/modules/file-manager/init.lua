@@ -39,20 +39,38 @@ function M.init(enabled_flags, user_config, log)
 end
 
 function M.apply_to_config(wezterm_config, state)
+  local split = require("wezmacs.utils.split")
+
+  -- File manager in smart split
+  local function file_manager_split(window, pane)
+    split.smart_split(pane, { state.config.file_manager })
+  end
+
+  -- File manager with sudo in smart split
+  local function file_manager_sudo_split(window, pane)
+    split.smart_split(pane, { "sudo", state.config.file_manager, "/" })
+  end
+
+  -- Create file-manager key table
+  wezterm_config.key_tables = wezterm_config.key_tables or {}
+  wezterm_config.key_tables["file-manager"] = {
+    { key = "f", action = wezterm.action_callback(file_manager_split) },
+    { key = "F", action = act.SpawnCommandInNewTab({ args = { state.config.file_manager } }) },
+    { key = "s", action = wezterm.action_callback(file_manager_sudo_split) },
+    { key = "S", action = act.SpawnCommandInNewTab({ args = { "sudo", state.config.file_manager, "/" } }) },
+    { key = "Escape", action = "PopKeyTable" },
+  }
+
+  -- Add keybinding to activate file-manager menu
   wezterm_config.keys = wezterm_config.keys or {}
-
-  -- Normal yazi
   table.insert(wezterm_config.keys, {
-    key = state.config.keybinding,
-    mods = state.config.modifier,
-    action = act.SpawnCommandInNewTab({ args = { "yazi" } })
-  })
-
-  -- Sudo yazi (for system files)
-  table.insert(wezterm_config.keys, {
-    key = state.config.sudo_keybinding,
-    mods = state.config.modifier,
-    action = act.SpawnCommandInNewTab({ args = { "sudo", "yazi", "/" } })
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
+    action = act.ActivateKeyTable({
+      name = "file-manager",
+      one_shot = false,
+      until_unknown = true,
+    }),
   })
 end
 
