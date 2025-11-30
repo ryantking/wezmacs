@@ -251,14 +251,20 @@ config.key_tables.my_table = { ... }
 Gracefully degrade if tools aren't available:
 
 ```lua
-function M.apply_to_config(config, flags, state)
+function M.apply_to_config(config, state)
   local has_lazygit = wezterm.run_child_process({ "which", "lazygit" })
   if not has_lazygit then
-    log("warn", "lazygit not found, skipping git shortcuts")
+    wezterm.log_warn("lazygit not found, skipping git shortcuts")
     return
   end
 
-  -- Add git keybindings
+  -- Add git keybindings using state.config
+  config.keys = config.keys or {}
+  table.insert(config.keys, {
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
+    action = wezterm.action.ActivateKeyTable({ name = "git" }),
+  })
 end
 ```
 
