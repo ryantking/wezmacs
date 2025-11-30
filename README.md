@@ -115,6 +115,12 @@ WezMacs provides a collection of carefully crafted modules organized by concern:
 - **git**: Lazygit integration with smart-split
 - **workspace**: Workspace switching with fuzzy search
 - **claude**: Claude Code integration
+- **kubernetes**: Kubernetes management (k9s)
+- **docker**: Docker management (lazydocker)
+- **file-manager**: File manager integration (yazi)
+- **media**: Media player integration (spotify_player)
+- **editors**: Editor launchers (helix, cursor)
+- **system-monitor**: System monitoring (btm)
 
 ## Module Documentation
 
