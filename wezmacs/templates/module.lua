@@ -57,25 +57,35 @@ M._CONFIG_SCHEMA = {
 -- ============================================================================
 -- INIT PHASE (Optional)
 -- ============================================================================
--- Called during framework initialization to set up module state.
+-- Called during framework initialization to merge user config with defaults.
 -- Use this to:
---   - Validate configuration flags
---   - Perform early setup that might fail
---   - Compute derived values from flags
+--   - Merge user configuration with _CONFIG_SCHEMA defaults
+--   - Validate configuration values
+--   - Store enabled feature flags for use in apply_to_config
 --
--- Return a table with state that will be passed to apply_to_config.
+-- Parameters:
+--   enabled_flags: Array of feature flags from modules.lua
+--                  Example: {"smartsplit", "diff-viewer"}
+--   user_config: Table of configuration from config.lua
+--                Example: {leader_key = "g", timeout = 3000}
+--   log: Logging function for info/debug messages
+--
+-- Return a state table containing merged config and flags.
 -- If you don't need this phase, simply delete this function.
 
-function M.init(flags, log)
-  -- flags: table of configuration for this module category
-  -- log: function(msg) for logging info/debug messages
-
+function M.init(enabled_flags, user_config, log)
   log("Initializing " .. M._NAME .. " module")
 
-  -- Example: validate and store flags
+  -- Standard pattern: merge user config with schema defaults
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+
+  -- Return state with merged config and enabled flags
   return {
-    -- Your computed state here
-    -- e.g., leader_key = flags.leader_key or "Space",
+    config = config,
+    flags = enabled_flags or {},
   }
 end
 
