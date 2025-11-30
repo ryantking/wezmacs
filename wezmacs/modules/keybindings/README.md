@@ -4,13 +4,19 @@ Core keyboard bindings for pane and tab management, selection modes, and utiliti
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-flags = {
-  editing = {
-    keybindings = {
-      leader_key = "Space",   -- Leader key
-      leader_mod = "CMD"      -- Leader modifier
-    }
+return {
+  "keybindings"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  keybindings = {
+    leader_key = "Space",   -- Leader key
+    leader_mod = "CMD"      -- Leader modifier
   }
 }
 ```
