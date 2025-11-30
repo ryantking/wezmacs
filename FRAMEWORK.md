@@ -27,6 +27,7 @@ wezmacs/modules/modulename/
 
 **Module Structure:**
 ```lua
+local wezterm = require("wezterm")
 local M = {}
 
 -- Metadata (for discovery and documentation)
@@ -35,20 +36,41 @@ M._CATEGORY = "category"  -- For docs only
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "What this does"
 M._EXTERNAL_DEPS = { "tool1", "tool2" }
-M._FLAGS_SCHEMA = {
-  option_name = "type description",
+
+-- Feature flags (optional features users can enable)
+M._FEATURE_FLAGS = { "smartsplit", "diff-viewer" }
+
+-- Configuration schema with defaults
+M._CONFIG_SCHEMA = {
+  leader_key = "g",
+  leader_mod = "LEADER",
 }
 
--- Init phase (optional) - validation and early setup
-function M.init(flags, log)
-  return {
-    -- Computed state for apply_to_config
-  }
+-- Init phase (optional) - merge user config with defaults
+function M.init(enabled_flags, user_config, log)
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+  return { config = config, flags = enabled_flags or {} }
 end
 
--- Apply phase (required) - main configuration
-function M.apply_to_config(config, flags, state)
-  -- Modify config object
+-- Apply phase (required) - modify WezTerm config
+function M.apply_to_config(config, state)
+  -- Check feature flags
+  for _, flag in ipairs(state.flags) do
+    if flag == "smartsplit" then
+      -- Enable smart-split feature
+    end
+  end
+
+  -- Use state.config for configuration values
+  config.keys = config.keys or {}
+  table.insert(config.keys, {
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
+    action = wezterm.action.ActivateKeyTable({ name = "modulename" }),
+  })
 end
 
 return M
