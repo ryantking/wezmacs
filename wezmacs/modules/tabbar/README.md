@@ -13,13 +13,14 @@ Provides custom tab bar with process icons, decorative separators, and smart tit
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-flags = {
-  ui = {
-    tabbar = {}  -- No configurable flags currently
-  }
+return {
+  "tabbar"
 }
 ```
+
+No additional configuration required in `~/.config/wezmacs/config.lua`.
 
 ## Supported Icons
 
