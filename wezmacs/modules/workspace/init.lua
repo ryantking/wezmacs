@@ -23,22 +23,13 @@ local M = {}
 
 M._NAME = "workspace"
 M._CATEGORY = "workflows"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Workspace switching and management"
 M._EXTERNAL_DEPS = { "smart_workspace_switcher (plugin)" }
-M._FEATURE_FLAGS = {}
+M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   leader_key = "s",
   leader_mod = "LEADER",
 }
-
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
 
 function M.apply_to_config(config, state)
   -- Plugin setup
