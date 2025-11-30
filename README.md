@@ -216,6 +216,7 @@ Create a new module in `~/.config/wezmacs/custom-modules/`:
 
 ```lua
 -- ~/.config/wezmacs/custom-modules/my-module/init.lua
+local wezterm = require("wezterm")
 local M = {}
 
 M._NAME = "my-module"
@@ -223,27 +224,49 @@ M._CATEGORY = "custom"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "My custom module"
 M._EXTERNAL_DEPS = {}
-M._FLAGS_SCHEMA = {}
 
-function M.init(flags, log)
-  return {}  -- Module state
+-- Feature flags (optional)
+M._FEATURE_FLAGS = {}
+
+-- Configuration schema with defaults
+M._CONFIG_SCHEMA = {
+  some_option = "default_value",
+}
+
+-- Init phase: merge user config with defaults
+function M.init(enabled_flags, user_config, log)
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+  return { config = config, flags = enabled_flags or {} }
 end
 
-function M.apply_to_config(config, flags, state)
-  -- Apply your configuration here
+-- Apply phase: modify WezTerm config
+function M.apply_to_config(config, state)
   config.keys = config.keys or {}
-  -- ... add keybindings, event handlers, etc
+  -- Use state.config.some_option for configuration
+  -- Check state.flags for enabled feature flags
 end
 
 return M
 ```
 
-Enable it in `~/.config/wezmacs/config.lua`:
+Enable it in `~/.config/wezmacs/modules.lua`:
 
 ```lua
 return {
-  modules = {
-    custom = { "my-module" },
+  "appearance",
+  { name = "my-module", flags = {} },
+}
+```
+
+Configure it in `~/.config/wezmacs/config.lua`:
+
+```lua
+return {
+  ["my-module"] = {
+    some_option = "custom_value",
   },
 }
 ```
