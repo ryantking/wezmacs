@@ -97,28 +97,43 @@ end
 --
 -- Parameters:
 --   config: WezTerm config object (from config_builder())
---   flags: Table of configuration flags for this module's category
 --   state: State returned from init() phase (or {} if no init)
+--          state.config contains merged configuration values
+--          state.flags contains enabled feature flags
 
-function M.apply_to_config(config, flags, state)
-  -- Example: Apply a keybinding
+function M.apply_to_config(config, state)
+  -- Example: Check for enabled feature flags
+  -- for _, flag in ipairs(state.flags) do
+  --   if flag == "smartsplit" then
+  --     -- Enable smart-split functionality
+  --   elseif flag == "diff-viewer" then
+  --     -- Enable diff viewer functionality
+  --   end
+  -- end
+
+  -- Example: Apply a keybinding using configuration values
   -- config.keys = config.keys or {}
   -- table.insert(config.keys, {
-  --   key = "s",
-  --   mods = "CMD",
-  --   action = wezterm.action.SpawnTab("CurrentPaneDomain"),
+  --   key = state.config.leader_key,
+  --   mods = state.config.leader_mod,
+  --   action = wezterm.action.ActivateKeyTable({
+  --     name = "your-module",
+  --     one_shot = false,
+  --     until_unknown = true,
+  --   }),
   -- })
 
   -- Example: Create a key table
   -- config.key_tables = config.key_tables or {}
-  -- config.key_tables.example = {
-  --   { key = "a", action = wezterm.action.CloseCurrentTab({ confirm = false }) },
+  -- config.key_tables["your-module"] = {
+  --   { key = "a", action = wezterm.action.SomeAction() },
+  --   { key = "b", action = wezterm.action.OtherAction() },
   --   { key = "Escape", action = "PopKeyTable" },
   -- }
 
   -- Example: Register an event handler
-  -- wezterm.on("example-event", function(window, pane)
-  --   window:toast_notification("WezTerm", "Example event fired!", nil, 3000)
+  -- wezterm.on("your-module-event", function(window, pane)
+  --   window:toast_notification("WezMacs", "Event fired!", nil, 3000)
   -- end)
 end
 
