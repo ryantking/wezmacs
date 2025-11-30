@@ -131,6 +131,35 @@ status:
         echo "Status: Run 'just install' to set up"; \
     fi
 
+# Test WezMacs with current branch's config
+test:
+    #!/bin/bash
+    set -e
+
+    # Create temporary test config directory
+    TEST_CONFIG_DIR=$(mktemp -d)
+    trap "rm -rf $TEST_CONFIG_DIR" EXIT
+
+    # Copy framework files to temp location
+    mkdir -p "$TEST_CONFIG_DIR/wezterm"
+    cp -r wezmacs "$TEST_CONFIG_DIR/wezterm/"
+    cp wezterm.lua "$TEST_CONFIG_DIR/wezterm/"
+
+    # Create test user config directory and copy templates
+    mkdir -p "$TEST_CONFIG_DIR/wezmacs/custom-modules"
+    cp user/modules.lua "$TEST_CONFIG_DIR/wezmacs/modules.lua"
+    cp user/config.lua "$TEST_CONFIG_DIR/wezmacs/config.lua"
+
+    echo "Testing WezMacs with current branch configuration..."
+    echo "Config directory: $TEST_CONFIG_DIR"
+    echo "Press Ctrl+D or type 'exit' to close"
+    echo ""
+
+    # Run wezterm with test config
+    WEZTERM_CONFIG_DIR="$TEST_CONFIG_DIR/wezterm" \
+    XDG_CONFIG_HOME="$TEST_CONFIG_DIR" \
+    wezterm
+
 # Show documentation
 docs:
     @echo "WezMacs Documentation"
