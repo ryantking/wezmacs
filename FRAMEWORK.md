@@ -80,22 +80,29 @@ return M
 
 **Phase 1: Init**
 - Called for each module in order
-- Receives user-provided flags for that module's category
-- Validates flags, performs early setup
-- Returns state that will be passed to apply_to_config
-- Optional - if not defined, skipped
+- Receives three parameters:
+  - `enabled_flags`: Array of feature flags from modules.lua (e.g., {"smartsplit"})
+  - `user_config`: Table of configuration values from config.lua (e.g., {leader_key = "g"})
+  - `log`: Logging function
+- Merges user config with defaults from _CONFIG_SCHEMA
+- Returns state object containing merged config and flags
+- Optional - if not defined, empty state passed to apply
 
 **Phase 2: Apply**
 - Called after all init phases complete
-- Receives wezterm config object, flags, and state from init
+- Receives two parameters:
+  - `config`: WezTerm config object (from config_builder())
+  - `state`: State object returned from init phase
+- Checks state.flags to conditionally enable features
+- Uses state.config for configuration values
 - Modifies config object (add keybindings, set colors, register events, etc)
 - Required - every module must define this
 
 **Why Two Phases?**
 - Prevents circular dependencies
 - Ensures all modules can see each other's setup
-- Allows modules to generate derived values from flags
-- Matches Lua and WezTerm best practices
+- Allows modules to merge and validate configuration before use
+- Separates configuration logic from application logic
 
 ### Categories (Documentation Only)
 
