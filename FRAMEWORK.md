@@ -158,55 +158,66 @@ Every module should export these fields (for documentation and discovery):
 ```lua
 M._NAME          -- string: module name (must match directory name)
 M._CATEGORY      -- string: ui|behavior|editing|integration|workflows
-M._VERSION       -- string: semantic version (e.g., "0.1.0")
 M._DESCRIPTION   -- string: one-line description
 M._EXTERNAL_DEPS -- table: list of external tools/dependencies
-M._FEATURE_FLAGS -- table: array of optional feature flags (e.g., {"smartsplit", "diff-viewer"})
+M._FEATURES      -- table: map of feature_name = true or { config_schema = {}, deps = {} }
 M._CONFIG_SCHEMA -- table: map of config_key = default_value
-```
-
-### Init Function (Optional)
-
-```lua
-function M.init(enabled_flags, user_config, log)
-  -- enabled_flags: array of flags from modules.lua (e.g., {"smartsplit"})
-  -- user_config: table of configuration from config.lua (e.g., {leader_key = "g"})
-  -- log: function(msg) for logging (INFO level)
-
-  -- Merge user config with defaults
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-
-  -- Return state containing config and flags
-  return { config = config, flags = enabled_flags or {} }
-end
 ```
 
 ### Apply Function (Required)
 
 ```lua
-function M.apply_to_config(config, state)
+function M.apply_to_config(config)
   -- config: WezTerm config object (from config_builder())
-  -- state: table returned from init() phase (or {} if no init)
-  --        state.config contains merged configuration values
-  --        state.flags contains enabled feature flags
+
+  -- Get merged configuration from framework
+  local module_config = wezmacs.get_config("modulename")
+  local enabled_flags = wezmacs.get_enabled_flags("modulename")
 
   -- Check for enabled feature flags
-  for _, flag in ipairs(state.flags) do
-    if flag == "smartsplit" then
-      -- Enable smart-split functionality
-    end
+  if enabled_flags.smartsplit then
+    -- Enable smart-split functionality
   end
 
-  -- Use configuration values from state.config
+  -- Use configuration values from module_config
   config.keys = config.keys or {}
   table.insert(config.keys, {
-    key = state.config.leader_key,
-    mods = state.config.leader_mod,
+    key = module_config.leader_key,
+    mods = module_config.leader_mod,
     action = wezterm.action.SomeAction(),
   })
+
+  -- Feature-specific config is at config.features.feature_name
+  if enabled_flags.advanced then
+    local advanced_config = config.features.advanced
+    -- Use advanced_config for feature-specific settings
+  end
+end
+```
+
+### Global WezMacs API
+
+The framework provides a global `wezmacs` table with these functions:
+
+```lua
+-- Get merged configuration for a module
+-- Returns table with values from config.lua merged with _CONFIG_SCHEMA defaults
+local module_config = wezmacs.get_config("modulename")
+
+-- Get enabled flags for a module
+-- Returns table with flag_name = true for each enabled flag
+local enabled_flags = wezmacs.get_enabled_flags("modulename")
+
+-- Example usage in a module:
+function M.apply_to_config(config)
+  local cfg = wezmacs.get_config("git")
+  local flags = wezmacs.get_enabled_flags("git")
+
+  if flags.smartsplit then
+    -- Use smartsplit feature
+  end
+
+  -- Use cfg.leader_key, cfg.leader_mod, etc.
 end
 ```
 
