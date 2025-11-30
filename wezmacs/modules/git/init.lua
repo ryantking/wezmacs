@@ -69,6 +69,15 @@ local git_diff_new_window = act.SpawnCommandInNewWindow({
 })
 
 function M.apply_to_config(config, state)
+  -- Check if riff flag is enabled
+  local riff_enabled = false
+  for _, flag in ipairs(state.flags) do
+    if flag == "riff" then
+      riff_enabled = true
+      break
+    end
+  end
+
   -- Create git key table
   config.key_tables = config.key_tables or {}
   config.key_tables.git = {
@@ -78,6 +87,11 @@ function M.apply_to_config(config, state)
     { key = "D", action = git_diff_new_window },
     { key = "Escape", action = "PopKeyTable" },
   }
+
+  -- Add riff binding if enabled
+  if riff_enabled then
+    table.insert(config.key_tables.git, { key = "r", action = wezterm.action_callback(riff_smart_split) })
+  end
 
   -- Add keybinding to activate git menu
   config.keys = config.keys or {}
