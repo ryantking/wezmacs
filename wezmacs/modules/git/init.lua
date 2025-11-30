@@ -19,24 +19,19 @@ local M = {}
 
 M._NAME = "git"
 M._CATEGORY = "workflows"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Git workflow integration (lazygit, diff, etc)"
-M._EXTERNAL_DEPS = { "lazygit", "git", "delta", "riff" }
-M._FEATURE_FLAGS = {
-  riff = false,
+M._EXTERNAL_DEPS = { "lazygit", "git", "delta" }
+M._FEATURES = {
+  {
+    name = "riff",
+    config_schema = {},
+    deps = { "riff" },
+  },
 }
 M._CONFIG_SCHEMA = {
   leader_key = "g",
   leader_mod = "LEADER",
 }
-
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
 
 local split = require("wezmacs.utils.split")
 
