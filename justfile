@@ -63,16 +63,18 @@ install:
     @cp -r wezmacs ~/.config/wezterm/
     @cp wezterm.lua ~/.config/wezterm/
     @mkdir -p ~/.config/wezmacs/custom-modules
+    @cp user/modules.lua ~/.config/wezmacs/modules.lua
     @cp user/config.lua ~/.config/wezmacs/config.lua
     @echo "✓ WezMacs installed"
     @echo ""
     @echo "Installation complete!"
     @echo ""
     @echo "Next steps:"
-    @echo "1. Edit ~/.config/wezmacs/config.lua to select modules"
-    @echo "2. Reload WezTerm (Cmd+Option+R on macOS)"
+    @echo "1. Edit ~/.config/wezmacs/modules.lua to select modules"
+    @echo "2. Edit ~/.config/wezmacs/config.lua to configure modules"
+    @echo "3. Reload WezTerm (Cmd+Option+R on macOS)"
     @echo ""
-    @echo "Configuration location: ~/.config/wezmacs/config.lua"
+    @echo "Configuration location: ~/.config/wezmacs/"
     @echo "Framework location: ~/.config/wezterm/"
 
 # Update existing WezMacs installation
