@@ -26,19 +26,21 @@ M._CATEGORY = "editing"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Core keyboard bindings for pane and tab management"
 M._EXTERNAL_DEPS = {}
-M._FLAGS_SCHEMA = {
-  leader_key = "string (default: Space)",
-  leader_mod = "string (default: CMD)",
+M._FEATURE_FLAGS = {}
+M._CONFIG_SCHEMA = {
+  leader_key = "Space",
+  leader_mod = "CMD",
 }
 
-function M.init(flags, log)
-  return {
-    leader_key = flags.leader_key or "Space",
-    leader_mod = flags.leader_mod or "CMD",
-  }
+function M.init(enabled_flags, user_config, log)
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+  return { config = config, flags = enabled_flags or {} }
 end
 
-function M.apply_to_config(config, flags, state)
+function M.apply_to_config(config, state)
   config.disable_default_key_bindings = false
   config.leader = { key = state.leader_key, mods = state.leader_mod, timeout_milliseconds = 5000 }
 
