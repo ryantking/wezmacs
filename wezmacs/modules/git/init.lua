@@ -71,7 +71,7 @@ local git_diff_new_window = act.SpawnCommandInNewWindow({
   },
 })
 
-function M.apply_to_config(config, flags, state)
+function M.apply_to_config(config, state)
   -- Create git key table
   config.key_tables = config.key_tables or {}
   config.key_tables.git = {
@@ -85,8 +85,8 @@ function M.apply_to_config(config, flags, state)
   -- Add keybinding to activate git menu
   config.keys = config.keys or {}
   table.insert(config.keys, {
-    key = state.leader_key,
-    mods = state.leader_mod,
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
     action = act.ActivateKeyTable({
       name = "git",
       one_shot = false,
