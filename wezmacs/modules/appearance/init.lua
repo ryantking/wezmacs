@@ -38,12 +38,15 @@ M._CONFIG_SCHEMA = {
   window_decorations = "RESIZE",
 }
 
-function M.apply_to_config(config, state)
+function M.apply_to_config(config)
+  local mod_config = wezmacs.get_config(M._NAME)
+  local enabled_flags = wezmacs.get_enabled_flags(M._NAME)
+
   -- Only apply theme if configured
-  if state.config.theme then
-    local theme = wezterm.get_builtin_color_schemes()[state.config.theme]
+  if mod_config.theme then
+    local theme = wezterm.get_builtin_color_schemes()[mod_config.theme]
     if not theme then
-      wezterm.log_error("WezMacs: Color scheme '" .. state.config.theme .. "' not found, using default")
+      wezterm.log_error("WezMacs: Color scheme '" .. mod_config.theme .. "' not found, using default")
       theme = wezterm.get_builtin_color_schemes()["Horizon Dark (Gogh)"]
     end
 
@@ -86,30 +89,31 @@ function M.apply_to_config(config, state)
   end
 
   -- Only apply font if configured
-  if state.config.font then
+  if mod_config.font then
     config.font = wezterm.font_with_fallback({
-      { family = state.config.font, weight = "Medium" },
+      { family = mod_config.font, weight = "Medium" },
     })
     config.warn_about_missing_glyphs = false
   end
 
   -- Only apply font_size if configured
-  if state.config.font_size then
-    config.font_size = state.config.font_size
+  if mod_config.font_size then
+    config.font_size = mod_config.font_size
   end
 
-  -- Apply ligatures only if enable_ligatures flag is true
+  -- Apply ligatures only if ligatures flag is enabled
   local enable_ligatures = false
-  for _, flag in ipairs(state.flags) do
-    if flag == "enable_ligatures" then
+  for _, flag in ipairs(enabled_flags) do
+    if flag == "ligatures" then
       enable_ligatures = true
       break
     end
   end
 
   if enable_ligatures then
-    if state.config.harfbuzz_features then
-      config.harfbuzz_features = state.config.harfbuzz_features
+    local ligatures_config = mod_config.features and mod_config.features.ligatures
+    if ligatures_config and ligatures_config.harfbuzz_features then
+      config.harfbuzz_features = ligatures_config.harfbuzz_features
     else
       -- Default ligatures + stylistic sets
       config.harfbuzz_features = {
@@ -129,61 +133,61 @@ function M.apply_to_config(config, state)
   end
 
   -- Window decorations
-  if state.config.window_decorations then
-    config.window_decorations = state.config.window_decorations
+  if mod_config.window_decorations then
+    config.window_decorations = mod_config.window_decorations
   end
 
   -- Font rules for different text styles (only if font is configured)
-  if state.config.font then
+  if mod_config.font then
     config.font_rules = {
       {
         intensity = "Normal",
         italic = false,
         font = wezterm.font_with_fallback({
-          { family = state.config.font, weight = "Medium" },
+          { family = mod_config.font, weight = "Medium" },
         }),
       },
       {
         intensity = "Bold",
         italic = false,
         font = wezterm.font_with_fallback({
-          { family = state.config.font, weight = "ExtraBold" },
+          { family = mod_config.font, weight = "ExtraBold" },
         }),
       },
       {
         intensity = "Half",
         italic = false,
         font = wezterm.font_with_fallback({
-          { family = state.config.font, weight = "Thin" },
+          { family = mod_config.font, weight = "Thin" },
         }),
       },
       {
         intensity = "Normal",
         italic = true,
         font = wezterm.font_with_fallback({
-          { family = state.config.font, weight = "Regular", style = "Italic" },
+          { family = mod_config.font, weight = "Regular", style = "Italic" },
         }),
       },
       {
         intensity = "Bold",
         italic = true,
         font = wezterm.font_with_fallback({
-          { family = state.config.font, weight = "Bold", style = "Italic" },
+          { family = mod_config.font, weight = "Bold", style = "Italic" },
         }),
       },
       {
         intensity = "Half",
         italic = true,
         font = wezterm.font_with_fallback({
-          { family = state.config.font, weight = "Thin", style = "Italic" },
+          { family = mod_config.font, weight = "Thin", style = "Italic" },
         }),
       },
     }
   end
 
   -- UI fonts (for UI elements) - only if theme is configured
-  if state.config.theme then
-    local theme = wezterm.get_builtin_color_schemes()[state.config.theme]
+  if mod_config.theme then
+    local theme = wezterm.get_builtin_color_schemes()[mod_config.theme]
     if theme then
       local ui_font = wezterm.font({ family = "Iosevka" })
       local ui_font_size = 14
