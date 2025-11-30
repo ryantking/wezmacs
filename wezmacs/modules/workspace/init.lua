@@ -76,31 +76,6 @@ function M.apply_to_config(config, state)
       window:set_right_status(window:active_workspace())
     end),
   })
-
-  -- Claude workspaces (only if claudectl available)
-  local has_claudectl = wezterm.run_child_process({ "which", "claudectl" })
-  if has_claudectl then
-    -- Create claudectl workspace
-    table.insert(config.keys, {
-      key = "C",
-      mods = state.config.leader_mod,
-      action = wezterm.action_callback(create_claudectl_workspace),
-    })
-
-    -- List and select claudectl workspace
-    table.insert(config.keys, {
-      key = "c",
-      mods = state.config.leader_mod,
-      action = wezterm.action_callback(list_claudectl_sessions),
-    })
-
-    -- Delete claudectl workspace (using 'd' would conflict, use Delete key or similar)
-    -- For now, skipping to avoid conflicts
-  end
-
-  -- Domain management (optional)
-  table.insert(config.keys, { key = "a", mods = state.config.leader_mod, action = act.AttachDomain("unix") })
-  table.insert(config.keys, { key = "d", mods = state.config.leader_mod, action = act.DetachDomain({ DomainName = "unix" }) })
 end
 
 return M
