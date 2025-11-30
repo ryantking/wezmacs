@@ -5,9 +5,11 @@
   Follow the structure and patterns shown here for consistency.
 
   Module files should be placed in:
-    wezmacs/categories/[category]/[module-name]/init.lua
+    wezmacs/modules/[module-name]/init.lua
 
-  Where [category] is one of:
+  Where [module-name] is a kebab-case name describing the module.
+
+  Categories (for documentation only):
     - ui: Visual styling, appearance, tabs
     - behavior: User interactions, mouse, scrolling
     - editing: Keybindings, selection, input
@@ -15,7 +17,7 @@
     - workflows: Feature-specific workflows (git, workspace, etc)
 
   Or in custom locations:
-    user/custom-modules/[module-name]/init.lua
+    ~/.config/wezmacs/custom-modules/[module-name]/init.lua
 ]]
 
 local wezterm = require("wezterm")
