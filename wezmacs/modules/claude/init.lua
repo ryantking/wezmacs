@@ -23,22 +23,13 @@ local M = {}
 
 M._NAME = "claude"
 M._CATEGORY = "workflows"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Claude Code integration and workspace management"
 M._EXTERNAL_DEPS = { "claude (CLI)", "claudectl" }
-M._FEATURE_FLAGS = {}
+M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   leader_key = "c",
   leader_mod = "LEADER",
 }
-
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
 
 -- Create and open claudectl workspace
 local function create_claudectl_workspace(window, pane)
