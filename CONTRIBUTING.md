@@ -142,10 +142,16 @@ brew install tool1 tool2
 Test locally before submitting:
 
 ```bash
-# Edit user/config.lua to include your module
+# Edit user/modules.lua to include your module
 return {
-  modules = {
-    category = { "your-module-name" },
+  "appearance",
+  { name = "your-module-name", flags = {} },
+}
+
+# Edit user/config.lua to configure your module
+return {
+  ["your-module-name"] = {
+    leader_key = "y",
   },
 }
 
