@@ -19,22 +19,13 @@ local M = {}
 
 M._NAME = "system-monitor"
 M._CATEGORY = "tools"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "System monitoring with bottom"
 M._EXTERNAL_DEPS = { "bottom (btm)" }
-M._FEATURE_FLAGS = {}
+M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   keybinding = "h",
   modifier = "LEADER",
 }
-
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
 
 function M.apply_to_config(wezterm_config, state)
   wezterm_config.keys = wezterm_config.keys or {}
