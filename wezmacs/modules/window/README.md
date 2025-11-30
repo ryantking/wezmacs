@@ -13,13 +13,19 @@ Configures WezTerm window behavior, padding, scrolling, and cursor appearance.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-flags = {
-  ui = {
-    window = {
-      padding = 16,           -- Pixels of padding (all sides)
-      scrollback_lines = 5000 -- Lines to keep in buffer
-    }
+return {
+  "window"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  window = {
+    padding = 16,           -- Pixels of padding (all sides)
+    scrollback_lines = 5000 -- Lines to keep in buffer
   }
 }
 ```
