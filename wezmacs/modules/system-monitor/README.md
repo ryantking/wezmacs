@@ -11,13 +11,19 @@ System resource monitoring through bottom terminal UI.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-config = {
-  tools = {
-    system_monitor = {
-      keybinding = "h",      -- Key to launch bottom
-      modifier = "LEADER",   -- Modifier key
-    }
+return {
+  "system-monitor"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  system_monitor = {
+    keybinding = "h",      -- Key to launch bottom
+    modifier = "LEADER",   -- Modifier key
   }
 }
 ```
