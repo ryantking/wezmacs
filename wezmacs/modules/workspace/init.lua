@@ -26,16 +26,18 @@ M._CATEGORY = "workflows"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Workspace switching and management"
 M._EXTERNAL_DEPS = { "smart_workspace_switcher (plugin)" }
-M._FLAGS_SCHEMA = {
-  leader_key = "string (default: s)",
-  leader_mod = "string (default: LEADER)",
+M._FEATURE_FLAGS = {}
+M._CONFIG_SCHEMA = {
+  leader_key = "s",
+  leader_mod = "LEADER",
 }
 
-function M.init(flags, log)
-  return {
-    leader_key = flags.leader_key or "s",
-    leader_mod = flags.leader_mod or "LEADER",
-  }
+function M.init(enabled_flags, user_config, log)
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+  return { config = config, flags = enabled_flags or {} }
 end
 
 -- Create and open claudectl workspace
