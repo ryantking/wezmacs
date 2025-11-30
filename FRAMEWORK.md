@@ -33,12 +33,20 @@ local M = {}
 -- Metadata (for discovery and documentation)
 M._NAME = "modulename"
 M._CATEGORY = "category"  -- For docs only
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "What this does"
 M._EXTERNAL_DEPS = { "tool1", "tool2" }
 
 -- Feature flags (optional features users can enable)
-M._FEATURE_FLAGS = { "smartsplit", "diff-viewer" }
+-- Can be simple flags or complex objects with config_schema and deps
+M._FEATURES = {
+  smartsplit = true,  -- Simple flag
+  advanced = {
+    config_schema = {
+      advanced_option = "default",
+    },
+    deps = { "smartsplit" },  -- Requires smartsplit to be enabled
+  },
+}
 
 -- Configuration schema with defaults
 M._CONFIG_SCHEMA = {
@@ -46,31 +54,30 @@ M._CONFIG_SCHEMA = {
   leader_mod = "LEADER",
 }
 
--- Init phase (optional) - merge user config with defaults
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
-
 -- Apply phase (required) - modify WezTerm config
-function M.apply_to_config(config, state)
+function M.apply_to_config(config)
+  -- Get merged configuration from framework
+  local module_config = wezmacs.get_config("modulename")
+  local enabled_flags = wezmacs.get_enabled_flags("modulename")
+
   -- Check feature flags
-  for _, flag in ipairs(state.flags) do
-    if flag == "smartsplit" then
-      -- Enable smart-split feature
-    end
+  if enabled_flags.smartsplit then
+    -- Enable smart-split feature
   end
 
-  -- Use state.config for configuration values
+  -- Use module_config for configuration values
   config.keys = config.keys or {}
   table.insert(config.keys, {
-    key = state.config.leader_key,
-    mods = state.config.leader_mod,
+    key = module_config.leader_key,
+    mods = module_config.leader_mod,
     action = wezterm.action.ActivateKeyTable({ name = "modulename" }),
   })
+
+  -- Feature-specific config is at config.features.feature_name
+  if enabled_flags.advanced then
+    local advanced_config = config.features.advanced
+    -- Use advanced_config.advanced_option
+  end
 end
 
 return M
