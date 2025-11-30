@@ -37,12 +37,31 @@ function M.init(enabled_flags, user_config, log)
 end
 
 function M.apply_to_config(wezterm_config, state)
-  wezterm_config.keys = wezterm_config.keys or {}
+  local split = require("wezmacs.utils.split")
 
+  -- Lazydocker in smart split
+  local function lazydocker_split(window, pane)
+    split.smart_split(pane, { "lazydocker" })
+  end
+
+  -- Create docker key table
+  wezterm_config.key_tables = wezterm_config.key_tables or {}
+  wezterm_config.key_tables.docker = {
+    { key = "d", action = wezterm.action_callback(lazydocker_split) },
+    { key = "D", action = act.SpawnCommandInNewTab({ args = { "lazydocker" } }) },
+    { key = "Escape", action = "PopKeyTable" },
+  }
+
+  -- Add keybinding to activate docker menu
+  wezterm_config.keys = wezterm_config.keys or {}
   table.insert(wezterm_config.keys, {
-    key = state.config.keybinding,
-    mods = state.config.modifier,
-    action = act.SpawnCommandInNewTab({ args = { "lazydocker" } })
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
+    action = act.ActivateKeyTable({
+      name = "docker",
+      one_shot = false,
+      until_unknown = true,
+    }),
   })
 end
 
