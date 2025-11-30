@@ -9,7 +9,7 @@ default:
     @just --list
 
 # Install dependencies for development
-install-deps:
+deps:
     @echo "Installing development dependencies..."
     @command -v luacheck > /dev/null || (echo "Installing luacheck..." && brew install luacheck)
     @command -v stylua > /dev/null || (echo "Installing stylua..." && brew install stylua)
