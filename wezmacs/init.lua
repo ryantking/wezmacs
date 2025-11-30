@@ -70,22 +70,6 @@ function M.setup(config, opts)
   log("info", "WezMacs framework initialized successfully")
 end
 
--- Load user configuration from user/config.lua
----@param path string Module path to user config (e.g., "user.config")
----@param log function Logging function
----@return table|nil User configuration table or nil if not found
-function M.load_user_config(path, log)
-  path = path or "user.config"
-
-  local ok, user_config = pcall(require, path)
-  if not ok then
-    log("warn", "User config not found at '" .. path .. "' - using defaults")
-    return nil
-  end
-
-  return user_config
-end
-
 -- Get default configuration (all modules enabled)
 ---@return table Default configuration
 function M.default_config()
