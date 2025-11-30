@@ -11,13 +11,19 @@ Spotify playback control through spotify_player terminal UI.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-config = {
-  tools = {
-    media = {
-      keybinding = "m",      -- Key to launch spotify_player
-      modifier = "LEADER",   -- Modifier key
-    }
+return {
+  "media"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  media = {
+    keybinding = "m",      -- Key to launch spotify_player
+    modifier = "LEADER",   -- Modifier key
   }
 }
 ```
