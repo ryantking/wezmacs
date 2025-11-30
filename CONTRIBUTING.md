@@ -172,27 +172,22 @@ See [Submitting a Pull Request](#submitting-a-pull-request).
 1. **Metadata Fields**
    - `_NAME`: Must match directory name
    - `_CATEGORY`: One of ui, behavior, editing, integration, workflows
-   - `_VERSION`: Semantic version
    - `_DESCRIPTION`: One-line description
    - `_EXTERNAL_DEPS`: List of external tools
-   - `_FEATURE_FLAGS`: Array of optional feature flags (e.g., {"smartsplit"})
+   - `_FEATURES`: Map of feature_name = true or { config_schema = {}, deps = {} }
    - `_CONFIG_SCHEMA`: Map of config_key = default_value
 
 2. **apply_to_config Function**
    - Always required
-   - Receives: config (WezTerm config), state (from init)
+   - Receives: config (WezTerm config)
+   - Uses `wezmacs.get_config(module_name)` to access merged configuration
+   - Uses `wezmacs.get_enabled_flags(module_name)` to check enabled features
    - Modifies config object
    - No return value
 
 ### Optional Elements
 
-1. **init Function**
-   - Called before apply_to_config
-   - Receives: enabled_flags (array), user_config (table), log (function)
-   - Returns: state table with merged config and flags
-   - Use for: merging user config with defaults, validation
-
-2. **Public Functions**
+1. **Public Functions**
    - Functions other modules might call
    - Document as part of module API
 
