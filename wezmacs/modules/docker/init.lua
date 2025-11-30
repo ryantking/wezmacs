@@ -19,22 +19,13 @@ local M = {}
 
 M._NAME = "docker"
 M._CATEGORY = "devops"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Docker container management with lazydocker"
 M._EXTERNAL_DEPS = { "lazydocker" }
-M._FEATURE_FLAGS = {}
+M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   leader_key = "d",
   leader_mod = "LEADER",
 }
-
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
 
 function M.apply_to_config(wezterm_config, state)
   local split = require("wezmacs.utils.split")
