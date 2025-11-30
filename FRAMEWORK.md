@@ -434,7 +434,17 @@ local wezterm = require("wezterm")
 local config = wezterm.config_builder()
 local module = require("wezmacs.modules.modulename")
 
-module.apply_to_config(config, {}, {})
+-- Set up global wezmacs API for testing
+_G.wezmacs = {
+  get_config = function(name)
+    return { leader_key = "g", leader_mod = "LEADER" }
+  end,
+  get_enabled_flags = function(name)
+    return { smartsplit = true }
+  end,
+}
+
+module.apply_to_config(config)
 
 -- config now has module's settings applied
 ```
