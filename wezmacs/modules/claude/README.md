@@ -4,13 +4,19 @@ Provides Claude Code integration and workspace management.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-flags = {
-  workflows = {
-    claude = {
-      leader_key = "c",        -- Claude menu key
-      leader_mod = "LEADER"    -- Modifier for Claude menu
-    }
+return {
+  "claude"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  claude = {
+    leader_key = "c",        -- Claude menu key
+    leader_mod = "LEADER"    -- Modifier for Claude menu
   }
 }
 ```
