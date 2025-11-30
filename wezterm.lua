@@ -4,15 +4,15 @@
   This file serves as the entry point for WezMacs, a Doom Emacs/LazyVim-inspired
   modular configuration system for WezTerm.
 
-  User configuration should be edited in: user/config.lua
-
   Framework Structure:
-  - wezterm.lua: Entry point (this file)
+  - wezterm.lua: Entry point (this file) at ~/.config/wezterm/
   - wezmacs/init.lua: Framework bootstrap
   - wezmacs/module.lua: Module loading system
-  - wezmacs/categories/: Built-in modules organized by concern
-  - user/config.lua: User configuration (modules and flags)
-  - user/custom-modules/: User's custom modules
+  - wezmacs/modules/: Built-in modules (flat structure)
+
+  User Configuration:
+  - ~/.config/wezmacs/config.lua: Module selection and flags
+  - ~/.config/wezmacs/custom-modules/: User's custom modules
 ]]
 
 local wezterm = require("wezterm")
