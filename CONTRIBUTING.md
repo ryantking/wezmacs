@@ -97,13 +97,21 @@ Brief description of what this module does.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-flags = {
-  category = {
-    your-module-name = {
-      option_name = "value",
-    }
-  }
+return {
+  "appearance",
+  { name = "your-module-name", flags = { "smartsplit" } },
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  ["your-module-name"] = {
+    leader_key = "y",
+    leader_mod = "LEADER",
+  },
 }
 ```
 
