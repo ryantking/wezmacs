@@ -137,12 +137,14 @@ For each enabled module:
   ├─ Load module file
   ├─ Extract enabled_flags from modules.lua
   ├─ Extract user_config for module from config.lua
-  ├─ Call init(enabled_flags, user_config, log) → get state
-  └─ Store state
+  ├─ Merge user_config with module._CONFIG_SCHEMA defaults
+  ├─ Process feature flags and merge feature-specific config
+  └─ Store merged config in global wezmacs table
   ↓
 For each enabled module:
-  ├─ Call apply_to_config(config, state)
-  └─ State contains merged config and flags
+  ├─ Call apply_to_config(config)
+  ├─ Module accesses config via wezmacs.get_config(module_name)
+  └─ Module checks flags via wezmacs.get_enabled_flags(module_name)
   ↓
 Return configured wezterm.config object
 ```
