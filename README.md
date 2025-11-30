@@ -185,7 +185,7 @@ WezMacs follows a pragmatic hybrid approach inspired by Doom Emacs and LazyVim:
 - **Plain Lua Config**: No DSL or macros - just standard Lua tables
 - **Two-Phase Loading**: Init phase for validation, apply phase for configuration
 - **Feature Flags**: Per-module configuration without editing module code
-- **Custom Modules**: Users can add modules to `user/custom-modules/`
+- **Custom Modules**: Users can add modules to `~/.config/wezmacs/custom-modules/`
 
 See [FRAMEWORK.md](FRAMEWORK.md) for architectural details.
 
