@@ -83,33 +83,32 @@ end
 return M
 ```
 
-### Two-Phase Loading
+### Module Loading
 
-**Phase 1: Init**
-- Called for each module in order
-- Receives three parameters:
-  - `enabled_flags`: Array of feature flags from modules.lua (e.g., {"smartsplit"})
-  - `user_config`: Table of configuration values from config.lua (e.g., {leader_key = "g"})
-  - `log`: Logging function
-- Merges user config with defaults from _CONFIG_SCHEMA
-- Returns state object containing merged config and flags
-- Optional - if not defined, empty state passed to apply
+Modules are loaded in a single phase with framework-managed configuration:
 
-**Phase 2: Apply**
-- Called after all init phases complete
-- Receives two parameters:
+**Apply Phase:**
+- Called for each module after framework merges configuration
+- Receives one parameter:
   - `config`: WezTerm config object (from config_builder())
-  - `state`: State object returned from init phase
-- Checks state.flags to conditionally enable features
-- Uses state.config for configuration values
+- Uses `wezmacs.get_config(module_name)` to access merged configuration
+- Uses `wezmacs.get_enabled_flags(module_name)` to check enabled features
 - Modifies config object (add keybindings, set colors, register events, etc)
 - Required - every module must define this
+- Modules are stateless and have no initialization phase
 
-**Why Two Phases?**
-- Prevents circular dependencies
-- Ensures all modules can see each other's setup
-- Allows modules to merge and validate configuration before use
-- Separates configuration logic from application logic
+**Configuration Merging:**
+The framework handles configuration merging before modules run:
+- User config from `config.lua` is merged with module's `_CONFIG_SCHEMA` defaults
+- Feature flags from `modules.lua` are processed and validated
+- Feature-specific config is merged and stored at `config.features.feature_name`
+- All merged config is accessible via global `wezmacs` API
+
+**Why Framework-Managed Config?**
+- Eliminates duplicate config merging code in every module
+- Modules are simpler and more focused on behavior
+- Consistent configuration pattern across all modules
+- Easier to test and maintain modules
 
 ### Categories (Documentation Only)
 
