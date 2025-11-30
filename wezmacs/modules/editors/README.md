@@ -11,14 +11,20 @@ Quick access to external code editors from WezTerm.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-config = {
-  development = {
-    editors = {
-      helix_keybinding = "E",     -- Key to launch Helix
-      cursor_keybinding = "C",    -- Key to launch Cursor
-      modifier = "LEADER",        -- Modifier key
-    }
+return {
+  "editors"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  editors = {
+    helix_keybinding = "E",     -- Key to launch Helix
+    cursor_keybinding = "C",    -- Key to launch Cursor
+    modifier = "LEADER",        -- Modifier key
   }
 }
 ```
