@@ -29,9 +29,9 @@ return {
   "domains",     -- SSH/Docker/Kubernetes domain management
 
   -- Workflow Modules
-  "git",                              -- Git integration (lazygit)
-  { name = "workspace", flags = {} }, -- Workspace switching
-  "claude",                           -- Claude Code integration
+  "git",       -- Git integration (lazygit)
+  "workspace", -- Workspace switching
+  "claude",    -- Claude Code integration
   "kubernetes",                       -- Kubernetes management (k9s)
   "docker",                           -- Docker management (lazydocker)
   "file-manager",                     -- File manager (yazi)
