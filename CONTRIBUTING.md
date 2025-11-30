@@ -285,14 +285,20 @@ local dark_bg = colors_util.darken(theme.background, 0.2)
 
 ### 7. Logging for Debugging
 
-Use provided log function:
+Use provided log function in init:
 
 ```lua
-function M.init(flags, log)
+function M.init(enabled_flags, user_config, log)
   log("Initializing module")
-  if not flags.option then
-    log("warn", "option not specified, using default")
+  if not user_config.option then
+    log("option not specified, using default")
   end
+
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+  return { config = config, flags = enabled_flags or {} }
 end
 ```
 
