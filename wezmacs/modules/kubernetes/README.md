@@ -10,13 +10,19 @@ Kubernetes cluster management and monitoring through k9s terminal UI.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-config = {
-  devops = {
-    kubernetes = {
-      keybinding = "k",      -- Key to launch k9s
-      modifier = "LEADER",   -- Modifier key
-    }
+return {
+  "kubernetes"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  kubernetes = {
+    keybinding = "k",      -- Key to launch k9s
+    modifier = "LEADER",   -- Modifier key
   }
 }
 ```
