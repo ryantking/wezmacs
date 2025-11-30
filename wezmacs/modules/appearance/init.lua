@@ -23,21 +23,22 @@ M._CATEGORY = "ui"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Color scheme, fonts, visual styling"
 M._EXTERNAL_DEPS = {}
-M._FLAGS_SCHEMA = {
-  theme = "string (builtin color scheme name)",
-  font = "string (font family name)",
-  font_size = "number (points)",
+M._FEATURE_FLAGS = {}
+M._CONFIG_SCHEMA = {
+  theme = "Horizon Dark (Gogh)",
+  font = "Iosevka Mono",
+  font_size = 16,
 }
 
-function M.init(flags, log)
-  return {
-    theme_name = flags.theme or "Horizon Dark (Gogh)",
-    font_family = flags.font or "Iosevka Mono",
-    font_size = flags.font_size or 16,
-  }
+function M.init(enabled_flags, user_config, log)
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+  return { config = config, flags = enabled_flags or {} }
 end
 
-function M.apply_to_config(config, flags, state)
+function M.apply_to_config(config, state)
   -- Get builtin color scheme
   local theme = wezterm.get_builtin_color_schemes()[state.theme_name]
   if not theme then
