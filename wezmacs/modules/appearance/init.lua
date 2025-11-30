@@ -137,114 +137,84 @@ function M.apply_to_config(config, state)
     config.window_decorations = state.config.window_decorations
   end
 
-  -- Font rules for different text styles
-  config.font_rules = {
-    {
-      intensity = "Normal",
-      italic = false,
-      font = wezterm.font_with_fallback({
-        { family = state.config.font, weight = "Medium" },
-      }),
-    },
-    {
-      intensity = "Bold",
-      italic = false,
-      font = wezterm.font_with_fallback({
-        { family = state.config.font, weight = "ExtraBold" },
-      }),
-    },
-    {
-      intensity = "Half",
-      italic = false,
-      font = wezterm.font_with_fallback({
-        { family = state.config.font, weight = "Thin" },
-      }),
-    },
-    {
-      intensity = "Normal",
-      italic = true,
-      font = wezterm.font_with_fallback({
-        { family = state.config.font, weight = "Regular", style = "Italic" },
-      }),
-    },
-    {
-      intensity = "Bold",
-      italic = true,
-      font = wezterm.font_with_fallback({
-        { family = state.config.font, weight = "Bold", style = "Italic" },
-      }),
-    },
-    {
-      intensity = "Half",
-      italic = true,
-      font = wezterm.font_with_fallback({
-        { family = state.config.font, weight = "Thin", style = "Italic" },
-      }),
-    },
-  }
+  -- Font rules for different text styles (only if font is configured)
+  if state.config.font then
+    config.font_rules = {
+      {
+        intensity = "Normal",
+        italic = false,
+        font = wezterm.font_with_fallback({
+          { family = state.config.font, weight = "Medium" },
+        }),
+      },
+      {
+        intensity = "Bold",
+        italic = false,
+        font = wezterm.font_with_fallback({
+          { family = state.config.font, weight = "ExtraBold" },
+        }),
+      },
+      {
+        intensity = "Half",
+        italic = false,
+        font = wezterm.font_with_fallback({
+          { family = state.config.font, weight = "Thin" },
+        }),
+      },
+      {
+        intensity = "Normal",
+        italic = true,
+        font = wezterm.font_with_fallback({
+          { family = state.config.font, weight = "Regular", style = "Italic" },
+        }),
+      },
+      {
+        intensity = "Bold",
+        italic = true,
+        font = wezterm.font_with_fallback({
+          { family = state.config.font, weight = "Bold", style = "Italic" },
+        }),
+      },
+      {
+        intensity = "Half",
+        italic = true,
+        font = wezterm.font_with_fallback({
+          { family = state.config.font, weight = "Thin", style = "Italic" },
+        }),
+      },
+    }
+  end
 
-  -- Apply color scheme
-  config.colors = theme
+  -- UI fonts (for UI elements) - only if theme is configured
+  if state.config.theme then
+    local theme = wezterm.get_builtin_color_schemes()[state.config.theme]
+    if theme then
+      local ui_font = wezterm.font({ family = "Iosevka" })
+      local ui_font_size = 14
 
-  -- Customize tab bar colors
-  config.colors.tab_bar = {
-    background = theme.background,
-    inactive_tab_edge = theme.ansi[8],
-    inactive_tab_edge_hover = theme.foreground,
+      -- Window frame styling
+      config.window_frame = {
+        font = ui_font,
+        font_size = ui_font_size,
+        active_titlebar_bg = theme.background,
+        inactive_titlebar_bg = theme.background,
+        active_titlebar_fg = theme.foreground,
+        inactive_titlebar_fg = theme.foreground,
+      }
 
-    active_tab = {
-      bg_color = theme.background,
-      fg_color = theme.ansi[5],
-      intensity = "Bold",
-    },
+      -- Character selector appearance
+      config.char_select_bg_color = theme.brights[1]
+      config.char_select_fg_color = theme.foreground
+      config.char_select_font = ui_font
+      config.char_select_font_size = ui_font_size
 
-    inactive_tab = {
-      bg_color = theme.background,
-      fg_color = theme.ansi[8],
-      intensity = "Half",
-    },
-
-    inactive_tab_hover = {
-      bg_color = theme.brights[1],
-      fg_color = theme.ansi[8],
-    },
-
-    new_tab = {
-      bg_color = theme.background,
-      fg_color = theme.ansi[8],
-    },
-
-    new_tab_hover = {
-      bg_color = theme.brights[1],
-      fg_color = theme.ansi[8],
-    },
-  }
-
-  -- UI fonts (for UI elements)
-  local ui_font = wezterm.font({ family = "Iosevka" })
-  local ui_font_size = 14
-
-  -- Window frame styling
-  config.window_frame = {
-    font = ui_font,
-    font_size = ui_font_size,
-    active_titlebar_bg = theme.background,
-    inactive_titlebar_bg = theme.background,
-    active_titlebar_fg = theme.foreground,
-    inactive_titlebar_fg = theme.foreground,
-  }
-
-  -- Character selector appearance
-  config.char_select_bg_color = theme.brights[1]
-  config.char_select_fg_color = theme.foreground
-  config.char_select_font = ui_font
-  config.char_select_font_size = ui_font_size
-
-  -- Command palette appearance
-  config.command_palette_bg_color = theme.brights[1]
-  config.command_palette_fg_color = theme.foreground
-  config.command_palette_font = ui_font
-  config.command_palette_font_size = ui_font_size
+      -- Command palette appearance
+      config.command_palette_bg_color = theme.brights[1]
+      config.command_palette_fg_color = theme.foreground
+      config.command_palette_font = ui_font
+      config.command_palette_font_size = ui_font_size
+    end
+  end
 end
 
 return M
