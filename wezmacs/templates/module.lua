@@ -30,20 +30,25 @@ local M = {}
 
 M._NAME = "your-module-name"
 M._CATEGORY = "workflows"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Brief description of what this module does"
 
 -- External dependencies that should be documented for users
+-- Use for module-level deps (tools always needed if module is loaded)
 M._EXTERNAL_DEPS = {
   -- "lazygit",  -- Example: tool name
   -- "git",      -- Example: tool name
 }
 
--- Feature flags: optional features users can enable in modules.lua
--- Example: { name = "your-module-name", flags = { "smartsplit", "diff-viewer" } }
-M._FEATURE_FLAGS = {
-  -- "smartsplit",   -- Example: optional smart-split feature
-  -- "diff-viewer",  -- Example: optional diff viewer feature
+-- Features: optional features users can enable in modules.lua
+-- Example: { name = "your-module-name", flags = { "riff" } }
+-- Or with complex config/deps: { name = "your-module-name", flags = { { name = "riff", deps = {"riff"} } } }
+M._FEATURES = {
+  -- "simple_flag",           -- Example: simple boolean feature flag
+  -- {
+  --   name = "complex_flag",
+  --   config_schema = { option = "default" },  -- Feature-specific config defaults
+  --   deps = { "external_tool" }               -- Feature-specific dependencies
+  -- }
 }
 
 -- Configuration schema: default values for all configuration options
@@ -55,67 +60,43 @@ M._CONFIG_SCHEMA = {
 }
 
 -- ============================================================================
--- INIT PHASE (Optional)
--- ============================================================================
--- Called during framework initialization to merge user config with defaults.
--- Use this to:
---   - Merge user configuration with _CONFIG_SCHEMA defaults
---   - Validate configuration values
---   - Store enabled feature flags for use in apply_to_config
---
--- Parameters:
---   enabled_flags: Array of feature flags from modules.lua
---                  Example: {"smartsplit", "diff-viewer"}
---   user_config: Table of configuration from config.lua
---                Example: {leader_key = "g", timeout = 3000}
---   log: Logging function for info/debug messages
---
--- Return a state table containing merged config and flags.
--- If you don't need this phase, simply delete this function.
-
-function M.init(enabled_flags, user_config, log)
-  log("Initializing " .. M._NAME .. " module")
-
-  -- Standard pattern: merge user config with schema defaults
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-
-  -- Return state with merged config and enabled flags
-  return {
-    config = config,
-    flags = enabled_flags or {},
-  }
-end
-
--- ============================================================================
 -- APPLY PHASE (Required)
 -- ============================================================================
--- Called after all modules are initialized.
+-- Called after all modules are initialized with merged configs.
 -- Apply your configuration to the wezterm config object here.
 --
 -- Parameters:
 --   config: WezTerm config object (from config_builder())
---   state: State returned from init() phase (or {} if no init)
---          state.config contains merged configuration values
---          state.flags contains enabled feature flags
+--
+-- Access your module's config:
+--   - local mod_config = wezmacs.get_config(M._NAME)
+--   - Access module config: mod_config.leader_key
+--   - Access feature config: mod_config.features.feature_name
+--   - Access enabled flags: wezmacs.get_enabled_flags(M._NAME)
 
-function M.apply_to_config(config, state)
+function M.apply_to_config(config)
+  -- Get this module's configuration (framework handles merging)
+  local mod_config = wezmacs.get_config(M._NAME)
+  local enabled_flags = wezmacs.get_enabled_flags(M._NAME)
+
   -- Example: Check for enabled feature flags
-  -- for _, flag in ipairs(state.flags) do
-  --   if flag == "smartsplit" then
-  --     -- Enable smart-split functionality
-  --   elseif flag == "diff-viewer" then
-  --     -- Enable diff viewer functionality
+  -- for _, flag in ipairs(enabled_flags) do
+  --   if flag == "simple_flag" then
+  --     -- Enable simple-flag functionality
   --   end
+  -- end
+
+  -- Example: Access feature config
+  -- if mod_config.features.complex_flag then
+  --   local feat_config = mod_config.features.complex_flag
+  --   -- Use feat_config.option
   -- end
 
   -- Example: Apply a keybinding using configuration values
   -- config.keys = config.keys or {}
   -- table.insert(config.keys, {
-  --   key = state.config.leader_key,
-  --   mods = state.config.leader_mod,
+  --   key = mod_config.leader_key,
+  --   mods = mod_config.leader_mod,
   --   action = wezterm.action.ActivateKeyTable({
   --     name = "your-module",
   --     one_shot = false,
