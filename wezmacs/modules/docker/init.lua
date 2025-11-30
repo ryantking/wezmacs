@@ -24,8 +24,8 @@ M._DESCRIPTION = "Docker container management with lazydocker"
 M._EXTERNAL_DEPS = { "lazydocker" }
 M._FEATURE_FLAGS = {}
 M._CONFIG_SCHEMA = {
-  keybinding = "D",
-  modifier = "LEADER",
+  leader_key = "d",
+  leader_mod = "LEADER",
 }
 
 function M.init(enabled_flags, user_config, log)
