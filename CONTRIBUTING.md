@@ -491,7 +491,7 @@ Follow the style of existing modules:
 - **Line Length**: ~100 chars (reasonable wrapping)
 - **Comments**: Use for complex logic, not obvious code
 - **Naming**: Use descriptive names, avoid abbreviations
-- **Structure**: metadata → init → apply
+- **Structure**: metadata → apply
 
 ### Example Style
 
