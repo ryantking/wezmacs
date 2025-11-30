@@ -14,37 +14,54 @@ git clone https://github.com/yourusername/wezmacs.git ~/.config/wezterm
 
 ### 2. Initialize Your Configuration
 
-Set up the user configuration directory and default config:
+Set up the user configuration directory and default config files:
 
 ```bash
 cd ~/.config/wezterm
 just install
 ```
 
-This creates `~/.config/wezmacs/config.lua` with a starter configuration.
+This creates two configuration files:
+- `~/.config/wezmacs/modules.lua` - Module selection and feature flags
+- `~/.config/wezmacs/config.lua` - Per-module configuration values
 
 **Manual Setup** (if not using `just`):
 
 ```bash
 mkdir -p ~/.config/wezmacs/custom-modules
+cp user/modules.lua ~/.config/wezmacs/modules.lua
 cp user/config.lua ~/.config/wezmacs/config.lua
 ```
 
 ### 3. Customize Your Setup
 
-Edit `~/.config/wezmacs/config.lua` to select which modules to enable:
+Edit `~/.config/wezmacs/modules.lua` to select which modules to enable:
 
 ```lua
 return {
-  modules = {
-    ui = { "appearance", "tabbar", "window" },
-    behavior = { "mouse" },
-    editing = { "keybindings" },
-    workflows = { "git", "workspace" },
-    integration = { "plugins" },
+  "appearance",  -- Load with defaults
+  "tabbar",
+  "window",
+  "mouse",
+  "keybindings",
+  { name = "git", flags = {} },  -- Load with optional flags
+  "workspace",
+  "domains",
+}
+```
+
+Edit `~/.config/wezmacs/config.lua` to configure module behavior:
+
+```lua
+return {
+  appearance = {
+    theme = "Horizon Dark (Gogh)",
+    font = "JetBrains Mono",
+    font_size = 16,
   },
-  flags = {
-    ui = { theme = "Horizon Dark (Gogh)" },
+  git = {
+    leader_key = "g",
+    leader_mod = "LEADER",
   },
 }
 ```
