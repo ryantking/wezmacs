@@ -80,7 +80,7 @@ git pull origin main
 just update
 ```
 
-Your `~/.config/wezmacs/config.lua` configuration is preserved.
+Your `~/.config/wezmacs/modules.lua` and `~/.config/wezmacs/config.lua` configurations are preserved.
 
 ### Uninstalling WezMacs
 
