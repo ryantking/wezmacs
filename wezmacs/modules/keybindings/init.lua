@@ -97,38 +97,11 @@ function M.apply_to_config(config, state)
   table.insert(config.keys, { key = "UpArrow", mods = "CTRL", action = act.ActivatePaneDirection("Up") })
   table.insert(config.keys, { key = "DownArrow", mods = "CTRL", action = act.ActivatePaneDirection("Down") })
 
-  -- Pane Resizing (LEADER+SHIFT+Arrow → sticky resize mode)
+  -- Pane Resizing (CMD+R → sticky resize mode)
   table.insert(config.keys, {
-    key = "LeftArrow",
-    mods = "LEADER|SHIFT",
-    action = act.Multiple({
-      act.AdjustPaneSize({ "Left", 2 }),
-      act.ActivateKeyTable({ name = "resize_pane", one_shot = false }),
-    }),
-  })
-  table.insert(config.keys, {
-    key = "RightArrow",
-    mods = "LEADER|SHIFT",
-    action = act.Multiple({
-      act.AdjustPaneSize({ "Right", 2 }),
-      act.ActivateKeyTable({ name = "resize_pane", one_shot = false }),
-    }),
-  })
-  table.insert(config.keys, {
-    key = "UpArrow",
-    mods = "LEADER|SHIFT",
-    action = act.Multiple({
-      act.AdjustPaneSize({ "Up", 2 }),
-      act.ActivateKeyTable({ name = "resize_pane", one_shot = false }),
-    }),
-  })
-  table.insert(config.keys, {
-    key = "DownArrow",
-    mods = "LEADER|SHIFT",
-    action = act.Multiple({
-      act.AdjustPaneSize({ "Down", 2 }),
-      act.ActivateKeyTable({ name = "resize_pane", one_shot = false }),
-    }),
+    key = "r",
+    mods = "CMD",
+    action = act.ActivateKeyTable({ name = "resize_pane", one_shot = false }),
   })
 
   -- Utility & Selection
