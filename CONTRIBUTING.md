@@ -285,20 +285,18 @@ local dark_bg = colors_util.darken(theme.background, 0.2)
 
 ### 7. Logging for Debugging
 
-Use provided log function in init:
+Use wezterm logging functions:
 
 ```lua
-function M.init(enabled_flags, user_config, log)
-  log("Initializing module")
-  if not user_config.option then
-    log("option not specified, using default")
+function M.apply_to_config(config)
+  wezterm.log_info("Applying module configuration")
+
+  local cfg = wezmacs.get_config("modulename")
+  if not cfg.option then
+    wezterm.log_warn("option not specified, using default")
   end
 
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
+  -- Apply configuration...
 end
 ```
 
