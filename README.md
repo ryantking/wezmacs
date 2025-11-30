@@ -114,7 +114,7 @@ See `wezmacs/modules/*/README.md` for details.
 ### Basic Usage
 
 ```lua
--- ~/.config/wezterm/user/config.lua
+-- ~/.config/wezmacs/config.lua
 return {
   modules = {
     ui = { "appearance", "tabbar" },
