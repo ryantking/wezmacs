@@ -36,24 +36,45 @@ M._CATEGORY = "workflows"  -- or ui, behavior, editing, integration
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "What this module does"
 M._EXTERNAL_DEPS = { "tool1", "tool2" }  -- External tool dependencies
-M._FLAGS_SCHEMA = {
-  option_name = "string | number | table description",
+
+-- Feature flags (optional features users can enable)
+M._FEATURE_FLAGS = { "smartsplit", "diff-viewer" }
+
+-- Configuration schema with defaults
+M._CONFIG_SCHEMA = {
+  leader_key = "y",
+  leader_mod = "LEADER",
 }
 
--- Init phase (optional)
-function M.init(flags, log)
+-- Init phase (optional) - merge user config with defaults
+function M.init(enabled_flags, user_config, log)
   log("Initializing your-module-name")
 
-  return {
-    computed_value = flags.option_name or "default",
-  }
+  -- Merge user config with defaults
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+
+  return { config = config, flags = enabled_flags or {} }
 end
 
--- Apply phase (required)
-function M.apply_to_config(config, flags, state)
-  -- Implement your module here
+-- Apply phase (required) - modify WezTerm config
+function M.apply_to_config(config, state)
+  -- Check for enabled feature flags
+  for _, flag in ipairs(state.flags) do
+    if flag == "smartsplit" then
+      -- Enable smart-split functionality
+    end
+  end
+
+  -- Use configuration values from state.config
   config.keys = config.keys or {}
-  -- ... add keybindings, etc
+  table.insert(config.keys, {
+    key = state.config.leader_key,
+    mods = state.config.leader_mod,
+    action = wezterm.action.ActivateKeyTable({ name = "your-module" }),
+  })
 end
 
 return M
