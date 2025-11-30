@@ -26,10 +26,9 @@ local M = {}
 
 M._NAME = "domains"
 M._CATEGORY = "devops"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "Quick domain management for SSH/Docker/Kubernetes"
 M._EXTERNAL_DEPS = { "quick_domains (plugin)" }
-M._FEATURE_FLAGS = {}
+M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   leader_key = "t",
   leader_mod = "LEADER",
@@ -37,14 +36,6 @@ M._CONFIG_SCHEMA = {
   docker_ignore = false,
   kubernetes_ignore = true,
 }
-
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
 
 function M.apply_to_config(wezterm_config, state)
   local domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
