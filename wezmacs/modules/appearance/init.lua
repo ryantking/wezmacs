@@ -23,11 +23,15 @@ M._CATEGORY = "ui"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Color scheme, fonts, visual styling"
 M._EXTERNAL_DEPS = {}
-M._FEATURE_FLAGS = {}
+M._FEATURE_FLAGS = {
+  enable_ligatures = false,
+}
 M._CONFIG_SCHEMA = {
-  theme = "Horizon Dark (Gogh)",
-  font = "Iosevka Mono",
-  font_size = 16,
+  theme = nil,
+  font = nil,
+  font_size = nil,
+  harfbuzz_features = nil,
+  window_decorations = "RESIZE",
 }
 
 function M.init(enabled_flags, user_config, log)
