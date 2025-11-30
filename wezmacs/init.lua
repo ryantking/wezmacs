@@ -29,42 +29,28 @@ function M.setup(config, opts)
     end
   end
 
-  -- Use provided user_config or empty table as fallback
+  -- Use provided modules list and user_config or empty table as fallback
+  local modules_spec = opts.modules_spec or {}
   local user_config = opts.user_config or {}
-
-  -- Merge with defaults
-  local final_config = M.merge_configs(M.default_config(), user_config)
 
   log("info", "Loading WezMacs framework")
 
   -- Phase 1: Load and initialize all modules (init phase)
   local modules, states = module_loader.load_all(
-    config,
-    final_config.modules,
-    final_config.flags,
+    modules_spec,
+    user_config,
     log
   )
 
   -- Phase 2: Apply all modules to config (apply_to_config phase)
-  for category, mods in pairs(modules) do
-    for _, mod in ipairs(mods) do
-      local mod_name = mod._NAME or "unknown"
-      log("info", "Applying module: " .. category .. "/" .. mod_name)
+  for _, mod in ipairs(modules) do
+    local mod_name = mod._NAME or "unknown"
+    log("info", "Applying module: " .. mod_name)
 
-      -- Get flags for this module's category
-      local category_flags = final_config.flags[category] or {}
-
-      -- Call apply_to_config with config, flags, and state from init
-      if mod.apply_to_config then
-        mod.apply_to_config(config, category_flags, states[mod_name] or {})
-      end
+    -- Call apply_to_config with config and state from init
+    if mod.apply_to_config then
+      mod.apply_to_config(config, states[mod_name] or {})
     end
-  end
-
-  -- Phase 3: User overrides (final customization)
-  if final_config.overrides and type(final_config.overrides) == "function" then
-    log("info", "Applying user overrides")
-    final_config.overrides(config)
   end
 
   log("info", "WezMacs framework initialized successfully")
