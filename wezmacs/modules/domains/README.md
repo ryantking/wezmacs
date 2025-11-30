@@ -12,20 +12,26 @@ Quick domain management for SSH, Docker, and Kubernetes connections.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-config = {
-  devops = {
-    domains = {
-      attach_key = "t",               -- Key for domain attach
-      attach_mod = "ALT|SHIFT",       -- Modifier for attach
-      vsplit_key = "_",               -- Key for vertical split
-      vsplit_mod = "CTRL|SHIFT|ALT",  -- Modifier for vsplit
-      hsplit_key = "-",               -- Key for horizontal split
-      hsplit_mod = "CTRL|ALT",        -- Modifier for hsplit
-      ssh_ignore = true,              -- Ignore SSH domains
-      docker_ignore = false,          -- Ignore Docker domains
-      kubernetes_ignore = true,       -- Ignore Kubernetes domains
-    }
+return {
+  "domains"
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  domains = {
+    attach_key = "t",               -- Key for domain attach
+    attach_mod = "ALT|SHIFT",       -- Modifier for attach
+    vsplit_key = "_",               -- Key for vertical split
+    vsplit_mod = "CTRL|SHIFT|ALT",  -- Modifier for vsplit
+    hsplit_key = "-",               -- Key for horizontal split
+    hsplit_mod = "CTRL|ALT",        -- Modifier for hsplit
+    ssh_ignore = true,              -- Ignore SSH domains
+    docker_ignore = false,          -- Ignore Docker domains
+    kubernetes_ignore = true,       -- Ignore Kubernetes domains
   }
 }
 ```
