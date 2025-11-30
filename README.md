@@ -222,32 +222,39 @@ local M = {}
 
 M._NAME = "my-module"
 M._CATEGORY = "custom"
-M._VERSION = "0.1.0"
 M._DESCRIPTION = "My custom module"
 M._EXTERNAL_DEPS = {}
 
--- Feature flags (optional)
-M._FEATURE_FLAGS = {}
+-- Feature flags (optional) - can be simple flags or complex objects
+M._FEATURES = {
+  advanced = {
+    config_schema = {
+      advanced_option = "default",
+    },
+    deps = { "other_feature" },  -- Optional dependencies
+  },
+}
 
 -- Configuration schema with defaults
 M._CONFIG_SCHEMA = {
   some_option = "default_value",
 }
 
--- Init phase: merge user config with defaults
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v
-  end
-  return { config = config, flags = enabled_flags or {} }
-end
-
 -- Apply phase: modify WezTerm config
-function M.apply_to_config(config, state)
+function M.apply_to_config(config)
+  -- Get merged configuration from framework
+  local module_config = wezmacs.get_config("my-module")
+  local enabled_flags = wezmacs.get_enabled_flags("my-module")
+
   config.keys = config.keys or {}
-  -- Use state.config.some_option for configuration
-  -- Check state.flags for enabled feature flags
+  -- Use module_config.some_option for configuration values
+  -- Check enabled_flags for feature flags
+
+  -- Feature-specific config is at config.features.feature_name
+  if enabled_flags.advanced then
+    local advanced_config = config.features.advanced
+    -- Use advanced_config.advanced_option
+  end
 end
 
 return M
