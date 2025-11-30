@@ -37,30 +37,47 @@ config.default_workspace = "~"
 -- ============================================================================
 -- WEZMACS FRAMEWORK INITIALIZATION
 -- ============================================================================
--- Load user configuration from ~/.config/wezmacs/config.lua
+-- Load user configuration from ~/.config/wezmacs/
 
-local function load_user_config()
+local function load_config_file(filename)
   local config_dir = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
-  local user_config_path = config_dir .. "/wezmacs/config.lua"
+  local file_path = config_dir .. "/wezmacs/" .. filename
 
-  if wezterm.path_exists(user_config_path) then
-    local config_chunk, err = loadfile(user_config_path)
-    if config_chunk then
-      return config_chunk()
+  if wezterm.path_exists(file_path) then
+    local chunk, err = loadfile(file_path)
+    if chunk then
+      return chunk()
     else
-      wezterm.log_error("Failed to load user config: " .. err)
-      return {}
+      wezterm.log_error("Failed to load " .. filename .. ": " .. err)
+      return nil
     end
   else
-    wezterm.log_warn("User config not found at " .. user_config_path)
-    wezterm.log_warn("Using default configuration - run 'just install' to set up")
-    return {}
+    wezterm.log_warn(filename .. " not found at " .. file_path)
+    return nil
   end
 end
 
-local user_config = load_user_config()
+-- Load modules specification (which modules to load + feature flags)
+local modules_spec = load_config_file("modules.lua")
+if not modules_spec then
+  wezterm.log_warn("Using default modules - run 'just install' to set up")
+  -- Default modules if none specified
+  modules_spec = {
+    "appearance",
+    "tabbar",
+    "mouse",
+    "keybindings",
+    "git",
+    "workspace",
+    "claude",
+  }
+end
+
+-- Load user configuration (per-module settings)
+local user_config = load_config_file("config.lua") or {}
 
 wezmacs.setup(config, {
+  modules_spec = modules_spec,
   user_config = user_config,
   log_level = "info",
 })
