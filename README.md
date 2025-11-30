@@ -191,10 +191,10 @@ See [FRAMEWORK.md](FRAMEWORK.md) for architectural details.
 
 ## Creating Custom Modules
 
-Create a new module in `~/.config/wezterm/user/custom-modules/`:
+Create a new module in `~/.config/wezmacs/custom-modules/`:
 
 ```lua
--- user/custom-modules/my-module/init.lua
+-- ~/.config/wezmacs/custom-modules/my-module/init.lua
 local M = {}
 
 M._NAME = "my-module"
@@ -217,7 +217,7 @@ end
 return M
 ```
 
-Enable it in `user/config.lua`:
+Enable it in `~/.config/wezmacs/config.lua`:
 
 ```lua
 return {
