@@ -25,9 +25,9 @@ M._DESCRIPTION = "File management with yazi terminal file manager"
 M._EXTERNAL_DEPS = { "yazi" }
 M._FEATURE_FLAGS = {}
 M._CONFIG_SCHEMA = {
-  keybinding = "y",
-  sudo_keybinding = "Y",
-  modifier = "LEADER",
+  file_manager = "yazi",
+  leader_key = "f",
+  leader_mod = "LEADER",
 }
 
 function M.init(enabled_flags, user_config, log)
