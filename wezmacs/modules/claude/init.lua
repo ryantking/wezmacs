@@ -26,19 +26,21 @@ M._CATEGORY = "workflows"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Claude Code integration and workspace management"
 M._EXTERNAL_DEPS = { "claude (CLI)", "claudectl (optional, for workspace management)" }
-M._FLAGS_SCHEMA = {
-  leader_key = "string (default: c)",
-  leader_mod = "string (default: LEADER)",
+M._FEATURE_FLAGS = {}
+M._CONFIG_SCHEMA = {
+  leader_key = "c",
+  leader_mod = "LEADER",
 }
 
-function M.init(flags, log)
-  return {
-    leader_key = flags.leader_key or "c",
-    leader_mod = flags.leader_mod or "LEADER",
-  }
+function M.init(enabled_flags, user_config, log)
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+  return { config = config, flags = enabled_flags or {} }
 end
 
-function M.apply_to_config(config, flags, state)
+function M.apply_to_config(config, state)
   -- Create claude key table
   config.key_tables = config.key_tables or {}
   config.key_tables.claude = {
