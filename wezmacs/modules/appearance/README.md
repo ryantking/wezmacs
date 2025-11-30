@@ -12,14 +12,20 @@ Provides color scheme, font configuration, and visual styling for WezTerm.
 
 ## Configuration
 
+Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
-flags = {
-  ui = {
-    appearance = {
-      theme = "Horizon Dark (Gogh)",  -- WezTerm builtin color scheme
-      font = "Iosevka Mono",           -- Font family
-      font_size = 16,                  -- Font size in points
-    }
+return {
+  { name = "appearance", flags = { "color_scheme", "fonts", "ui_styling" } }
+}
+```
+
+Configure in `~/.config/wezmacs/config.lua`:
+```lua
+return {
+  appearance = {
+    theme = "Horizon Dark (Gogh)",  -- WezTerm builtin color scheme
+    font = "Iosevka Mono",           -- Font family
+    font_size = 16,                  -- Font size in points
   }
 }
 ```
