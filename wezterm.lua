@@ -37,10 +37,31 @@ config.default_workspace = "~"
 -- ============================================================================
 -- WEZMACS FRAMEWORK INITIALIZATION
 -- ============================================================================
--- Load user configuration and initialize all modules
+-- Load user configuration from ~/.config/wezmacs/config.lua
+
+local function load_user_config()
+  local config_dir = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
+  local user_config_path = config_dir .. "/wezmacs/config.lua"
+
+  if wezterm.path_exists(user_config_path) then
+    local config_chunk, err = loadfile(user_config_path)
+    if config_chunk then
+      return config_chunk()
+    else
+      wezterm.log_error("Failed to load user config: " .. err)
+      return {}
+    end
+  else
+    wezterm.log_warn("User config not found at " .. user_config_path)
+    wezterm.log_warn("Using default configuration - run 'just install' to set up")
+    return {}
+  end
+end
+
+local user_config = load_user_config()
 
 wezmacs.setup(config, {
-  user_config_path = "user.config",
+  user_config = user_config,
   log_level = "info",
 })
 
