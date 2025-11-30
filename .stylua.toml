@@ -1,0 +1,9 @@
+# WezMacs StyLua Configuration
+# Code formatting for Lua
+
+indent_type = "Spaces"
+indent_width = 2
+line_endings = "Unix"
+max_line_length = 100
+quote_style = "AutoPreferDouble"
+collapse_simple_statement = "FunctionOnly"
