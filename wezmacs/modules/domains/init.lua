@@ -37,7 +37,8 @@ M._CONFIG_SCHEMA = {
   kubernetes_ignore = true,
 }
 
-function M.apply_to_config(wezterm_config, state)
+function M.apply_to_config(wezterm_config)
+  local mod_config = wezmacs.get_config(M._NAME)
   local domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
 
   -- Configure quick_domains to use the domains key table
@@ -48,11 +49,11 @@ function M.apply_to_config(wezterm_config, state)
       hsplit = { key = "h", mods = "", tbl = "domains" },
     },
     auto = {
-      ssh_ignore = state.config.ssh_ignore,
+      ssh_ignore = mod_config.ssh_ignore,
       exec_ignore = {
-        ssh = state.config.ssh_ignore,
-        docker = state.config.docker_ignore,
-        kubernetes = state.config.kubernetes_ignore,
+        ssh = mod_config.ssh_ignore,
+        docker = mod_config.docker_ignore,
+        kubernetes = mod_config.kubernetes_ignore,
       },
     },
   })
@@ -65,8 +66,8 @@ function M.apply_to_config(wezterm_config, state)
   -- Add keybinding to activate domains menu
   wezterm_config.keys = wezterm_config.keys or {}
   table.insert(wezterm_config.keys, {
-    key = state.config.leader_key,
-    mods = state.config.leader_mod,
+    key = mod_config.leader_key,
+    mods = mod_config.leader_mod,
     action = wezterm.action.ActivateKeyTable({
       name = "domains",
       one_shot = false,
