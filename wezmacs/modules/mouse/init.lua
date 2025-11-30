@@ -21,17 +21,20 @@ M._CATEGORY = "behavior"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Mouse bindings and behavior"
 M._EXTERNAL_DEPS = {}
-M._FLAGS_SCHEMA = {
-  leader_mod = "string (modifier key)",
+M._FEATURE_FLAGS = {}
+M._CONFIG_SCHEMA = {
+  leader_mod = "CMD",
 }
 
-function M.init(flags, log)
-  return {
-    leader_mod = flags.leader_mod or "CMD",
-  }
+function M.init(enabled_flags, user_config, log)
+  local config = {}
+  for k, v in pairs(M._CONFIG_SCHEMA) do
+    config[k] = user_config[k] or v
+  end
+  return { config = config, flags = enabled_flags or {} }
 end
 
-function M.apply_to_config(config, flags, state)
+function M.apply_to_config(config, state)
   config.alternate_buffer_wheel_scroll_speed = 1
   config.bypass_mouse_reporting_modifiers = state.leader_mod
   config.hide_mouse_cursor_when_typing = false
