@@ -40,12 +40,14 @@ init:
     fi
     @echo "Initializing ~/.config/wezmacs..."
     @mkdir -p ~/.config/wezmacs/custom-modules
+    @cp user/modules.lua ~/.config/wezmacs/modules.lua
     @cp user/config.lua ~/.config/wezmacs/config.lua
     @echo "✓ Initialized ~/.config/wezmacs"
     @echo ""
     @echo "Next steps:"
-    @echo "1. Edit ~/.config/wezmacs/config.lua to customize your setup"
-    @echo "2. Reload WezTerm configuration"
+    @echo "1. Edit ~/.config/wezmacs/modules.lua to select modules"
+    @echo "2. Edit ~/.config/wezmacs/config.lua to configure modules"
+    @echo "3. Reload WezTerm configuration"
 
 # Install WezMacs to ~/.config/wezterm
 install:
