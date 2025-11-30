@@ -21,8 +21,10 @@ M._NAME = "git"
 M._CATEGORY = "workflows"
 M._VERSION = "0.1.0"
 M._DESCRIPTION = "Git workflow integration (lazygit, diff, etc)"
-M._EXTERNAL_DEPS = { "lazygit", "git", "delta" }
-M._FEATURE_FLAGS = {}
+M._EXTERNAL_DEPS = { "lazygit", "git", "delta", "riff" }
+M._FEATURE_FLAGS = {
+  riff = false,
+}
 M._CONFIG_SCHEMA = {
   leader_key = "g",
   leader_mod = "LEADER",
