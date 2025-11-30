@@ -227,8 +227,8 @@ The module loader (`wezmacs/module.lua`) handles:
 
 1. **Discovery**: Finding modules by name
 2. **Loading**: Using `require()` to load module code
-3. **Initialization**: Running init phases and collecting state
-4. **Application**: Running apply_to_config phases
+3. **Configuration Merging**: Merging user config with module defaults and processing features
+4. **Application**: Running apply_to_config phases with framework-provided config access
 
 **Module Search Order:**
 1. `wezmacs.modules.modulename` (built-in modules)
