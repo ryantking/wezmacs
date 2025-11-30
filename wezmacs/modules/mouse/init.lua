@@ -36,7 +36,7 @@ end
 
 function M.apply_to_config(config, state)
   config.alternate_buffer_wheel_scroll_speed = 1
-  config.bypass_mouse_reporting_modifiers = state.leader_mod
+  config.bypass_mouse_reporting_modifiers = state.config.leader_mod
   config.hide_mouse_cursor_when_typing = false
 
   config.mouse_bindings = {
@@ -49,7 +49,7 @@ function M.apply_to_config(config, state)
     -- Leader+left-click: Open link or extend selection
     {
       event = { Up = { streak = 1, button = "Left" } },
-      mods = state.leader_mod,
+      mods = state.config.leader_mod,
       action = wezterm.action.CompleteSelectionOrOpenLinkAtMouseCursor("ClipboardAndPrimarySelection"),
     },
 
