@@ -74,42 +74,42 @@ function M.apply_to_config(config, state)
       intensity = "Normal",
       italic = false,
       font = wezterm.font_with_fallback({
-        { family = state.font_family, weight = "Medium" },
+        { family = state.config.font, weight = "Medium" },
       }),
     },
     {
       intensity = "Bold",
       italic = false,
       font = wezterm.font_with_fallback({
-        { family = state.font_family, weight = "ExtraBold" },
+        { family = state.config.font, weight = "ExtraBold" },
       }),
     },
     {
       intensity = "Half",
       italic = false,
       font = wezterm.font_with_fallback({
-        { family = state.font_family, weight = "Thin" },
+        { family = state.config.font, weight = "Thin" },
       }),
     },
     {
       intensity = "Normal",
       italic = true,
       font = wezterm.font_with_fallback({
-        { family = state.font_family, weight = "Regular", style = "Italic" },
+        { family = state.config.font, weight = "Regular", style = "Italic" },
       }),
     },
     {
       intensity = "Bold",
       italic = true,
       font = wezterm.font_with_fallback({
-        { family = state.font_family, weight = "Bold", style = "Italic" },
+        { family = state.config.font, weight = "Bold", style = "Italic" },
       }),
     },
     {
       intensity = "Half",
       italic = true,
       font = wezterm.font_with_fallback({
-        { family = state.font_family, weight = "Thin", style = "Italic" },
+        { family = state.config.font, weight = "Thin", style = "Italic" },
       }),
     },
   }
