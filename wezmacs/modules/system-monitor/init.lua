@@ -27,12 +27,14 @@ M._CONFIG_SCHEMA = {
   modifier = "LEADER",
 }
 
-function M.apply_to_config(wezterm_config, state)
+function M.apply_to_config(wezterm_config)
+  local mod_config = wezmacs.get_config(M._NAME)
+
   wezterm_config.keys = wezterm_config.keys or {}
 
   table.insert(wezterm_config.keys, {
-    key = state.config.keybinding,
-    mods = state.config.modifier,
+    key = mod_config.keybinding,
+    mods = mod_config.modifier,
     action = act.SpawnCommandInNewTab({ args = { "btm" } })
   })
 end
