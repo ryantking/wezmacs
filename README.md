@@ -134,70 +134,67 @@ See `wezmacs/modules/*/README.md` for details.
 
 ## Configuration
 
-### Basic Usage
+WezMacs uses two configuration files to separate concerns:
+
+### modules.lua - Module Selection
+
+Choose which modules to load and enable optional feature flags:
+
+```lua
+-- ~/.config/wezmacs/modules.lua
+return {
+  -- Simple string: load with defaults
+  "appearance",
+  "tabbar",
+  "window",
+  "mouse",
+  "keybindings",
+
+  -- Table with flags: enable optional features
+  { name = "git", flags = { "smartsplit" } },
+  { name = "workspace", flags = {} },
+
+  "claude",
+  "domains",
+}
+```
+
+### config.lua - Module Configuration
+
+Configure how each module behaves:
 
 ```lua
 -- ~/.config/wezmacs/config.lua
 return {
-  modules = {
-    ui = { "appearance", "tabbar" },
-    behavior = { "mouse" },
-    editing = { "keybindings" },
-    workflows = { "git", "workspace", "claude" },
-    integration = { "plugins" },
+  appearance = {
+    theme = "Horizon Dark (Gogh)",
+    font = "JetBrains Mono",
+    font_size = 16,
+  },
+
+  keybindings = {
+    leader_key = "Space",
+    leader_mod = "CMD",
+  },
+
+  git = {
+    leader_key = "g",
+    leader_mod = "LEADER",
+  },
+
+  workspace = {
+    leader_key = "s",
+    leader_mod = "LEADER",
   },
 }
 ```
 
-### With Flags
+### Configuration Pattern
 
-Customize module behavior without editing module code:
+1. **modules.lua** - WHAT to load (module names + feature flags)
+2. **config.lua** - HOW to configure (settings for each module)
 
-```lua
-return {
-  modules = {
-    ui = { "appearance", "tabbar", "window" },
-    workflows = { "git", "workspace" },
-  },
-
-  flags = {
-    ui = {
-      theme = "Nord",
-      font = "JetBrains Mono",
-      font_size = 18,
-    },
-    workflows = {
-      git = {
-        leader_key = "g",
-        leader_mod = "LEADER",
-      },
-    },
-  },
-}
-```
-
-### With Overrides
-
-Apply final tweaks after all modules load:
-
-```lua
-return {
-  modules = {
-    ui = { "appearance", "tabbar" },
-    editing = { "keybindings" },
-  },
-
-  overrides = function(config)
-    -- Custom keybindings
-    config.keys = config.keys or {}
-    table.insert(config.keys, {
-      key = "q",
-      mods = "CMD",
-      action = wezterm.action.QuitApplication,
-    })
-  end,
-}
-```
+This separation keeps configuration clean and maintainable.
 
 ## Architecture
 
