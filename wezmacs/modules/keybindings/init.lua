@@ -42,7 +42,7 @@ end
 
 function M.apply_to_config(config, state)
   config.disable_default_key_bindings = false
-  config.leader = { key = state.leader_key, mods = state.leader_mod, timeout_milliseconds = 5000 }
+  config.leader = { key = state.config.leader_key, mods = state.config.leader_mod, timeout_milliseconds = 5000 }
 
   -- ============================================================================
   -- KEY TABLES (Modal/Submenu Keybindings)
