@@ -64,13 +64,13 @@ end
 ---@param log function Logging function
 ---@return table|nil Loaded module or nil if failed
 function M.load_module(config, category, mod_name, log)
-  -- Build the require path based on category
-  local require_path = "wezmacs.categories." .. category .. "." .. mod_name
+  -- Build the require path - modules are now flat under wezmacs/modules/
+  local require_path = "wezmacs.modules." .. mod_name
   local alt_require_path = "user.custom-modules." .. mod_name
 
   local ok, mod = pcall(require, require_path)
 
-  -- If not found in built-in categories, try custom modules
+  -- If not found in built-in modules, try custom modules
   if not ok then
     ok, mod = pcall(require, alt_require_path)
   end
