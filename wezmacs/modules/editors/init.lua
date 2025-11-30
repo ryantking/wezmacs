@@ -26,9 +26,10 @@ M._DESCRIPTION = "External code editor launchers"
 M._EXTERNAL_DEPS = { "helix (hx)", "cursor (optional)" }
 M._FEATURE_FLAGS = {}
 M._CONFIG_SCHEMA = {
-  helix_keybinding = "E",
-  cursor_keybinding = "C",
-  modifier = "LEADER",
+  terminal_editor = "vim",
+  ide = "code",
+  leader_key = "e",
+  leader_mod = "LEADER",
 }
 
 function M.init(enabled_flags, user_config, log)
