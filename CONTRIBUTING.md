@@ -215,7 +215,7 @@ M._EXTERNAL_DEPS = { "lazygit", "git", "delta" }
 
 ### 3. Sensible Defaults
 
-Define good defaults in _CONFIG_SCHEMA:
+Define good defaults in _CONFIG_SCHEMA (framework handles merging):
 
 ```lua
 M._CONFIG_SCHEMA = {
@@ -223,12 +223,11 @@ M._CONFIG_SCHEMA = {
   leader_mod = "LEADER",
 }
 
-function M.init(enabled_flags, user_config, log)
-  local config = {}
-  for k, v in pairs(M._CONFIG_SCHEMA) do
-    config[k] = user_config[k] or v  -- User config overrides defaults
-  end
-  return { config = config, flags = enabled_flags or {} }
+-- Framework merges user config from config.lua with these defaults
+-- Access merged config via wezmacs.get_config(module_name)
+function M.apply_to_config(config)
+  local cfg = wezmacs.get_config("your-module")
+  -- cfg.leader_key will be user's value or "g" if not specified
 end
 ```
 
