@@ -215,7 +215,7 @@ local function delete_claudectl_session(window, pane)
 end
 
 function M.apply_to_config(config)
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   -- Create claude key table
   config.key_tables = config.key_tables or {}
@@ -231,8 +231,8 @@ function M.apply_to_config(config)
   -- Add keybinding to activate claude menu
   config.keys = config.keys or {}
   table.insert(config.keys, {
-    key = mod_config.leader_key,
-    mods = mod_config.leader_mod,
+    key = mod.leader_key,
+    mods = mod.leader_mod,
     action = act.ActivateKeyTable({
       name = "claude",
       one_shot = false,
