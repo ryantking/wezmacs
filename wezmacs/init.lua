@@ -59,7 +59,19 @@ function M.setup(config, opts)
     end,
   }
 
-  -- Apply all modules to config
+  -- Apply CORE module first if present (core settings must be applied before others)
+  for i, mod in ipairs(modules) do
+    if mod._NAME == "core" then
+      log("info", "Applying CORE module first")
+      if mod.apply_to_config then
+        mod.apply_to_config(config)
+      end
+      table.remove(modules, i)
+      break
+    end
+  end
+
+  -- Apply remaining modules
   for _, mod in ipairs(modules) do
     local mod_name = mod._NAME or "unknown"
     log("info", "Applying module: " .. mod_name)
