@@ -30,14 +30,14 @@ function M.apply_to_config(config)
   local wezterm = require("wezterm")
 
   -- Get configuration
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   -- Window decorations and behavior
-  config.window_decorations = mod_config.decorations
+  config.window_decorations = mod.decorations
   config.window_close_confirmation = "NeverPrompt"
 
   -- Window padding (equal on all sides)
-  local p = mod_config.padding
+  local p = mod.padding
   config.window_padding = {
     left = p,
     right = p,
@@ -46,7 +46,7 @@ function M.apply_to_config(config)
   }
 
   -- Scrolling behavior
-  config.scrollback_lines = mod_config.scrollback_lines
+  config.scrollback_lines = mod.scrollback_lines
   config.enable_scroll_bar = true
 
   -- Cursor configuration
