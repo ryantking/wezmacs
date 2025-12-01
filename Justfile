@@ -31,7 +31,7 @@ lint:
 check: fmt lint
     @echo "✓ Code quality check passed"
 
-# Initialize ~/.config/wezmacs with user configuration
+# Generate user configuration at ~/.config/wezmacs/wezmacs.lua
 init:
     @if [ -f ~/.wezmacs.lua ] || [ -f ~/.config/wezmacs/wezmacs.lua ]; then \
         echo "WezMacs config already exists:"; \
