@@ -1,17 +1,19 @@
 --[[
   Module: editors
   Category: development
-  Description: External code editor launchers (Helix and Cursor)
+  Description: External code editor launchers (terminal editor and IDE)
 
   Provides:
-  - Helix terminal editor launcher
-  - Cursor GUI editor launcher
-  - Open current directory in editor
+  - Terminal editor in smart split (LEADER e t)
+  - Terminal editor in new tab (LEADER e T)
+  - IDE launcher in CWD (LEADER e i)
+  - Configurable editor/IDE choices
 
-  Configurable flags:
-    helix_keybinding - Keybinding to launch Helix (default: "E")
-    cursor_keybinding - Keybinding to launch Cursor (default: "C")
-    modifier - Key modifier (default: "LEADER")
+  Configuration:
+    terminal_editor - Terminal editor to use (default: "vim")
+    ide - IDE to launch (default: "code" for VS Code)
+    leader_key - Key to activate editors menu (default: "e")
+    leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
 local wezterm = require("wezterm")
@@ -22,7 +24,7 @@ local M = {}
 M._NAME = "editors"
 M._CATEGORY = "development"
 M._DESCRIPTION = "External code editor launchers"
-M._EXTERNAL_DEPS = { "helix (hx)", "cursor (optional)" }
+M._EXTERNAL_DEPS = {}
 M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   terminal_editor = "vim",
