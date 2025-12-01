@@ -25,8 +25,7 @@ M._NAME = "claude"
 M._CATEGORY = "workflows"
 M._DESCRIPTION = "Claude Code integration and workspace management"
 M._EXTERNAL_DEPS = { "claude", "claudectl" }
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   leader_key = "c",
   leader_mod = "LEADER",
 }
