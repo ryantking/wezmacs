@@ -44,9 +44,8 @@ init:
     @echo "✓ Initialized ~/.config/wezmacs"
     @echo ""
     @echo "Next steps:"
-    @echo "1. Edit ~/.config/wezmacs/modules.lua to select modules"
-    @echo "2. Edit ~/.config/wezmacs/config.lua to configure modules"
-    @echo "3. Reload WezTerm configuration"
+    @echo "1. Edit ~/.config/wezmacs/config.lua to enable/configure modules"
+    @echo "2. Reload WezTerm configuration (Cmd+Option+R on macOS)"
 
 # Install WezMacs to ~/.config/wezterm
 install:
