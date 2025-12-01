@@ -40,7 +40,6 @@ init:
     fi
     @echo "Initializing ~/.config/wezmacs..."
     @mkdir -p ~/.config/wezmacs/custom-modules
-    @cp user/modules.lua ~/.config/wezmacs/modules.lua
     @cp user/config.lua ~/.config/wezmacs/config.lua
     @echo "✓ Initialized ~/.config/wezmacs"
     @echo ""
