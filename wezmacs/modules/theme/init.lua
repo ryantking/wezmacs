@@ -25,8 +25,7 @@ M._NAME = "theme"
 M._CATEGORY = "ui"
 M._DESCRIPTION = "Color scheme selection and tab bar colors"
 M._EXTERNAL_DEPS = {}
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   color_scheme = nil,  -- nil = use WezTerm default
 }
 
