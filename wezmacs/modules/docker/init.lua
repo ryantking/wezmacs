@@ -22,8 +22,7 @@ M._NAME = "docker"
 M._CATEGORY = "devops"
 M._DESCRIPTION = "Docker container management with lazydocker"
 M._EXTERNAL_DEPS = { "lazydocker" }
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   leader_key = "d",
   leader_mod = "LEADER",
 }
