@@ -62,17 +62,7 @@ local git_diff_new_window = act.SpawnCommandInNewWindow({
 })
 
 function M.apply_to_config(config)
-  local mod_config = wezmacs.get_config(M._NAME)
-  local enabled_flags = wezmacs.get_enabled_flags(M._NAME)
-
-  -- Check if riff flag is enabled
-  local riff_enabled = false
-  for _, flag in ipairs(enabled_flags) do
-    if flag == "riff" then
-      riff_enabled = true
-      break
-    end
-  end
+  local mod = wezmacs.get_module(M._NAME)
 
   -- Create git key table
   config.key_tables = config.key_tables or {}
@@ -85,15 +75,15 @@ function M.apply_to_config(config)
   }
 
   -- Add riff binding if enabled
-  if riff_enabled then
+  if mod.riff and mod.riff.enabled then
     table.insert(config.key_tables.git, { key = "r", action = wezterm.action_callback(riff_smart_split) })
   end
 
   -- Add keybinding to activate git menu
   config.keys = config.keys or {}
   table.insert(config.keys, {
-    key = mod_config.leader_key,
-    mods = mod_config.leader_mod,
+    key = mod.leader_key,
+    mods = mod.leader_mod,
     action = act.ActivateKeyTable({
       name = "git",
       one_shot = false,
