@@ -21,20 +21,19 @@ M._NAME = "kubernetes"
 M._CATEGORY = "devops"
 M._DESCRIPTION = "Kubernetes cluster management with k9s"
 M._EXTERNAL_DEPS = { "k9s" }
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   keybinding = "k",
   modifier = "LEADER",
 }
 
 function M.apply_to_config(wezterm_config)
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   wezterm_config.keys = wezterm_config.keys or {}
 
   table.insert(wezterm_config.keys, {
-    key = mod_config.keybinding,
-    mods = mod_config.modifier,
+    key = mod.keybinding,
+    mods = mod.modifier,
     action = act.SpawnCommandInNewTab({ args = { "k9s" } })
   })
 end
