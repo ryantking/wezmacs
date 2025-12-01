@@ -59,25 +59,24 @@ M._CONFIG = {
 -- Apply phase (required) - modify WezTerm config
 function M.apply_to_config(config)
   -- Get merged configuration from framework
-  local module_config = wezmacs.get_config("modulename")
-  local enabled_flags = wezmacs.get_enabled_flags("modulename")
+  local mod = wezmacs.get_module("modulename")
 
-  -- Check feature flags
-  if enabled_flags.smartsplit then
+  -- Check feature enabled with explicit check
+  if mod.smartsplit and mod.smartsplit.enabled then
     -- Enable smart-split feature
   end
 
-  -- Use module_config for configuration values
+  -- Use mod for configuration values
   config.keys = config.keys or {}
   table.insert(config.keys, {
-    key = module_config.leader_key,
-    mods = module_config.leader_mod,
+    key = mod.leader_key,
+    mods = mod.leader_mod,
     action = wezterm.action.ActivateKeyTable({ name = "modulename" }),
   })
 
-  -- Feature-specific config is at config.features.feature_name
-  if enabled_flags.advanced then
-    local advanced_config = config.features.advanced
+  -- Feature-specific config is at mod.feature_name.config
+  if mod.advanced and mod.advanced.enabled then
+    local advanced_config = mod.advanced.config
     -- Use advanced_config.advanced_option
   end
 end
