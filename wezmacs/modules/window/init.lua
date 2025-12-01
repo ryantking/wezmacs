@@ -28,11 +28,13 @@ M._CONFIG_SCHEMA = {
 }
 
 function M.apply_to_config(config)
+  local wezterm = require("wezterm")
+
   -- Get configuration
   local mod_config = wezmacs.get_config(M._NAME)
 
   -- Window decorations and behavior
-  config.window_decorations = "RESIZE"
+  config.window_decorations = mod_config.decorations
   config.window_close_confirmation = "NeverPrompt"
 
   -- Window padding (equal on all sides)
