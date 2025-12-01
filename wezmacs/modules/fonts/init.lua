@@ -30,21 +30,20 @@ M._NAME = "fonts"
 M._CATEGORY = "ui"
 M._DESCRIPTION = "Font configuration for terminal and UI elements"
 M._EXTERNAL_DEPS = {}
-M._FEATURES = {
-  {
-    name = "ligatures",
-    config_schema = {
-      harfbuzz_features = nil,  -- nil = use default ligatures
-    },
-    deps = {},
-  },
-}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   font = nil,
   font_size = nil,
   font_rules = nil,
   ui_font = nil,
   ui_font_size = nil,
+  features = {
+    ligatures = {
+      enabled = false,
+      config = {
+        harfbuzz_features = nil,  -- nil = use default ligatures
+      },
+    },
+  },
 }
 
 function M.apply_to_config(config)
