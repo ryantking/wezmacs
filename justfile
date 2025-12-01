@@ -56,37 +56,31 @@ install:
             exit 1; \
         fi \
     fi
-    @echo "Installing WezMacs to ~/.config/wezterm..."
+    @echo "Installing WezMacs framework to ~/.config/wezterm..."
     @mkdir -p ~/.config/wezterm
     @cp -r wezmacs ~/.config/wezterm/
     @cp wezterm.lua ~/.config/wezterm/
     @mkdir -p ~/.config/wezmacs/custom-modules
-    @cp user/config.lua ~/.config/wezmacs/config.lua
-    @echo "✓ WezMacs installed"
-    @echo ""
-    @echo "Installation complete!"
+    @echo "✓ WezMacs framework installed"
     @echo ""
     @echo "Next steps:"
-    @echo "1. Edit ~/.config/wezmacs/config.lua to enable/configure modules"
-    @echo "2. Reload WezTerm (Cmd+Option+R on macOS)"
-    @echo ""
-    @echo "Configuration location: ~/.config/wezmacs/"
-    @echo "Framework location: ~/.config/wezterm/"
+    @echo "1. Run 'just init' to create ~/.config/wezmacs/config.lua"
+    @echo "2. Edit ~/.config/wezmacs/config.lua to configure modules"
+    @echo "3. Reload WezTerm (Cmd+Option+R on macOS)"
 
 # Update existing WezMacs installation
 update:
-    @if [ ! -d ~/.config/wezterm ]; then \
-        echo "WezMacs not installed at ~/.config/wezterm"; \
-        echo "Run 'just install' first"; \
+    @if [ ! -d ~/.config/wezterm/.git ]; then \
+        echo "WezMacs not installed via git at ~/.config/wezterm"; \
+        echo "Cannot auto-update. Please reinstall with 'just install'"; \
         exit 1; \
     fi
     @echo "Updating WezMacs framework..."
-    @cp -r wezmacs ~/.config/wezterm/
-    @cp wezterm.lua ~/.config/wezterm/
+    @cd ~/.config/wezterm && git pull
     @echo "✓ Framework updated"
     @echo ""
     @echo "Your configuration at ~/.config/wezmacs/config.lua is unchanged"
-    @echo "Reload WezTerm to apply framework updates"
+    @echo "Reload WezTerm to apply updates (Cmd+Option+R)"
 
 # Uninstall WezMacs
 uninstall:
