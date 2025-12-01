@@ -21,8 +21,7 @@ M._NAME = "tabbar"
 M._CATEGORY = "ui"
 M._DESCRIPTION = "Custom tab bar with process icons and decorative separators"
 M._EXTERNAL_DEPS = {}
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {}
+M._CONFIG = {}
 
 M.arrow_solid = ""
 M.arrow_thin = ""
