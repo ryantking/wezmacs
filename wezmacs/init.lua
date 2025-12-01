@@ -29,16 +29,14 @@ function M.setup(config, opts)
     end
   end
 
-  -- Use provided modules list and user_config or empty table as fallback
-  local modules_spec = opts.modules_spec or {}
-  local user_config = opts.user_config or {}
+  -- Use unified config (single table where keys are module names)
+  local unified_config = opts.unified_config or {}
 
-  log("info", "Loading WezMacs framework")
+  log("info", "Loading WezMacs framework with unified config")
 
-  -- Phase 1: Load all modules with config merging (no init() phase)
+  -- Load all modules with config merging
   local modules, states = module_loader.load_all(
-    modules_spec,
-    user_config,
+    unified_config,
     log
   )
 
@@ -61,7 +59,7 @@ function M.setup(config, opts)
     end,
   }
 
-  -- Phase 2: Apply all modules to config
+  -- Apply all modules to config
   for _, mod in ipairs(modules) do
     local mod_name = mod._NAME or "unknown"
     log("info", "Applying module: " .. mod_name)
@@ -72,7 +70,7 @@ function M.setup(config, opts)
     end
   end
 
-  log("info", "WezMacs framework initialized successfully")
+  log("info", "WezMacs framework initialized successfully (" .. #modules .. " modules loaded)")
 end
 
 return M
