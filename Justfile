@@ -107,14 +107,16 @@ status:
     else \
         echo "✗ Framework NOT installed"; \
     fi
-    @if [ -d ~/.config/wezmacs ]; then \
-        echo "✓ User config exists at ~/.config/wezmacs"; \
-        echo "  - Main config: ~/.config/wezmacs/config.lua"; \
-        if [ -d ~/.config/wezmacs/custom-modules ]; then \
-            echo "  - Custom modules: ~/.config/wezmacs/custom-modules/"; \
-        fi \
+    @if [ -f ~/.wezmacs.lua ]; then \
+        echo "✓ User config: ~/.wezmacs.lua"; \
+    elif [ -f ~/.config/wezmacs/wezmacs.lua ]; then \
+        echo "✓ User config: ~/.config/wezmacs/wezmacs.lua"; \
     else \
-        echo "✗ User config directory NOT found"; \
+        echo "✗ User config NOT found"; \
+        echo "  Run 'just init' to generate configuration"; \
+    fi
+    @if [ -d ~/.config/wezmacs/custom-modules ]; then \
+        echo "  - Custom modules: ~/.config/wezmacs/custom-modules/"; \
     fi
     @echo ""
     @if [ -d ~/.config/wezterm ] && [ -d ~/.config/wezmacs ]; then \
