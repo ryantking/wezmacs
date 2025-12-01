@@ -25,8 +25,7 @@ M._NAME = "keybindings"
 M._CATEGORY = "editing"
 M._DESCRIPTION = "Core keyboard bindings for pane and tab management"
 M._EXTERNAL_DEPS = {}
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   leader_key = "Space",
   leader_mod = "CMD",
 }
