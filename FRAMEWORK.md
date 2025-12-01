@@ -156,8 +156,7 @@ M._NAME          -- string: module name (must match directory name)
 M._CATEGORY      -- string: ui|behavior|editing|integration|workflows
 M._DESCRIPTION   -- string: one-line description
 M._EXTERNAL_DEPS -- table: list of external tools/dependencies
-M._FEATURES      -- table: map of feature_name = true or { config_schema = {}, deps = {} }
-M._CONFIG_SCHEMA -- table: map of config_key = default_value
+M._CONFIG        -- table: configuration defaults (includes regular config and features)
 ```
 
 ### Apply Function (Required)
