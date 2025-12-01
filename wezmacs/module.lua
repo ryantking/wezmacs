@@ -3,9 +3,10 @@
 
   Handles module discovery, loading, and config merging phases.
 
-  New module format:
-  - modules.lua contains array of module specs: "module-name" or {name="module-name", flags={...}}
-  - config.lua contains module configuration: {module_name = {key = value, ...}, ...}
+  Unified config format:
+  - Single config.lua contains module configs: {module_name = {key = value, ...}, ...}
+  - Module enabled = key exists in config table
+  - Feature flags = nested objects within module config
   - Modules use new API: apply_to_config(config) - config accessed via wezmacs.get_config()
 ]]
 
@@ -25,100 +26,130 @@ function M.merge_config(schema, user_config)
   return config
 end
 
--- Parse _FEATURES format and merge feature configs
+-- Check if a value represents an enabled feature flag
+-- Feature flag is enabled if value is truthy (table or true)
+---@param value any The value to check
+---@return boolean True if value represents an enabled flag
+local function is_feature_enabled(value)
+  return value ~= nil and value ~= false
+end
+
+-- Parse _FEATURES format and extract enabled flags from user config
 ---@param features_def table Features definition (array of strings and objects)
----@param enabled_flags table Array of enabled feature flag names
----@param user_config table User-provided configuration
+---@param user_config table User-provided configuration for the module
+---@param log function Logging function
 ---@return table, table Merged feature configs and enabled flags array
-function M.parse_features(features_def, enabled_flags, user_config)
+function M.parse_features(features_def, user_config, log)
   local feature_configs = {}
   local enabled_flags_array = {}
 
-  for _, feature in ipairs(enabled_flags) do
-    table.insert(enabled_flags_array, feature)
-  end
-
+  -- Iterate through feature definitions
   for _, feature_item in ipairs(features_def or {}) do
+    local feature_name
+    local feature_schema = {}
+    local feature_deps = {}
+
+    -- Parse feature definition (string or table)
     if type(feature_item) == "string" then
-      -- Simple flag: just track if enabled
-      for _, enabled in ipairs(enabled_flags) do
-        if enabled == feature_item then
-          feature_configs[feature_item] = true
-          break
-        end
-      end
+      feature_name = feature_item
     elseif type(feature_item) == "table" and feature_item.name then
-      -- Complex feature: merge config
-      local feature_name = feature_item.name
-      local is_enabled = false
+      feature_name = feature_item.name
+      feature_schema = feature_item.config_schema or {}
+      feature_deps = feature_item.deps or {}
+    else
+      log("warn", "Invalid feature definition format")
+      goto continue
+    end
 
-      for _, enabled in ipairs(enabled_flags) do
-        if enabled == feature_name then
-          is_enabled = true
-          break
-        end
+    -- Check if feature is enabled in user config
+    local feature_user_config = user_config[feature_name]
+    if is_feature_enabled(feature_user_config) then
+      table.insert(enabled_flags_array, feature_name)
+
+      -- Merge feature config if it's a table
+      if type(feature_user_config) == "table" then
+        local merged = M.merge_config(feature_schema, feature_user_config)
+        feature_configs[feature_name] = merged
+      else
+        -- Simple flag (true or empty table {})
+        feature_configs[feature_name] = true
       end
 
-      if is_enabled then
-        local feature_user_config = user_config[feature_name] or {}
-        local merged = M.merge_config(feature_item.config_schema or {}, feature_user_config)
-        feature_configs[feature_name] = merged
+      -- Store dependencies for this feature
+      if #feature_deps > 0 then
+        feature_configs[feature_name .. "_deps"] = feature_deps
       end
     end
+
+    ::continue::
   end
 
   return feature_configs, enabled_flags_array
 end
 
--- Load all modules based on module specification array
----@param modules_spec table Module specification array: "name" or {name="name", flags={...}}
----@param user_config table Per-module configuration from config.lua
+-- Load all modules based on unified config
+---@param unified_config table Unified config table where keys are module names
 ---@param log function Logging function
 ---@return table, table Loaded modules (flat array), states with merged configs
-function M.load_all(modules_spec, user_config, log)
+function M.load_all(unified_config, log)
   local modules = {}
   local states = {}
 
-  -- Process each module specification
-  for _, spec in ipairs(modules_spec) do
-    -- Parse spec: can be string or {name=..., flags=...}
-    local mod_name, enabled_flags
-    if type(spec) == "string" then
-      mod_name = spec
-      enabled_flags = {}
-    elseif type(spec) == "table" and spec.name then
-      mod_name = spec.name
-      enabled_flags = spec.flags or {}
-    else
-      log("warn", "Invalid module spec format: " .. tostring(spec))
+  -- Process each module in the config
+  for mod_name, mod_user_config in pairs(unified_config) do
+    -- Skip if not a table (invalid config)
+    if type(mod_user_config) ~= "table" then
+      log("warn", "Invalid config for module '" .. mod_name .. "' (must be a table)")
       goto continue
     end
 
     -- Load the module
     local mod = M.load_module(mod_name, log)
     if mod then
-      -- Extract config for this specific module
-      local mod_user_config = user_config[mod_name] or {}
+      -- Separate feature flags from regular config
+      -- Feature flags are keys defined in mod._FEATURES
+      local regular_config = {}
+      local feature_flags = {}
 
-      -- Merge module-level config
-      local merged_config = M.merge_config(mod._CONFIG_SCHEMA or {}, mod_user_config)
+      -- Build set of feature flag names for quick lookup
+      local feature_names = {}
+      for _, feature_item in ipairs(mod._FEATURES or {}) do
+        local fname = type(feature_item) == "string" and feature_item or feature_item.name
+        if fname then
+          feature_names[fname] = true
+        end
+      end
+
+      -- Separate user config into regular config and feature flags
+      for k, v in pairs(mod_user_config) do
+        if feature_names[k] then
+          feature_flags[k] = v
+        else
+          regular_config[k] = v
+        end
+      end
+
+      -- Merge module-level config with schema defaults
+      local merged_config = M.merge_config(mod._CONFIG_SCHEMA or {}, regular_config)
 
       -- Parse features and merge feature configs
       local feature_configs, enabled_flags_array = M.parse_features(
         mod._FEATURES or {},
-        enabled_flags,
-        mod_user_config.features or {}
+        feature_flags,
+        log
       )
 
       -- Add features to merged config
       merged_config.features = feature_configs
 
-      -- Store module and state (no longer running init())
+      -- Store module and state
       states[mod_name] = {
         config = merged_config,
         enabled_flags = enabled_flags_array
       }
       table.insert(modules, mod)
+
+      log("info", "Loaded module: " .. mod_name .. " with " .. #enabled_flags_array .. " feature flags")
     end
 
     ::continue::
