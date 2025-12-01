@@ -14,16 +14,32 @@ local wezterm = require("wezterm")
 
 local M = {}
 
--- Merge user config with schema defaults
+-- Deep merge two tables, with user values taking precedence
 ---@param schema table Config schema with default values
 ---@param user_config table User-provided configuration
 ---@return table Merged configuration
-function M.merge_config(schema, user_config)
-  local config = {}
+function M.deep_merge(schema, user_config)
+  local result = {}
+
+  -- Copy all schema keys
   for k, v in pairs(schema) do
-    config[k] = user_config[k] ~= nil and user_config[k] or v
+    if type(v) == "table" and type(user_config[k]) == "table" then
+      -- Recursive merge for nested tables
+      result[k] = M.deep_merge(v, user_config[k])
+    else
+      -- Use user value if present, otherwise use schema default
+      result[k] = user_config[k] ~= nil and user_config[k] or v
+    end
   end
-  return config
+
+  -- Add any user keys not in schema
+  for k, v in pairs(user_config) do
+    if result[k] == nil then
+      result[k] = v
+    end
+  end
+
+  return result
 end
 
 -- Check if a value represents an enabled feature flag
