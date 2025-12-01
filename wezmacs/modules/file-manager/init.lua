@@ -1,16 +1,19 @@
 --[[
   Module: file-manager
   Category: tools
-  Description: File management with yazi terminal file manager
+  Description: File management with configurable terminal file manager
 
   Provides:
-  - yazi launcher in new tab (normal and sudo modes)
-  - File browsing and management
+  - File manager in smart split (LEADER f f)
+  - File manager in new tab (LEADER f F)
+  - File manager with sudo in split (LEADER f s)
+  - File manager with sudo in tab (LEADER f S)
+  - Configurable file manager (default: yazi)
 
-  Configurable flags:
-    keybinding - Keybinding to launch yazi (default: "y")
-    sudo_keybinding - Keybinding to launch yazi as sudo (default: "Y")
-    modifier - Key modifier (default: "LEADER")
+  Configuration:
+    file_manager - File manager to use (default: "yazi")
+    leader_key - Key to activate file-manager menu (default: "f")
+    leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
 local wezterm = require("wezterm")
