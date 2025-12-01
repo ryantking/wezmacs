@@ -23,15 +23,20 @@ return {
   },
 
   -- UI Modules
-  appearance = {
+  theme = {
+    -- Color scheme (nil = use WezTerm default)
+    -- Uncomment to customize:
+    -- color_scheme = "Horizon Dark (Gogh)",
+  },
+
+  fonts = {
     -- All options default to nil (use WezTerm defaults)
     -- Uncomment to customize:
-    -- theme = "Horizon Dark (Gogh)",
     -- font = "Iosevka Mono",
     -- font_size = 16,
+    -- font_rules = nil,  -- nil = auto-generate, {} = disable, [...] = custom
     -- ui_font = "Iosevka",
     -- ui_font_size = 14,
-    -- window_decorations = "RESIZE",
 
     -- Feature flags:
     -- ligatures = {},  -- Enable font ligatures
@@ -42,7 +47,11 @@ return {
   },
 
   window = {
-    -- Window padding, scrolling, behavior
+    -- Window decorations, padding, scrolling, behavior
+    -- Uncomment to customize:
+    -- decorations = "RESIZE",
+    -- padding = 16,
+    -- scrollback_lines = 5000,
   },
 
   -- Behavior Modules
