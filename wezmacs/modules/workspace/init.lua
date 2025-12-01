@@ -1,18 +1,19 @@
 --[[
   Module: workspace
   Category: workflows
-  Description: Workspace switching and management with fuzzy search
+  Description: WezTerm workspace switching and management with fuzzy search
 
   Provides:
-  - Fuzzy workspace switcher via plugin
-  - Create new workspace with name prompt
-  - Delete workspace with fuzzy selection
-  - Previous workspace navigation
-  - System workspace quick access
+  - Fuzzy workspace switcher (LEADER s)
+  - Previous workspace navigation (LEADER S)
+  - System workspace quick access (LEADER B)
+  - Integration with smart_workspace_switcher plugin
 
-  Configurable flags:
-    leader_key - Workspace key (default: s)
-    leader_mod - Leader modifier (default: LEADER)
+  Note: For Claude Code workspace management, see the claude module.
+
+  Configuration:
+    leader_key - Key for workspace switcher (default: "s")
+    leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
 local wezterm = require("wezterm")
