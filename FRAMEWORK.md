@@ -191,27 +191,24 @@ end
 
 ### Global WezMacs API
 
-The framework provides a global `wezmacs` table with these functions:
+The framework provides a global `wezmacs` table with this function:
 
 ```lua
 -- Get merged configuration for a module
--- Returns table with values from config.lua merged with _CONFIG_SCHEMA defaults
-local module_config = wezmacs.get_config("modulename")
-
--- Get enabled flags for a module
--- Returns table with flag_name = true for each enabled flag
-local enabled_flags = wezmacs.get_enabled_flags("modulename")
+-- Returns table with values from config.lua deep-merged with M._CONFIG defaults
+local mod = wezmacs.get_module("modulename")
 
 -- Example usage in a module:
 function M.apply_to_config(config)
-  local cfg = wezmacs.get_config("git")
-  local flags = wezmacs.get_enabled_flags("git")
+  local mod = wezmacs.get_module("git")
 
-  if flags.smartsplit then
+  -- Check feature enabled
+  if mod.smartsplit and mod.smartsplit.enabled then
     -- Use smartsplit feature
+    local smartsplit_config = mod.smartsplit.config
   end
 
-  -- Use cfg.leader_key, cfg.leader_mod, etc.
+  -- Use regular config: mod.leader_key, mod.leader_mod, etc.
 end
 ```
 
