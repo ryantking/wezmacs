@@ -14,6 +14,14 @@
 ]]
 
 return {
+  -- Core WezTerm Settings (applied first)
+  core = {
+    enable_kitty_keyboard = false,
+    enable_kitty_graphics = true,
+    default_prog = { "/opt/homebrew/bin/fish", "-l" },
+    default_workspace = "~",
+  },
+
   -- UI Modules
   appearance = {
     -- All options default to nil (use WezTerm defaults)
