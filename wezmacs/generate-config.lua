@@ -202,15 +202,18 @@ local function generate_config(modules)
         end
         table.insert(lines, "  " .. mod.name .. " = {")
 
-        if mod.schema then
-          for field, value in pairs(mod.schema) do
+        if mod.config then
+          for field, value in pairs(mod.config) do
             table.insert(lines, "    -- " .. field .. " = " .. value .. ",")
           end
         end
 
-        if mod.has_features then
-          table.insert(lines, "    -- Feature flags:")
-          table.insert(lines, "    -- feature_name = {},")
+        if mod.features and #mod.features > 0 then
+          table.insert(lines, "")
+          table.insert(lines, "    -- Optional features (set enabled = true to enable):")
+          for _, feature in ipairs(mod.features) do
+            table.insert(lines, "    -- " .. feature .. " = { enabled = false, config = {} },")
+          end
         end
 
         table.insert(lines, "  },")
