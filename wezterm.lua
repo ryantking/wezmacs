@@ -11,7 +11,7 @@
   - wezmacs/modules/: Built-in modules (flat structure)
 
   User Configuration:
-  - ~/.config/wezmacs/config.lua: Module selection and flags
+  - ~/.config/wezmacs/config.lua: Unified module configuration
   - ~/.config/wezmacs/custom-modules/: User's custom modules
 ]]
 
@@ -37,48 +37,47 @@ config.default_workspace = "~"
 -- ============================================================================
 -- WEZMACS FRAMEWORK INITIALIZATION
 -- ============================================================================
--- Load user configuration from ~/.config/wezmacs/
+-- Load unified configuration from ~/.config/wezmacs/config.lua
 
-local function load_config_file(filename)
+local function load_unified_config()
   local config_dir = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
-  local file_path = config_dir .. "/wezmacs/" .. filename
+  local file_path = config_dir .. "/wezmacs/config.lua"
 
   if wezterm.path_exists(file_path) then
     local chunk, err = loadfile(file_path)
     if chunk then
       return chunk()
     else
-      wezterm.log_error("Failed to load " .. filename .. ": " .. err)
+      wezterm.log_error("Failed to load config.lua: " .. err)
       return nil
     end
   else
-    wezterm.log_warn(filename .. " not found at " .. file_path)
+    wezterm.log_warn("config.lua not found at " .. file_path)
     return nil
   end
 end
 
--- Load modules specification (which modules to load + feature flags)
-local modules_spec = load_config_file("modules.lua")
-if not modules_spec then
+-- Load unified config
+local unified_config = load_unified_config()
+if not unified_config then
   wezterm.log_warn("Using default modules - run 'just install' to set up")
-  -- Default modules if none specified
-  modules_spec = {
-    "appearance",
-    "tabbar",
-    "mouse",
-    "keybindings",
-    "git",
-    "workspace",
-    "claude",
+  -- Default configuration if none specified
+  unified_config = {
+    appearance = {},
+    tabbar = {},
+    mouse = {},
+    keybindings = {
+      leader_key = "Space",
+      leader_mod = "CMD",
+    },
+    git = {},
+    workspace = {},
+    claude = {},
   }
 end
 
--- Load user configuration (per-module settings)
-local user_config = load_config_file("config.lua") or {}
-
 wezmacs.setup(config, {
-  modules_spec = modules_spec,
-  user_config = user_config,
+  unified_config = unified_config,
   log_level = "info",
 })
 
