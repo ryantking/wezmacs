@@ -72,34 +72,31 @@ M._CONFIG = {
 --   config: WezTerm config object (from config_builder())
 --
 -- Access your module's config:
---   - local mod_config = wezmacs.get_config(M._NAME)
---   - Access module config: mod_config.leader_key
---   - Access feature config: mod_config.features.feature_name
---   - Access enabled flags: wezmacs.get_enabled_flags(M._NAME)
+--   - local mod = wezmacs.get_module(M._NAME)
+--   - Access regular config: mod.leader_key
+--   - Check feature enabled: if mod.simple_feature and mod.simple_feature.enabled then
+--   - Access feature config: mod.complex_feature.config.option
 
 function M.apply_to_config(config)
   -- Get this module's configuration (framework handles merging)
-  local mod_config = wezmacs.get_config(M._NAME)
-  local enabled_flags = wezmacs.get_enabled_flags(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
-  -- Example: Check for enabled feature flags
-  -- for _, flag in ipairs(enabled_flags) do
-  --   if flag == "simple_flag" then
-  --     -- Enable simple-flag functionality
-  --   end
+  -- Example: Check for enabled feature
+  -- if mod.simple_feature and mod.simple_feature.enabled then
+  --   -- Enable simple-feature functionality
   -- end
 
   -- Example: Access feature config
-  -- if mod_config.features.complex_flag then
-  --   local feat_config = mod_config.features.complex_flag
+  -- if mod.complex_feature and mod.complex_feature.enabled then
+  --   local feat_config = mod.complex_feature.config
   --   -- Use feat_config.option
   -- end
 
   -- Example: Apply a keybinding using configuration values
   -- config.keys = config.keys or {}
   -- table.insert(config.keys, {
-  --   key = mod_config.leader_key,
-  --   mods = mod_config.leader_mod,
+  --   key = mod.leader_key,
+  --   mods = mod.leader_mod,
   --   action = wezterm.action.ActivateKeyTable({
   --     name = "your-module",
   --     one_shot = false,
