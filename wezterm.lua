@@ -24,7 +24,7 @@ local config = wezterm.config_builder()
 -- ============================================================================
 -- WEZMACS FRAMEWORK INITIALIZATION
 -- ============================================================================
--- Load unified configuration from ~/.config/wezmacs/config.lua
+-- Load unified configuration from ~/.wezmacs.lua or ~/.config/wezmacs/wezmacs.lua
 
 local function load_unified_config()
   local home = os.getenv("HOME")
