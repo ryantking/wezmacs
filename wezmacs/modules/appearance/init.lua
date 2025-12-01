@@ -35,6 +35,8 @@ M._CONFIG_SCHEMA = {
   theme = nil,
   font = nil,
   font_size = nil,
+  ui_font = nil,
+  ui_font_size = nil,
   window_decorations = "RESIZE",
 }
 
