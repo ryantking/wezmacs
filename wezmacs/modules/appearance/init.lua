@@ -187,34 +187,52 @@ function M.apply_to_config(config)
     }
   end
 
-  -- UI fonts (for UI elements) - only if theme is configured
+  -- UI fonts (for UI elements) - only if configured
+  if mod_config.ui_font or mod_config.ui_font_size then
+    if mod_config.ui_font then
+      local ui_font = wezterm.font({ family = mod_config.ui_font })
+      config.char_select_font = ui_font
+      config.command_palette_font = ui_font
+
+      -- Window frame styling
+      if not config.window_frame then
+        config.window_frame = {}
+      end
+      config.window_frame.font = ui_font
+    end
+
+    if mod_config.ui_font_size then
+      config.char_select_font_size = mod_config.ui_font_size
+      config.command_palette_font_size = mod_config.ui_font_size
+
+      -- Window frame styling
+      if not config.window_frame then
+        config.window_frame = {}
+      end
+      config.window_frame.font_size = mod_config.ui_font_size
+    end
+  end
+
+  -- Apply theme-based UI styling if theme is configured
   if mod_config.theme then
     local theme = wezterm.get_builtin_color_schemes()[mod_config.theme]
     if theme then
-      local ui_font = wezterm.font({ family = "Iosevka" })
-      local ui_font_size = 14
-
-      -- Window frame styling
-      config.window_frame = {
-        font = ui_font,
-        font_size = ui_font_size,
-        active_titlebar_bg = theme.background,
-        inactive_titlebar_bg = theme.background,
-        active_titlebar_fg = theme.foreground,
-        inactive_titlebar_fg = theme.foreground,
-      }
+      -- Window frame colors
+      if not config.window_frame then
+        config.window_frame = {}
+      end
+      config.window_frame.active_titlebar_bg = theme.background
+      config.window_frame.inactive_titlebar_bg = theme.background
+      config.window_frame.active_titlebar_fg = theme.foreground
+      config.window_frame.inactive_titlebar_fg = theme.foreground
 
       -- Character selector appearance
       config.char_select_bg_color = theme.brights[1]
       config.char_select_fg_color = theme.foreground
-      config.char_select_font = ui_font
-      config.char_select_font_size = ui_font_size
 
       -- Command palette appearance
       config.command_palette_bg_color = theme.brights[1]
       config.command_palette_fg_color = theme.foreground
-      config.command_palette_font = ui_font
-      config.command_palette_font_size = ui_font_size
     end
   end
 end
