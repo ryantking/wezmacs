@@ -30,11 +30,11 @@ M._CONFIG = {
 }
 
 function M.apply_to_config(config)
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   -- Only apply theme if configured
-  if mod_config.color_scheme then
-    local theme = wezterm.get_builtin_color_schemes()[mod_config.color_scheme]
+  if mod.color_scheme then
+    local theme = wezterm.get_builtin_color_schemes()[mod.color_scheme]
     if not theme then
       wezterm.log_error("WezMacs: Color scheme '" .. mod_config.color_scheme .. "' not found, using default")
       -- Don't apply anything, let WezTerm use its default
