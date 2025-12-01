@@ -4,12 +4,13 @@
   Description: Docker container management with lazydocker
 
   Provides:
-  - lazydocker launcher in new tab
+  - lazydocker in smart split (LEADER d d)
+  - lazydocker in new tab (LEADER d D)
   - Container, image, and volume management
 
-  Configurable flags:
-    keybinding - Keybinding to launch lazydocker (default: "D")
-    modifier - Key modifier (default: "LEADER")
+  Configuration:
+    leader_key - Key to activate docker menu (default: "d")
+    leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
 local wezterm = require("wezterm")
