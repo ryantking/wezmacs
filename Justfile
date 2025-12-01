@@ -18,13 +18,13 @@ deps:
 # Format all Lua files with StyLua
 fmt:
     @echo "Formatting Lua files..."
-    stylua --check-only . 2>/dev/null || stylua .
+    stylua --check-only wezmacs/ 2>/dev/null || stylua wezmacs/
     @echo "✓ Formatting complete"
 
 # Check code quality with Luacheck
 lint:
     @echo "Linting with luacheck..."
-    luacheck wezmacs/ user/ examples/ --codes 2>/dev/null || true
+    luacheck wezmacs/ --codes 2>/dev/null || true
     @echo "✓ Linting complete"
 
 # Format and lint (full code quality check)
@@ -40,14 +40,12 @@ init:
     fi
     @echo "Initializing ~/.config/wezmacs..."
     @mkdir -p ~/.config/wezmacs/custom-modules
-    @cp user/modules.lua ~/.config/wezmacs/modules.lua
     @cp user/config.lua ~/.config/wezmacs/config.lua
     @echo "✓ Initialized ~/.config/wezmacs"
     @echo ""
     @echo "Next steps:"
-    @echo "1. Edit ~/.config/wezmacs/modules.lua to select modules"
-    @echo "2. Edit ~/.config/wezmacs/config.lua to configure modules"
-    @echo "3. Reload WezTerm configuration"
+    @echo "1. Edit ~/.config/wezmacs/config.lua to enable/configure modules"
+    @echo "2. Reload WezTerm configuration (Cmd+Option+R on macOS)"
 
 # Install WezMacs to ~/.config/wezterm
 install:
@@ -63,16 +61,14 @@ install:
     @cp -r wezmacs ~/.config/wezterm/
     @cp wezterm.lua ~/.config/wezterm/
     @mkdir -p ~/.config/wezmacs/custom-modules
-    @cp user/modules.lua ~/.config/wezmacs/modules.lua
     @cp user/config.lua ~/.config/wezmacs/config.lua
     @echo "✓ WezMacs installed"
     @echo ""
     @echo "Installation complete!"
     @echo ""
     @echo "Next steps:"
-    @echo "1. Edit ~/.config/wezmacs/modules.lua to select modules"
-    @echo "2. Edit ~/.config/wezmacs/config.lua to configure modules"
-    @echo "3. Reload WezTerm (Cmd+Option+R on macOS)"
+    @echo "1. Edit ~/.config/wezmacs/config.lua to enable/configure modules"
+    @echo "2. Reload WezTerm (Cmd+Option+R on macOS)"
     @echo ""
     @echo "Configuration location: ~/.config/wezmacs/"
     @echo "Framework location: ~/.config/wezterm/"
