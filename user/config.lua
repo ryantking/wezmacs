@@ -1,102 +1,108 @@
 --[[
-  WezMacs User Configuration
+  WezMacs Unified Configuration
 
-  This file contains PER-MODULE CONFIGURATION (values and options).
-
-  Module selection and feature flags are specified in modules.lua.
-  This file specifies HOW each module should be configured.
+  This file contains ALL module configuration in one place.
+  - Module enabled = key exists in this table
+  - Feature flags = nested objects within module config
+  - Empty table {} enables module with defaults
 
   Example:
-  ```lua
-  appearance = {
-    theme = "Horizon Dark (Gogh)",
-    font = "JetBrains Mono",
-    font_size = 16,
-  },
-  git = {
-    leader_key = "g",
-    leader_mod = "LEADER",
-  },
-  ```
+    appearance = {
+      theme = "TokyoNight",
+      ligatures = {},  -- Enable ligatures feature flag
+    }
 ]]
 
 return {
-  -- Appearance module configuration
+  -- UI Modules
   appearance = {
-    theme = "Horizon Dark (Gogh)",  -- WezTerm builtin color scheme
-    font = "Iosevka Mono",
-    font_size = 16,
+    -- All options default to nil (use WezTerm defaults)
+    -- Uncomment to customize:
+    -- theme = "Horizon Dark (Gogh)",
+    -- font = "Iosevka Mono",
+    -- font_size = 16,
+    -- ui_font = "Iosevka",
+    -- ui_font_size = 14,
+    -- window_decorations = "RESIZE",
+
+    -- Feature flags:
+    -- ligatures = {},  -- Enable font ligatures
   },
 
-  -- Keybindings module configuration
+  tabbar = {
+    -- Custom tab bar with icons
+  },
+
+  window = {
+    -- Window padding, scrolling, behavior
+  },
+
+  -- Behavior Modules
+  mouse = {
+    -- Mouse selection and link handling
+  },
+
+  -- Editing Modules
   keybindings = {
     leader_key = "Space",
     leader_mod = "CMD",
   },
 
-  -- Git module configuration
+  -- Workflow Modules
   git = {
     leader_key = "g",
     leader_mod = "LEADER",
+    -- Feature flags:
+    -- riff = {},  -- Enable riff integration
   },
 
-  -- Workspace module configuration
   workspace = {
     leader_key = "s",
     leader_mod = "LEADER",
   },
 
-  -- Claude module configuration
   claude = {
     leader_key = "c",
     leader_mod = "LEADER",
   },
 
-  -- Kubernetes module configuration
+  -- Tool Modules
   kubernetes = {
     leader_key = "k",
     leader_mod = "LEADER",
   },
 
-  -- Docker module configuration
   docker = {
-    leader_key = "D",
+    leader_key = "d",
     leader_mod = "LEADER",
   },
 
-  -- File manager module configuration
   ["file-manager"] = {
-    leader_key = "y",
+    leader_key = "f",
     leader_mod = "LEADER",
-    sudo_key = "Y",
+    -- manager = "yazi",  -- File manager to use (default: yazi)
   },
 
-  -- Media module configuration
   media = {
     leader_key = "m",
     leader_mod = "LEADER",
   },
 
-  -- Editors module configuration
   editors = {
-    helix_key = "E",
-    cursor_key = "C",
+    -- terminal_editor = "vim",  -- Default terminal editor
+    -- ide = "code",              -- Default IDE (VS Code)
+    leader_key = "e",
     leader_mod = "LEADER",
   },
 
-  -- System monitor module configuration
   ["system-monitor"] = {
     leader_key = "h",
     leader_mod = "LEADER",
   },
 
-  -- Domains module configuration
+  -- Integration Modules
   domains = {
-    attach_key = "t",
-    attach_mods = "ALT|SHIFT",
-    vsplit_key = "_",
-    vsplit_mods = "CTRL|SHIFT|ALT",
-    hsplit_key = "-",
-    hsplit_mods = "CTRL|ALT",
+    leader_key = "t",
+    leader_mod = "LEADER",
   },
 }
