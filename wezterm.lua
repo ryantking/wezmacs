@@ -27,19 +27,27 @@ local config = wezterm.config_builder()
 -- Load unified configuration from ~/.config/wezmacs/config.lua
 
 local function load_unified_config()
-  local config_dir = os.getenv("XDG_CONFIG_HOME") or (os.getenv("HOME") .. "/.config")
-  local file_path = config_dir .. "/wezmacs/config.lua"
+  local home = os.getenv("HOME")
+  local config_dir = os.getenv("XDG_CONFIG_HOME") or (home .. "/.config")
 
-  if wezterm.path_exists(file_path) then
-    local chunk, err = loadfile(file_path)
-    if chunk then
-      return chunk()
-    else
-      error("Failed to load config.lua: " .. err)
+  -- Priority order: ~/.wezmacs.lua, then ~/.config/wezmacs/wezmacs.lua
+  local paths = {
+    home .. "/.wezmacs.lua",
+    config_dir .. "/wezmacs/wezmacs.lua",
+  }
+
+  for _, file_path in ipairs(paths) do
+    if wezterm.path_exists(file_path) then
+      local chunk, err = loadfile(file_path)
+      if chunk then
+        return chunk()
+      else
+        error("Failed to load " .. file_path .. ": " .. err)
+      end
     end
-  else
-    return nil
   end
+
+  return nil
 end
 
 -- Load unified config or fail
