@@ -75,39 +75,42 @@ local function scan_modules()
           module_info.description = desc
         end
 
-        -- Extract _CONFIG_SCHEMA
-        local schema_start = content:find("M%._CONFIG_SCHEMA%s*=%s*{")
-        if schema_start then
+        -- Extract _CONFIG (unified structure)
+        local config_start = content:find("M%._CONFIG%s*=%s*{")
+        if config_start then
           local brace_count = 0
-          local in_schema = false
-          local schema_text = ""
-          for i = schema_start, #content do
+          local in_config = false
+          local config_text = ""
+          for i = config_start, #content do
             local char = content:sub(i, i)
             if char == "{" then
               brace_count = brace_count + 1
-              in_schema = true
+              in_config = true
             elseif char == "}" then
               brace_count = brace_count - 1
             end
-            if in_schema then
-              schema_text = schema_text .. char
+            if in_config then
+              config_text = config_text .. char
             end
-            if in_schema and brace_count == 0 then
+            if in_config and brace_count == 0 then
               break
             end
           end
 
-          -- Parse schema fields
-          module_info.schema = {}
-          for field, value in schema_text:gmatch('([%w_]+)%s*=%s*([^,}]+)') do
-            module_info.schema[field] = value:gsub("^%s+", ""):gsub("%s+$", "")
-          end
-        end
+          -- Parse config fields (basic regex - captures top-level keys)
+          module_info.config = {}
+          module_info.features = {}
 
-        -- Extract _FEATURES
-        local features_match = content:match('M%._FEATURES%s*=%s*{(.-)}\n')
-        if features_match and features_match:find("{") then
-          module_info.has_features = true
+          -- Look for top-level fields
+          for field, value in config_text:gmatch('\n%s+([%w_]+)%s*=%s*([^,\n]+)') do
+            local trimmed = value:gsub("^%s+", ""):gsub("%s+$", "")
+            module_info.config[field] = trimmed
+          end
+
+          -- Look for feature definitions (fields with enabled = false/true)
+          for feature_name in config_text:gmatch('\n%s+([%w_]+)%s*=%s*{[^}]*enabled%s*=') do
+            table.insert(module_info.features, feature_name)
+          end
         end
 
         table.insert(modules, module_info)
