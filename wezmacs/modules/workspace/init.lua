@@ -26,8 +26,7 @@ M._NAME = "workspace"
 M._CATEGORY = "workflows"
 M._DESCRIPTION = "Workspace switching and management"
 M._EXTERNAL_DEPS = {} -- Uses WezTerm plugin: smart_workspace_switcher
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   leader_key = "s",
   leader_mod = "LEADER",
 }
