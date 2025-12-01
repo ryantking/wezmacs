@@ -24,6 +24,7 @@ M._FEATURES = {}
 M._CONFIG_SCHEMA = {
   padding = 16,
   scrollback_lines = 5000,
+  decorations = "RESIZE",
 }
 
 function M.apply_to_config(config)
