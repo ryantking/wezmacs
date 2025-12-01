@@ -70,18 +70,17 @@ install:
 
 # Update existing WezMacs installation
 update:
-    @if [ ! -d ~/.config/wezterm ]; then \
-        echo "WezMacs not installed at ~/.config/wezterm"; \
-        echo "Run 'just install' first"; \
+    @if [ ! -d ~/.config/wezterm/.git ]; then \
+        echo "WezMacs not installed via git at ~/.config/wezterm"; \
+        echo "Cannot auto-update. Please reinstall with 'just install'"; \
         exit 1; \
     fi
     @echo "Updating WezMacs framework..."
-    @cp -r wezmacs ~/.config/wezterm/
-    @cp wezterm.lua ~/.config/wezterm/
+    @cd ~/.config/wezterm && git pull
     @echo "✓ Framework updated"
     @echo ""
     @echo "Your configuration at ~/.config/wezmacs/config.lua is unchanged"
-    @echo "Reload WezTerm to apply framework updates"
+    @echo "Reload WezTerm to apply updates (Cmd+Option+R)"
 
 # Uninstall WezMacs
 uninstall:
