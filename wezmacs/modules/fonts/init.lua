@@ -36,12 +36,10 @@ M._CONFIG = {
   font_rules = nil,
   ui_font = nil,
   ui_font_size = nil,
-  features = {
-    ligatures = {
-      enabled = false,
-      config = {
-        harfbuzz_features = nil,  -- nil = use default ligatures
-      },
+  ligatures = {
+    enabled = false,
+    config = {
+      harfbuzz_features = nil,  -- nil = use default ligatures
     },
   },
 }
