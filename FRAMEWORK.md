@@ -36,22 +36,24 @@ M._CATEGORY = "category"  -- For docs only
 M._DESCRIPTION = "What this does"
 M._EXTERNAL_DEPS = { "tool1", "tool2" }
 
--- Feature flags (optional features users can enable)
--- Can be simple flags or complex objects with config_schema and deps
-M._FEATURES = {
-  smartsplit = true,  -- Simple flag
+-- Configuration with defaults (includes features)
+M._CONFIG = {
+  -- Regular configuration
+  leader_key = "g",
+  leader_mod = "LEADER",
+
+  -- Optional features (users must enable via `enabled = true`)
+  smartsplit = {
+    enabled = false,  -- Must be explicitly enabled
+    config = {},
+  },
   advanced = {
-    config_schema = {
+    enabled = false,
+    config = {
       advanced_option = "default",
     },
     deps = { "smartsplit" },  -- Requires smartsplit to be enabled
   },
-}
-
--- Configuration schema with defaults
-M._CONFIG_SCHEMA = {
-  leader_key = "g",
-  leader_mod = "LEADER",
 }
 
 -- Apply phase (required) - modify WezTerm config
