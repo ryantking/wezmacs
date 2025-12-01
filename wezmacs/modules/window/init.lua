@@ -58,6 +58,30 @@ function M.apply_to_config(config)
 
   -- Audio feedback
   config.audible_bell = "Disabled"
+
+  -- Apply theme-based UI styling if theme module is enabled
+  local theme_config = wezmacs.get_config("theme")
+  if theme_config and theme_config.color_scheme then
+    local theme = wezterm.get_builtin_color_schemes()[theme_config.color_scheme]
+    if theme then
+      -- Window frame colors
+      if not config.window_frame then
+        config.window_frame = {}
+      end
+      config.window_frame.active_titlebar_bg = theme.background
+      config.window_frame.inactive_titlebar_bg = theme.background
+      config.window_frame.active_titlebar_fg = theme.foreground
+      config.window_frame.inactive_titlebar_fg = theme.foreground
+
+      -- Character selector appearance
+      config.char_select_bg_color = theme.brights[1]
+      config.char_select_fg_color = theme.foreground
+
+      -- Command palette appearance
+      config.command_palette_bg_color = theme.brights[1]
+      config.command_palette_fg_color = theme.foreground
+    end
+  end
 end
 
 return M
