@@ -21,20 +21,19 @@ M._NAME = "media"
 M._CATEGORY = "tools"
 M._DESCRIPTION = "Media player control with spotify_player"
 M._EXTERNAL_DEPS = { "spotify_player" }
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   keybinding = "m",
   modifier = "LEADER",
 }
 
 function M.apply_to_config(wezterm_config)
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   wezterm_config.keys = wezterm_config.keys or {}
 
   table.insert(wezterm_config.keys, {
-    key = mod_config.keybinding,
-    mods = mod_config.modifier,
+    key = mod.keybinding,
+    mods = mod.modifier,
     action = act.SpawnCommandInNewTab({ args = { "spotify_player" } })
   })
 end
