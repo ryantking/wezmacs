@@ -58,9 +58,25 @@ return {
 - **Close Confirmation**: Never prompt (instant close)
 - **Decorations**: Resize handle only (minimal chrome)
 
+## Theme Integration
+
+When the `theme` module is enabled and a color_scheme is set, the window module automatically applies theme colors to:
+
+- **Window Frame**: Active/inactive titlebar background and foreground
+- **Character Selector**: Background and foreground colors (Ctrl+Shift+U)
+- **Command Palette**: Background and foreground colors (Ctrl+Shift+P)
+
+This ensures UI widgets match your chosen theme seamlessly.
+
 ## External Dependencies
 
 None. Uses only WezTerm builtin features.
+
+## Related Modules
+
+- `ui/theme` - Color scheme selection (provides colors for UI widgets)
+- `ui/fonts` - Font configuration
+- `ui/tabbar` - Tab bar styling
 
 ## Keybindings
 
