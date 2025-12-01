@@ -33,10 +33,20 @@ M._CONFIG_SCHEMA = {
 
 -- Create and open claudectl workspace
 local function create_claudectl_workspace(window, pane)
+  -- Get color from theme or use default
+  local theme_config = wezmacs.get_config("theme")
+  local prompt_color = "#56be8d" -- fallback
+  if theme_config and theme_config.color_scheme then
+    local theme = wezterm.get_builtin_color_schemes()[theme_config.color_scheme]
+    if theme and theme.ansi and theme.ansi[3] then
+      prompt_color = theme.ansi[3] -- Use cyan/green from theme
+    end
+  end
+
   window:perform_action(
     act.PromptInputLine({
       description = wezterm.format({
-        { Foreground = { Color = "#56be8d" } },
+        { Foreground = { Color = prompt_color } },
         { Text = "Enter workspace name: " },
       }),
       action = wezterm.action_callback(function(inner_window, inner_pane, line)
