@@ -21,16 +21,14 @@ M._NAME = "git"
 M._CATEGORY = "workflows"
 M._DESCRIPTION = "Git workflow integration (lazygit, diff, etc)"
 M._EXTERNAL_DEPS = { "lazygit", "git", "delta" }
-M._FEATURES = {
-  {
-    name = "riff",
-    config_schema = {},
-    deps = { "riff" },
-  },
-}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   leader_key = "g",
   leader_mod = "LEADER",
+  riff = {
+    enabled = false,
+    config = {},
+    deps = { "riff" },
+  },
 }
 
 local split = require("wezmacs.utils.split")
