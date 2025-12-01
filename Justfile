@@ -33,18 +33,20 @@ check: fmt lint
 
 # Initialize ~/.config/wezmacs with user configuration
 init:
-    @if [ -d ~/.config/wezmacs ]; then \
-        echo "~/.config/wezmacs already exists"; \
-        echo "Remove it first with: rm -rf ~/.config/wezmacs"; \
+    @if [ -f ~/.wezmacs.lua ] || [ -f ~/.config/wezmacs/wezmacs.lua ]; then \
+        echo "WezMacs config already exists:"; \
+        [ -f ~/.wezmacs.lua ] && echo "  ~/.wezmacs.lua"; \
+        [ -f ~/.config/wezmacs/wezmacs.lua ] && echo "  ~/.config/wezmacs/wezmacs.lua"; \
+        echo ""; \
+        echo "Remove existing config first or run 'just init --force' to overwrite"; \
         exit 1; \
     fi
-    @echo "Initializing ~/.config/wezmacs..."
+    @echo "Generating WezMacs configuration..."
+    @lua wezmacs/generate-config.lua
     @mkdir -p ~/.config/wezmacs/custom-modules
-    @cp user/config.lua ~/.config/wezmacs/config.lua
-    @echo "✓ Initialized ~/.config/wezmacs"
     @echo ""
     @echo "Next steps:"
-    @echo "1. Edit ~/.config/wezmacs/config.lua to enable/configure modules"
+    @echo "1. Edit ~/.config/wezmacs/wezmacs.lua to enable/configure modules"
     @echo "2. Reload WezTerm configuration (Cmd+Option+R on macOS)"
 
 # Install WezMacs to ~/.config/wezterm
