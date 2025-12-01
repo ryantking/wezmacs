@@ -4,17 +4,17 @@
   Description: Claude Code integration with workspace management
 
   Provides:
-  - New Claude session in tab
-  - Create new claudectl workspace
-  - List and select active claudectl workspaces
-  - Delete claudectl workspaces
+  - Open Claude in new tab (LEADER c c or LEADER c C)
+  - Create new claudectl workspace (LEADER c w)
+  - Switch to existing workspace (LEADER c s)
+  - Delete claudectl workspace (LEADER c d)
 
   Note: This module depends on claudectl being installed.
   If not available, only basic claude launching works.
 
-  Configurable flags:
-    leader_key - Claude submenu key (default: c)
-    leader_mod - Leader modifier (default: LEADER)
+  Configuration:
+    leader_key - Key to activate claude menu (default: "c")
+    leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
 local wezterm = require("wezterm")
