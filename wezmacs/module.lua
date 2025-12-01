@@ -51,61 +51,28 @@ function M.load_all(unified_config, log)
   local modules = {}
   local states = {}
 
-  -- Process each module in the config
   for mod_name, mod_user_config in pairs(unified_config) do
-    -- Skip if not a table (invalid config)
     if type(mod_user_config) ~= "table" then
       log("warn", "Invalid config for module '" .. mod_name .. "' (must be a table)")
       goto continue
     end
 
-    -- Load the module
     local mod = M.load_module(mod_name, log)
     if mod then
-      -- Separate feature flags from regular config
-      -- Feature flags are keys defined in mod._FEATURES
-      local regular_config = {}
-      local feature_flags = {}
-
-      -- Build set of feature flag names for quick lookup
-      local feature_names = {}
-      for _, feature_item in ipairs(mod._FEATURES or {}) do
-        local fname = type(feature_item) == "string" and feature_item or feature_item.name
-        if fname then
-          feature_names[fname] = true
-        end
+      -- Validate module has _CONFIG
+      if not mod._CONFIG then
+        log("error", "Module '" .. mod_name .. "' missing required '_CONFIG' definition")
+        goto continue
       end
 
-      -- Separate user config into regular config and feature flags
-      for k, v in pairs(mod_user_config) do
-        if feature_names[k] then
-          feature_flags[k] = v
-        else
-          regular_config[k] = v
-        end
-      end
-
-      -- Merge module-level config with schema defaults
-      local merged_config = M.merge_config(mod._CONFIG_SCHEMA or {}, regular_config)
-
-      -- Parse features and merge feature configs
-      local feature_configs, enabled_flags_array = M.parse_features(
-        mod._FEATURES or {},
-        feature_flags,
-        log
-      )
-
-      -- Add features to merged config
-      merged_config.features = feature_configs
+      -- Deep merge user config with module _CONFIG defaults
+      local merged_config = M.deep_merge(mod._CONFIG, mod_user_config)
 
       -- Store module and state
-      states[mod_name] = {
-        config = merged_config,
-        enabled_flags = enabled_flags_array
-      }
+      states[mod_name] = merged_config
       table.insert(modules, mod)
 
-      log("info", "Loaded module: " .. mod_name .. " with " .. #enabled_flags_array .. " feature flags")
+      log("info", "Loaded module: " .. mod_name)
     end
 
     ::continue::
