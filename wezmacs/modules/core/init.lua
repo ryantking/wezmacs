@@ -37,14 +37,14 @@ function M.apply_to_config(config)
   local mod = wezmacs.get_module(M._NAME)
 
   -- Terminal protocol support
-  config.enable_kitty_keyboard = mod_config.enable_kitty_keyboard
-  config.enable_kitty_graphics = mod_config.enable_kitty_graphics
+  config.enable_kitty_keyboard = mod.enable_kitty_keyboard
+  config.enable_kitty_graphics = mod.enable_kitty_graphics
 
   -- Shell and workspace defaults
-  if mod_config.default_prog then
-    config.default_prog = mod_config.default_prog
+  if mod.default_prog then
+    config.default_prog = mod.default_prog
   end
-  config.default_workspace = mod_config.default_workspace
+  config.default_workspace = mod.default_workspace
 
   -- Global event handlers
   wezterm.on("mux-is-process-stateful", function(_proc)
