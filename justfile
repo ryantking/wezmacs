@@ -31,20 +31,22 @@ lint:
 check: fmt lint
     @echo "✓ Code quality check passed"
 
-# Initialize ~/.config/wezmacs with user configuration
+# Generate user configuration at ~/.config/wezmacs/wezmacs.lua
 init:
-    @if [ -d ~/.config/wezmacs ]; then \
-        echo "~/.config/wezmacs already exists"; \
-        echo "Remove it first with: rm -rf ~/.config/wezmacs"; \
+    @if [ -f ~/.wezmacs.lua ] || [ -f ~/.config/wezmacs/wezmacs.lua ]; then \
+        echo "WezMacs config already exists:"; \
+        [ -f ~/.wezmacs.lua ] && echo "  ~/.wezmacs.lua"; \
+        [ -f ~/.config/wezmacs/wezmacs.lua ] && echo "  ~/.config/wezmacs/wezmacs.lua"; \
+        echo ""; \
+        echo "Remove existing config first or run 'just init --force' to overwrite"; \
         exit 1; \
     fi
-    @echo "Initializing ~/.config/wezmacs..."
+    @echo "Generating WezMacs configuration..."
+    @lua wezmacs/generate-config.lua
     @mkdir -p ~/.config/wezmacs/custom-modules
-    @cp user/config.lua ~/.config/wezmacs/config.lua
-    @echo "✓ Initialized ~/.config/wezmacs"
     @echo ""
     @echo "Next steps:"
-    @echo "1. Edit ~/.config/wezmacs/config.lua to enable/configure modules"
+    @echo "1. Edit ~/.config/wezmacs/wezmacs.lua to enable/configure modules"
     @echo "2. Reload WezTerm configuration (Cmd+Option+R on macOS)"
 
 # Install WezMacs to ~/.config/wezterm
@@ -105,20 +107,22 @@ status:
     else \
         echo "✗ Framework NOT installed"; \
     fi
-    @if [ -d ~/.config/wezmacs ]; then \
-        echo "✓ User config exists at ~/.config/wezmacs"; \
-        echo "  - Main config: ~/.config/wezmacs/config.lua"; \
-        if [ -d ~/.config/wezmacs/custom-modules ]; then \
-            echo "  - Custom modules: ~/.config/wezmacs/custom-modules/"; \
-        fi \
+    @if [ -f ~/.wezmacs.lua ]; then \
+        echo "✓ User config: ~/.wezmacs.lua"; \
+    elif [ -f ~/.config/wezmacs/wezmacs.lua ]; then \
+        echo "✓ User config: ~/.config/wezmacs/wezmacs.lua"; \
     else \
-        echo "✗ User config directory NOT found"; \
+        echo "✗ User config NOT found"; \
+        echo "  Run 'just init' to generate configuration"; \
+    fi
+    @if [ -d ~/.config/wezmacs/custom-modules ]; then \
+        echo "  - Custom modules: ~/.config/wezmacs/custom-modules/"; \
     fi
     @echo ""
-    @if [ -d ~/.config/wezterm ] && [ -d ~/.config/wezmacs ]; then \
+    @if [ -d ~/.config/wezterm ] && ([ -f ~/.wezmacs.lua ] || [ -f ~/.config/wezmacs/wezmacs.lua ]); then \
         echo "Status: ✓ Ready to use!"; \
     else \
-        echo "Status: Run 'just install' to set up"; \
+        echo "Status: Run 'just install' and 'just init' to set up"; \
     fi
 
 # Test WezMacs with current branch's config
