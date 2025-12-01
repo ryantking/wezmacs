@@ -28,7 +28,7 @@ M._CONFIG = {
 }
 
 function M.apply_to_config(wezterm_config)
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
   local split = require("wezmacs.utils.split")
 
   -- Lazydocker in smart split
@@ -47,8 +47,8 @@ function M.apply_to_config(wezterm_config)
   -- Add keybinding to activate docker menu
   wezterm_config.keys = wezterm_config.keys or {}
   table.insert(wezterm_config.keys, {
-    key = mod_config.leader_key,
-    mods = mod_config.leader_mod,
+    key = mod.leader_key,
+    mods = mod.leader_mod,
     action = act.ActivateKeyTable({
       name = "docker",
       one_shot = false,
