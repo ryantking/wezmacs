@@ -32,10 +32,10 @@ M._CONFIG = {
 
 function M.apply_to_config(config)
   -- Get configuration
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   config.disable_default_key_bindings = false
-  config.leader = { key = mod_config.leader_key, mods = mod_config.leader_mod, timeout_milliseconds = 5000 }
+  config.leader = { key = mod.leader_key, mods = mod.leader_mod, timeout_milliseconds = 5000 }
 
   -- ============================================================================
   -- KEY TABLES (Modal/Submenu Keybindings)
