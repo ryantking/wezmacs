@@ -98,51 +98,51 @@ function M.apply_to_config(config)
         intensity = "Normal",
         italic = false,
         font = wezterm.font_with_fallback({
-          { family = mod_config.font, weight = "Medium" },
+          { family = mod.font, weight = "Medium" },
         }),
       },
       {
         intensity = "Bold",
         italic = false,
         font = wezterm.font_with_fallback({
-          { family = mod_config.font, weight = "ExtraBold" },
+          { family = mod.font, weight = "ExtraBold" },
         }),
       },
       {
         intensity = "Half",
         italic = false,
         font = wezterm.font_with_fallback({
-          { family = mod_config.font, weight = "Thin" },
+          { family = mod.font, weight = "Thin" },
         }),
       },
       {
         intensity = "Normal",
         italic = true,
         font = wezterm.font_with_fallback({
-          { family = mod_config.font, weight = "Regular", style = "Italic" },
+          { family = mod.font, weight = "Regular", style = "Italic" },
         }),
       },
       {
         intensity = "Bold",
         italic = true,
         font = wezterm.font_with_fallback({
-          { family = mod_config.font, weight = "Bold", style = "Italic" },
+          { family = mod.font, weight = "Bold", style = "Italic" },
         }),
       },
       {
         intensity = "Half",
         italic = true,
         font = wezterm.font_with_fallback({
-          { family = mod_config.font, weight = "Thin", style = "Italic" },
+          { family = mod.font, weight = "Thin", style = "Italic" },
         }),
       },
     }
   end
 
   -- UI fonts (for UI elements) - only if configured
-  if mod_config.ui_font or mod_config.ui_font_size then
-    if mod_config.ui_font then
-      local ui_font = wezterm.font({ family = mod_config.ui_font })
+  if mod.ui_font or mod.ui_font_size then
+    if mod.ui_font then
+      local ui_font = wezterm.font({ family = mod.ui_font })
       config.char_select_font = ui_font
       config.command_palette_font = ui_font
 
@@ -153,15 +153,15 @@ function M.apply_to_config(config)
       config.window_frame.font = ui_font
     end
 
-    if mod_config.ui_font_size then
-      config.char_select_font_size = mod_config.ui_font_size
-      config.command_palette_font_size = mod_config.ui_font_size
+    if mod.ui_font_size then
+      config.char_select_font_size = mod.ui_font_size
+      config.command_palette_font_size = mod.ui_font_size
 
       -- Window frame styling
       if not config.window_frame then
         config.window_frame = {}
       end
-      config.window_frame.font_size = mod_config.ui_font_size
+      config.window_frame.font_size = mod.ui_font_size
     end
   end
 end
