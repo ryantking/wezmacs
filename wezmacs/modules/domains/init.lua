@@ -4,17 +4,15 @@
   Description: Quick domain management for SSH/Docker/Kubernetes
 
   Provides:
-  - Quick attach to SSH/Docker/Kubernetes domains
-  - Domain split (vertical/horizontal) support
+  - Quick attach to domain (LEADER t a)
+  - Vertical split domain (LEADER t v)
+  - Horizontal split domain (LEADER t h)
   - Auto-detection of domain types
+  - Integration with quick_domains plugin
 
-  Configurable flags:
-    attach_key - Key for domain attach (default: "t")
-    attach_mod - Modifier for attach (default: "ALT|SHIFT")
-    vsplit_key - Key for vertical split (default: "_")
-    vsplit_mod - Modifier for vsplit (default: "CTRL|SHIFT|ALT")
-    hsplit_key - Key for horizontal split (default: "-")
-    hsplit_mod - Modifier for hsplit (default: "CTRL|ALT")
+  Configuration:
+    leader_key - Key to activate domains menu (default: "t")
+    leader_mod - Modifier for leader key (default: "LEADER")
     ssh_ignore - Ignore SSH domains (default: true)
     docker_ignore - Ignore Docker domains (default: false)
     kubernetes_ignore - Ignore Kubernetes domains (default: true)
