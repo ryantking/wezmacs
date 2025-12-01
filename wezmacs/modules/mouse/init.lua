@@ -20,8 +20,7 @@ M._NAME = "mouse"
 M._CATEGORY = "behavior"
 M._DESCRIPTION = "Mouse bindings and behavior"
 M._EXTERNAL_DEPS = {}
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   leader_mod = "CMD",
 }
 
