@@ -26,10 +26,10 @@ M._CONFIG = {
 
 function M.apply_to_config(config)
   -- Get configuration
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   config.alternate_buffer_wheel_scroll_speed = 1
-  config.bypass_mouse_reporting_modifiers = mod_config.leader_mod
+  config.bypass_mouse_reporting_modifiers = mod.leader_mod
   config.hide_mouse_cursor_when_typing = false
 
   config.mouse_bindings = {
@@ -42,7 +42,7 @@ function M.apply_to_config(config)
     -- Leader+left-click: Open link or extend selection
     {
       event = { Up = { streak = 1, button = "Left" } },
-      mods = mod_config.leader_mod,
+      mods = mod.leader_mod,
       action = wezterm.action.CompleteSelectionOrOpenLinkAtMouseCursor("ClipboardAndPrimarySelection"),
     },
 
