@@ -55,9 +55,21 @@ These applications get custom display names:
 3. If pane is zoomed: prepend 🔍 emoji
 4. Trim very long titles (configurable via `tab_max_width`)
 
+## Theme Integration
+
+When the `theme` module is enabled and a color_scheme is set, tab bar colors are automatically customized to match. The tabbar module reads colors from WezTerm's resolved palette, which includes tab_bar colors set by the theme module.
+
+No configuration needed - theme integration works automatically.
+
 ## External Dependencies
 
 None. Uses WezTerm builtin nerd fonts.
+
+## Related Modules
+
+- `ui/theme` - Color scheme selection (provides tab bar colors)
+- `ui/fonts` - Font configuration
+- `ui/window` - Window styling
 
 ## Keybindings
 
