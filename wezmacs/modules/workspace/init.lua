@@ -32,7 +32,7 @@ M._CONFIG = {
 }
 
 function M.apply_to_config(config)
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   -- Plugin setup
   workspace_switcher.apply_to_config(config)
@@ -42,22 +42,22 @@ function M.apply_to_config(config)
 
   -- Workspace switcher
   table.insert(config.keys, {
-    key = mod_config.leader_key,
-    mods = mod_config.leader_mod,
+    key = mod.leader_key,
+    mods = mod.leader_mod,
     action = workspace_switcher.switch_workspace(),
   })
 
   -- Switch to previous workspace
   table.insert(config.keys, {
     key = "S",
-    mods = mod_config.leader_mod,
+    mods = mod.leader_mod,
     action = workspace_switcher.switch_to_prev_workspace(),
   })
 
   -- Jump to System workspace
   table.insert(config.keys, {
     key = "B",
-    mods = mod_config.leader_mod,
+    mods = mod.leader_mod,
     action = wezterm.action_callback(function(window, pane)
       window:perform_action(
         act.SwitchToWorkspace({
