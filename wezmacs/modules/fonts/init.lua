@@ -45,34 +45,25 @@ M._CONFIG = {
 }
 
 function M.apply_to_config(config)
-  local mod_config = wezmacs.get_config(M._NAME)
-  local enabled_flags = wezmacs.get_enabled_flags(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   -- Only apply font if configured
-  if mod_config.font then
+  if mod.font then
     config.font = wezterm.font_with_fallback({
-      { family = mod_config.font, weight = "Medium" },
+      { family = mod.font, weight = "Medium" },
     })
     config.warn_about_missing_glyphs = false
   end
 
   -- Only apply font_size if configured
-  if mod_config.font_size then
-    config.font_size = mod_config.font_size
+  if mod.font_size then
+    config.font_size = mod.font_size
   end
 
-  -- Apply ligatures only if ligatures flag is enabled
-  local enable_ligatures = false
-  for _, flag in ipairs(enabled_flags) do
-    if flag == "ligatures" then
-      enable_ligatures = true
-      break
-    end
-  end
-
-  if enable_ligatures then
-    local ligatures_config = mod_config.features and mod_config.features.ligatures
-    if ligatures_config and ligatures_config.harfbuzz_features then
+  -- Apply ligatures only if ligatures feature is enabled
+  if mod.ligatures and mod.ligatures.enabled then
+    local ligatures_config = mod.ligatures.config
+    if ligatures_config.harfbuzz_features then
       config.harfbuzz_features = ligatures_config.harfbuzz_features
     else
       -- Default ligatures + stylistic sets
