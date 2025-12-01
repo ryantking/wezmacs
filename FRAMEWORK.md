@@ -92,18 +92,16 @@ Modules are loaded in a single phase with framework-managed configuration:
 - Called for each module after framework merges configuration
 - Receives one parameter:
   - `config`: WezTerm config object (from config_builder())
-- Uses `wezmacs.get_config(module_name)` to access merged configuration
-- Uses `wezmacs.get_enabled_flags(module_name)` to check enabled features
+- Uses `wezmacs.get_module(module_name)` to access merged configuration
 - Modifies config object (add keybindings, set colors, register events, etc)
 - Required - every module must define this
 - Modules are stateless and have no initialization phase
 
 **Configuration Merging:**
 The framework handles configuration merging before modules run:
-- User config from `config.lua` is merged with module's `_CONFIG_SCHEMA` defaults
-- Feature flags from `modules.lua` are processed and validated
-- Feature-specific config is merged and stored at `config.features.feature_name`
-- All merged config is accessible via global `wezmacs` API
+- User config from `config.lua` is deep-merged with module's `M._CONFIG` defaults
+- Feature flags (with `enabled = true`) are processed along with regular config
+- All merged config is accessible via global `wezmacs.get_module()` API
 
 **Why Framework-Managed Config?**
 - Eliminates duplicate config merging code in every module
