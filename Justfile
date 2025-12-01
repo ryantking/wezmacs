@@ -119,10 +119,10 @@ status:
         echo "  - Custom modules: ~/.config/wezmacs/custom-modules/"; \
     fi
     @echo ""
-    @if [ -d ~/.config/wezterm ] && [ -d ~/.config/wezmacs ]; then \
+    @if [ -d ~/.config/wezterm ] && ([ -f ~/.wezmacs.lua ] || [ -f ~/.config/wezmacs/wezmacs.lua ]); then \
         echo "Status: ✓ Ready to use!"; \
     else \
-        echo "Status: Run 'just install' to set up"; \
+        echo "Status: Run 'just install' and 'just init' to set up"; \
     fi
 
 # Test WezMacs with current branch's config
