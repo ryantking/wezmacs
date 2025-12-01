@@ -53,7 +53,7 @@ end
 -- Load unified config or fail
 local unified_config = load_unified_config()
 if not unified_config then
-  error("WezMacs config not found at ~/.config/wezmacs/config.lua\nRun 'just init' to create configuration")
+  error("WezMacs config not found at ~/.wezmacs.lua or ~/.config/wezmacs/wezmacs.lua\nRun 'just init' to create configuration")
 end
 
 -- Initialize framework (core module will handle core settings)
