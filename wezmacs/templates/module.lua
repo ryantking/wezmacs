@@ -39,24 +39,27 @@ M._EXTERNAL_DEPS = {
   -- "git",      -- Example: tool name
 }
 
--- Features: optional features users can enable in modules.lua
--- Example: { name = "your-module-name", flags = { "riff" } }
--- Or with complex config/deps: { name = "your-module-name", flags = { { name = "riff", deps = {"riff"} } } }
-M._FEATURES = {
-  -- "simple_flag",           -- Example: simple boolean feature flag
-  -- {
-  --   name = "complex_flag",
-  --   config_schema = { option = "default" },  -- Feature-specific config defaults
-  --   deps = { "external_tool" }               -- Feature-specific dependencies
-  -- }
-}
-
--- Configuration schema: default values for all configuration options
+-- Configuration: default values for all options including features
 -- Users can override these in config.lua
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
+  -- Regular module configuration
   -- leader_key = "y",        -- Example: default keybinding
   -- leader_mod = "LEADER",   -- Example: default modifier
   -- timeout = 5000,          -- Example: default timeout in ms
+
+  -- Optional features (user must enable via `enabled = true`)
+  -- simple_feature = {
+  --   enabled = false,
+  --   config = {},
+  -- },
+  --
+  -- complex_feature = {
+  --   enabled = false,
+  --   config = {
+  --     option = "default",   -- Feature-specific config defaults
+  --   },
+  --   deps = { "external_tool" },  -- Feature-specific dependencies
+  -- },
 }
 
 -- ============================================================================
