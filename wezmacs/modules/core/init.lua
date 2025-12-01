@@ -26,8 +26,7 @@ M._NAME = "core"
 M._CATEGORY = "system"
 M._DESCRIPTION = "Core WezTerm settings and global event handlers"
 M._EXTERNAL_DEPS = {}
-M._FEATURES = {}
-M._CONFIG_SCHEMA = {
+M._CONFIG = {
   enable_kitty_keyboard = false,
   enable_kitty_graphics = true,
   default_prog = nil,  -- nil = use WezTerm default
@@ -35,7 +34,7 @@ M._CONFIG_SCHEMA = {
 }
 
 function M.apply_to_config(config)
-  local mod_config = wezmacs.get_config(M._NAME)
+  local mod = wezmacs.get_module(M._NAME)
 
   -- Terminal protocol support
   config.enable_kitty_keyboard = mod_config.enable_kitty_keyboard
