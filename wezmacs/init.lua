@@ -42,20 +42,14 @@ function M.setup(config, opts)
 
   -- Create global wezmacs API table (captured closure over states)
   _G.wezmacs = {
-    -- Get merged config for a module
-    get_config = function(module_name)
+    -- Get full merged config for a module (includes features)
+    get_module = function(module_name)
       local state = states[module_name]
       if not state then
         log("warn", "No config found for module: " .. module_name)
         return { features = {} }
       end
-      return state.config
-    end,
-
-    -- Get enabled flags for a module
-    get_enabled_flags = function(module_name)
-      local state = states[module_name]
-      return state and state.enabled_flags or {}
+      return state
     end,
   }
 
