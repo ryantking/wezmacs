@@ -4,15 +4,21 @@
   Description: Color scheme, fonts, visual styling, and font rules
 
   Provides:
-  - Horizon Dark Gogh color scheme
-  - Iosevka Mono with extensive stylistic sets
+  - Color scheme configuration (uses WezTerm default if not specified)
+  - Font configuration with stylistic sets
   - Font rules for different text intensities and styles
-  - UI font configuration
+  - UI font configuration for menus and window frame
 
-  Configurable flags:
-    theme - Color scheme name (default: "Horizon Dark (Gogh)")
-    font - Font family (default: "Iosevka Mono")
-    font_size - Terminal font size in points (default: 16)
+  Configuration options:
+    theme - Color scheme name (nil = use WezTerm default)
+    font - Font family (nil = use WezTerm default)
+    font_size - Terminal font size in points (nil = use WezTerm default)
+    ui_font - UI elements font (nil = use WezTerm default)
+    ui_font_size - UI elements font size (nil = use WezTerm default)
+    window_decorations - Window decoration style (default: "RESIZE")
+
+  Feature flags:
+    ligatures - Enable font ligatures with configurable harfbuzz features
 ]]
 
 local wezterm = require("wezterm")
