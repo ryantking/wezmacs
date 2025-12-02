@@ -209,8 +209,8 @@ new-module MODULE_NAME:
     cp wezmacs/templates/module.lua "$MODULE_DIR/init.lua"
 
     # Create README
-    cat > "$MODULE_DIR/README.md" << 'EOF'
-# {{MODULE_NAME}} module
+    cat > "$MODULE_DIR/README.md" << EOF
+# {{{{MODULE_NAME}}}} module
 
 Brief description of what this module does.
 
@@ -221,13 +221,12 @@ Brief description of what this module does.
 
 ## Configuration
 
-```lua
-flags = {
-  category = {
-    {{MODULE_NAME}} = {}
-  }
+\`\`\`lua
+-- Enable the module
+{{{{MODULE_NAME}}}} = {
+  -- config options here
 }
-```
+\`\`\`
 
 ## External Dependencies
 
