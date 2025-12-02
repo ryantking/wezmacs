@@ -40,11 +40,13 @@ M._CONFIG = {
 }
 
 function M.apply_to_config(config)
-  config.use_fancy_tab_bar = true
-  config.tab_bar_at_bottom = false
-  config.hide_tab_bar_if_only_one_tab = true
-  config.tab_max_width = 60
-  config.unzoom_on_switch_pane = true
+  local mod = wezmacs.get_module(M._NAME)
+
+  config.use_fancy_tab_bar = mod.use_fancy_tab_bar
+  config.tab_bar_at_bottom = mod.tab_bar_at_bottom
+  config.hide_tab_bar_if_only_one_tab = mod.hide_tab_bar_if_only_one_tab
+  config.tab_max_width = mod.tab_max_width
+  config.unzoom_on_switch_pane = mod.unzoom_on_switch_pane
 
   wezterm.on("format-tab-title", function(tab, tabs, panes, config_obj, hover, max_width)
     local title = titles.format(tab, max_width)
@@ -69,7 +71,7 @@ function M.apply_to_config(config)
     local is_last = tab_idx == #tabs
     local next_tab = tabs[tab_idx + 1]
     local next_is_active = next_tab and next_tab.is_active
-    local arrow = (tab.is_active or is_last or next_is_active) and M.arrow_solid or M.arrow_thin
+    local arrow = (tab.is_active or is_last or next_is_active) and mod.arrow_solid or mod.arrow_thin
     local arrow_bg = inactive_bg
     local arrow_fg = colors.tab_bar.inactive_tab_edge
 
