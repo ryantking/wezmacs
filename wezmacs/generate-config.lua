@@ -204,7 +204,12 @@ local function generate_config(modules)
         if mod.description then
           table.insert(lines, "  -- " .. mod.description)
         end
-        table.insert(lines, "  " .. mod.name .. " = {")
+        -- Quote module name if it contains hyphens
+        local module_key = mod.name
+        if module_key:match("-") then
+          module_key = '["' .. module_key .. '"]'
+        end
+        table.insert(lines, "  " .. module_key .. " = {")
 
         if mod.config then
           for field, value in pairs(mod.config) do
