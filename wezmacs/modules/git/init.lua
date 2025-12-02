@@ -50,11 +50,6 @@ function M.apply_to_config(config)
     { key = "Escape", action = "PopKeyTable" },
   }
 
-  -- Add riff binding if enabled
-  if mod.riff and mod.riff.enabled then
-    table.insert(config.key_tables.git, { key = "r", action = wezterm.action_callback(actions.riff_smart_split) })
-  end
-
   -- Add keybinding to activate git menu
   config.keys = config.keys or {}
   table.insert(config.keys, {
