@@ -38,11 +38,11 @@ function M.apply_to_config(config)
   -- Create claude key table
   config.key_tables = config.key_tables or {}
   config.key_tables.claude = {
-    { key = "c", action = wezterm.action_callback(create_claudectl_workspace) },
+    { key = "c", action = wezterm.action_callback(actions.create_claudectl_workspace) },
     { key = "C", action = act.SpawnCommandInNewTab({ args = { "claudectl", "workspace", "create" } }) },
-    { key = "Space", action = wezterm.action_callback(list_claudectl_sessions) },
-    { key = "s", action = wezterm.action_callback(list_claudectl_sessions) },
-    { key = "d", action = wezterm.action_callback(delete_claudectl_session) },
+    { key = "Space", action = wezterm.action_callback(actions.list_claudectl_sessions) },
+    { key = "s", action = wezterm.action_callback(actions.list_claudectl_sessions) },
+    { key = "d", action = wezterm.action_callback(actions.delete_claudectl_session) },
     { key = "Escape", action = "PopKeyTable" },
   }
 
