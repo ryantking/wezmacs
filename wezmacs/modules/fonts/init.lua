@@ -33,12 +33,24 @@ M._EXTERNAL_DEPS = {}
 M._CONFIG = {
   font = nil,
   font_size = nil,
-  font_rules = nil,
+  font_rules = nil,  -- nil = auto-generate if font set, {} = disable, [...] = custom
   ui_font = nil,
   ui_font_size = nil,
   ligatures = {
     enabled = false,
-    harfbuzz_features = nil,  -- nil = use default ligatures
+    harfbuzz_features = {
+      "ss01", -- Contextual alternatives
+      "ss02", -- Stylistic Set 2
+      "ss03", -- Stylistic Set 3
+      "ss04", -- Stylistic Set 4
+      "ss05", -- Stylistic Set 5
+      "ss06", -- Stylistic Set 6
+      "ss07", -- Stylistic Set 7
+      "ss08", -- Stylistic Set 8
+      "calt", -- Contextual alternates
+      "liga", -- Standard ligatures
+      "dlig", -- Discretionary ligatures
+    },
   },
 }
 
