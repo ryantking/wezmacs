@@ -72,24 +72,7 @@ function M.apply_to_config(config)
 
   -- Apply ligatures only if ligatures feature is enabled
   if mod.ligatures and mod.ligatures.enabled then
-    if mod.ligatures.harfbuzz_features then
-      config.harfbuzz_features = mod.ligatures.harfbuzz_features
-    else
-      -- Default ligatures + stylistic sets
-      config.harfbuzz_features = {
-        "ss01", -- Contextual alternatives
-        "ss02", -- Stylistic Set 2
-        "ss03", -- Stylistic Set 3
-        "ss04", -- Stylistic Set 4
-        "ss05", -- Stylistic Set 5
-        "ss06", -- Stylistic Set 6
-        "ss07", -- Stylistic Set 7
-        "ss08", -- Stylistic Set 8
-        "calt", -- Contextual alternates
-        "liga", -- Standard ligatures
-        "dlig", -- Discretionary ligatures
-      }
-    end
+    config.harfbuzz_features = mod.ligatures.harfbuzz_features
   end
 
   -- Font rules for different text styles
