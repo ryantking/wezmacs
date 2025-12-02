@@ -18,9 +18,7 @@
 ]]
 
 local wezterm = require("wezterm")
-local act = wezterm.action
 local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
-local actions = require("wezmacs.modules.workspace.actions")
 
 local M = {}
 
