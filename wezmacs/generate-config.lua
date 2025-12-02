@@ -221,7 +221,7 @@ local function generate_config(modules)
           table.insert(lines, "")
           table.insert(lines, "    -- Optional features (set enabled = true to enable):")
           for _, feature in ipairs(mod.features) do
-            table.insert(lines, "    -- " .. feature .. " = { enabled = false, config = {} },")
+            table.insert(lines, "    -- " .. feature .. " = { enabled = false },")
           end
         end
 
