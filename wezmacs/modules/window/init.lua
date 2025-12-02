@@ -59,9 +59,9 @@ function M.apply_to_config(config)
   config.audible_bell = "Disabled"
 
   -- Apply theme-based UI styling if theme module is enabled
-  local theme_config = wezmacs.get_config("theme")
-  if theme_config and theme_config.color_scheme then
-    local theme = wezterm.get_builtin_color_schemes()[theme_config.color_scheme]
+  local theme_mod = wezmacs.get_module("theme")
+  if theme_mod and theme_mod.color_scheme then
+    local theme = wezterm.get_builtin_color_schemes()[theme_mod.color_scheme]
     if theme then
       -- Window frame colors
       if not config.window_frame then
