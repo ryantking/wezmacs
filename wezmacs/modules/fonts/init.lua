@@ -34,6 +34,14 @@ M._CONFIG = {
   font = nil,
   font_size = nil,
   font_rules = nil,  -- nil = auto-generate if font set, {} = disable, [...] = custom
+  default_font_rules = {
+    { intensity = "Normal", italic = false, weight = "Medium" },
+    { intensity = "Bold", italic = false, weight = "ExtraBold" },
+    { intensity = "Half", italic = false, weight = "Thin" },
+    { intensity = "Normal", italic = true, weight = "Regular", style = "Italic" },
+    { intensity = "Bold", italic = true, weight = "Bold", style = "Italic" },
+    { intensity = "Half", italic = true, weight = "Thin", style = "Italic" },
+  },
   ui_font = nil,
   ui_font_size = nil,
   ligatures = {
