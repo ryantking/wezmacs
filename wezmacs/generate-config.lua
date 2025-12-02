@@ -97,18 +97,22 @@ local function scan_modules()
             end
           end
 
-          -- Parse config fields (basic regex - captures top-level keys)
+          -- Parse config fields (improved - only top-level, non-nested)
           module_info.config = {}
           module_info.features = {}
 
-          -- Look for top-level fields
-          for field, value in config_text:gmatch('\n%s+([%w_]+)%s*=%s*([^,\n]+)') do
-            local trimmed = value:gsub("^%s+", ""):gsub("%s+$", "")
-            module_info.config[field] = trimmed
+          -- Look for top-level fields (field = value, where value is not {)
+          -- This captures simple values like strings, numbers, nil, booleans
+          for field, value in config_text:gmatch('\n  ([%w_]+)%s*=%s*([^{\n,]+),?') do
+            local trimmed = value:gsub("^%s+", ""):gsub("%s+$", ""):gsub(",$", "")
+            if trimmed ~= "" then
+              module_info.config[field] = trimmed
+            end
           end
 
-          -- Look for feature definitions (fields with enabled = false/true)
-          for feature_name in config_text:gmatch('\n%s+([%w_]+)%s*=%s*{[^}]*enabled%s*=') do
+          -- Look for feature definitions (top-level fields with nested enabled = )
+          -- Match: field_name = { ... enabled = ...
+          for feature_name in config_text:gmatch('\n  ([%w_]+)%s*=%s*{[^}]*enabled%s*=') do
             table.insert(module_info.features, feature_name)
           end
         end
