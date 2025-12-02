@@ -36,7 +36,7 @@ function M.apply_to_config(config)
   config.unzoom_on_switch_pane = true
 
   wezterm.on("format-tab-title", function(tab, tabs, panes, config_obj, hover, max_width)
-    local title = M.title(tab, max_width)
+    local title = titles.format(tab, max_width)
     local colors = config_obj.resolved_palette
     local active_bg = colors.tab_bar.active_tab.bg_color
     local inactive_bg = colors.tab_bar.inactive_tab.bg_color
