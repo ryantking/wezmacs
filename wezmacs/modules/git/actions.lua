@@ -21,9 +21,4 @@ function M.git_diff_smart_split(window, pane)
   })
 end
 
--- Riff in smart split (if enabled)
-function M.riff_smart_split(window, pane)
-  split.smart_split(pane, { "riff" })
-end
-
 return M
