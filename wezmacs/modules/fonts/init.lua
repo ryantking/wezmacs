@@ -83,11 +83,9 @@ function M.apply_to_config(config)
   end
 
   -- Font rules for different text styles
-  -- User can set: nil = auto-generate, {} = disable, [...] = custom
-  if mod.font_rules == nil and mod.font then
-    -- Auto-generate font rules from default_font_rules if font is configured
+  if mod.font and mod.font_rules and type(mod.font_rules) == "table" and #mod.font_rules > 0 then
     config.font_rules = {}
-    for _, rule_template in ipairs(mod.default_font_rules) do
+    for _, rule_template in ipairs(mod.font_rules) do
       local rule = {
         intensity = rule_template.intensity,
         italic = rule_template.italic,
@@ -101,11 +99,7 @@ function M.apply_to_config(config)
       }
       table.insert(config.font_rules, rule)
     end
-  elseif mod.font_rules and type(mod.font_rules) == "table" and #mod.font_rules > 0 then
-    -- User provided custom font rules
-    config.font_rules = mod.font_rules
   end
-  -- else: font_rules = {} means disable, don't set anything
 
   -- UI fonts (for UI elements) - only if configured
   if mod.ui_font or mod.ui_font_size then
