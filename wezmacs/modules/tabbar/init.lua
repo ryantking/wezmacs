@@ -37,7 +37,14 @@ function M.apply_to_config(config)
 
   wezterm.on("format-tab-title", function(tab, tabs, panes, config_obj, hover, max_width)
     local title = titles.format(tab, max_width)
+
+    -- Check if tab_bar colors are available
     local colors = config_obj.resolved_palette
+    if not colors.tab_bar then
+      -- Return simple title without decorations if theme not loaded
+      return { { Text = title } }
+    end
+
     local active_bg = colors.tab_bar.active_tab.bg_color
     local inactive_bg = colors.tab_bar.inactive_tab.bg_color
 
