@@ -39,9 +39,19 @@ function M.apply_to_config(wezterm_config)
   -- Create editors key table
   wezterm_config.key_tables = wezterm_config.key_tables or {}
   wezterm_config.key_tables.editors = {
-    { key = "t", action = wezterm.action_callback(terminal_editor_split) },
+    {
+      key = "t",
+      action = wezterm.action_callback(function(window, pane)
+        actions.terminal_editor_split(window, pane, mod.terminal_editor)
+      end),
+    },
     { key = "T", action = act.SpawnCommandInNewTab({ args = { mod.terminal_editor, "." } }) },
-    { key = "i", action = wezterm.action_callback(launch_ide) },
+    {
+      key = "i",
+      action = wezterm.action_callback(function(window, pane)
+        actions.launch_ide(window, pane, mod.ide)
+      end),
+    },
     { key = "Escape", action = "PopKeyTable" },
   }
 
