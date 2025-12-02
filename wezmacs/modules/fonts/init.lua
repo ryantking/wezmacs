@@ -60,9 +60,8 @@ function M.apply_to_config(config)
 
   -- Apply ligatures only if ligatures feature is enabled
   if mod.ligatures and mod.ligatures.enabled then
-    local ligatures_config = mod.ligatures.config
-    if ligatures_config.harfbuzz_features then
-      config.harfbuzz_features = ligatures_config.harfbuzz_features
+    if mod.ligatures.harfbuzz_features then
+      config.harfbuzz_features = mod.ligatures.harfbuzz_features
     else
       -- Default ligatures + stylistic sets
       config.harfbuzz_features = {
