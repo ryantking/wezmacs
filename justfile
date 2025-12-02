@@ -192,61 +192,23 @@ watch:
 
 # Create a new module from template
 new-module MODULE_NAME:
-    #!/bin/bash
-    set -e
-
-    MODULE_DIR="wezmacs/modules/{{MODULE_NAME}}"
-
-    if [ -d "$MODULE_DIR" ]; then
-        echo "Error: Module already exists at $MODULE_DIR"
-        exit 1
-    fi
-
-    echo "Creating new module: {{MODULE_NAME}}"
-    mkdir -p "$MODULE_DIR"
-
-    # Copy template
-    cp wezmacs/templates/module.lua "$MODULE_DIR/init.lua"
-
-    # Create README
-    cat > "$MODULE_DIR/README.md" << EOF
-# {{{{MODULE_NAME}}}} module
-
-Brief description of what this module does.
-
-## Features
-
-- Feature 1
-- Feature 2
-
-## Configuration
-
-\`\`\`lua
--- Enable the module
-{{{{MODULE_NAME}}}} = {
-  -- config options here
-}
-\`\`\`
-
-## External Dependencies
-
-None
-
-## Keybindings
-
-None
-
-## Related Modules
-
-None
-EOF
-
-    echo "✓ Module created at $MODULE_DIR"
-    echo ""
-    echo "Next steps:"
-    echo "1. Edit $MODULE_DIR/init.lua to implement your module"
-    echo "2. Update $MODULE_DIR/README.md with documentation"
-    echo "3. Test by enabling in ~/.config/wezmacs/config.lua"
+    @echo "Creating new module: {{MODULE_NAME}}"
+    @mkdir -p "wezmacs/modules/{{MODULE_NAME}}"
+    @cp wezmacs/templates/module.lua "wezmacs/modules/{{MODULE_NAME}}/init.lua"
+    @echo "# {{MODULE_NAME}} module" > "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "Brief description of what this module does" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "## Configuration" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo '```lua' >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "{{MODULE_NAME}} = {}" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo '```' >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "✓ Module created at wezmacs/modules/{{MODULE_NAME}}"
+    @echo ""
+    @echo "Next steps:"
+    @echo "1. Edit wezmacs/modules/{{MODULE_NAME}}/init.lua"
+    @echo "2. Update wezmacs/modules/{{MODULE_NAME}}/README.md"
 
 # Clean temporary files
 clean:
