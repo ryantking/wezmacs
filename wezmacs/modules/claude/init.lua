@@ -20,6 +20,7 @@
 local wezterm = require("wezterm")
 local act = wezterm.action
 local actions = require("wezmacs.modules.claude.actions")
+local split = require("wezmacs.utils.split")
 
 local M = {}
 
@@ -38,8 +39,9 @@ function M.apply_to_config(config)
   -- Create claude key table
   config.key_tables = config.key_tables or {}
   config.key_tables.claude = {
-    { key = "c", action = wezterm.action_callback(actions.create_claudectl_workspace) },
-    { key = "C", action = act.SpawnCommandInNewTab({ args = { "claudectl", "workspace", "create" } }) },
+    { key = "c", action = wezterm.action_callback(actions.claude_smart_split) },
+    { key = "C", action = act.SpawnCommandInNewTab({ args = { os.getenv("SHELL") or "/bin/bash", "-c", "claude" } }) },
+    { key = "w", action = wezterm.action_callback(actions.create_claudectl_workspace) },
     { key = "Space", action = wezterm.action_callback(actions.list_claudectl_sessions) },
     { key = "s", action = wezterm.action_callback(actions.list_claudectl_sessions) },
     { key = "d", action = wezterm.action_callback(actions.delete_claudectl_session) },
@@ -48,6 +50,7 @@ function M.apply_to_config(config)
 
   -- Add keybinding to activate claude menu
   config.keys = config.keys or {}
+  table.insert(config.keys, { key = "Enter", mods = "SHIFT", action = act.SendString("\\x1b\\r") })
   table.insert(config.keys, {
     key = mod.leader_key,
     mods = mod.leader_mod,

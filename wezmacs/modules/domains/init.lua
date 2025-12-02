@@ -37,13 +37,13 @@ M._CONFIG = {
 function M.apply_to_config(wezterm_config)
   local mod = wezmacs.get_module(M._NAME)
   local domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
-
+  
   -- Configure quick_domains to use the domains key table
   domains.apply_to_config(wezterm_config, {
     keys = {
-      attach = { key = "a", mods = "", tbl = "domains" },
-      vsplit = { key = "v", mods = "", tbl = "domains" },
-      hsplit = { key = "h", mods = "", tbl = "domains" },
+      attach = { key = "a", mods = "LEADER", tbl = nil },
+      vsplit = { key = "_", mods = "LEADER", tbl = nil },
+      hsplit = { key = "|", mods = "LEADER", tbl = nil },
     },
     auto = {
       ssh_ignore = mod.ssh_ignore,
@@ -53,23 +53,6 @@ function M.apply_to_config(wezterm_config)
         kubernetes = mod.kubernetes_ignore,
       },
     },
-  })
-
-  -- Add Escape to domains key table if it exists
-  if wezterm_config.key_tables and wezterm_config.key_tables.domains then
-    table.insert(wezterm_config.key_tables.domains, { key = "Escape", action = "PopKeyTable" })
-  end
-
-  -- Add keybinding to activate domains menu
-  wezterm_config.keys = wezterm_config.keys or {}
-  table.insert(wezterm_config.keys, {
-    key = mod.leader_key,
-    mods = mod.leader_mod,
-    action = wezterm.action.ActivateKeyTable({
-      name = "domains",
-      one_shot = false,
-      until_unknown = true,
-    }),
   })
 end
 

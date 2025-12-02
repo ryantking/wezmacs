@@ -6,7 +6,13 @@
 local wezterm = require("wezterm")
 local act = wezterm.action
 
+local split = require("wezmacs.utils.split")
+
 local M = {}
+
+function M.claude_smart_split(window, pane)
+  split.smart_split(pane, { os.getenv("SHELL") or "/bin/bash", "-lc", "claude" })
+end
 
 -- Create and open claudectl workspace
 function M.create_claudectl_workspace(window, pane)

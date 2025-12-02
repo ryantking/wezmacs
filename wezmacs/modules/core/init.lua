@@ -30,7 +30,6 @@ M._CONFIG = {
   enable_kitty_keyboard = false,
   enable_kitty_graphics = true,
   default_prog = nil,  -- nil = use WezTerm default
-  default_workspace = "~",
 }
 
 function M.apply_to_config(config)
@@ -44,7 +43,6 @@ function M.apply_to_config(config)
   if mod.default_prog then
     config.default_prog = mod.default_prog
   end
-  config.default_workspace = mod.default_workspace
 
   -- Global event handlers
   wezterm.on("mux-is-process-stateful", function(_proc)
