@@ -139,14 +139,17 @@ test:
     cp -r wezmacs "$TEST_CONFIG_DIR/wezterm/"
     cp wezterm.lua "$TEST_CONFIG_DIR/wezterm/"
 
-    # Create test user config directory and copy templates
+    # Generate test user config
     mkdir -p "$TEST_CONFIG_DIR/wezmacs/custom-modules"
-    cp user/modules.lua "$TEST_CONFIG_DIR/wezmacs/modules.lua"
-    cp user/config.lua "$TEST_CONFIG_DIR/wezmacs/config.lua"
+    echo "Generating test configuration..."
+    lua wezmacs/generate-config.lua "$TEST_CONFIG_DIR/wezmacs/wezmacs.lua"
 
+    echo ""
     echo "Testing WezMacs with current branch configuration..."
     echo "Config directory: $TEST_CONFIG_DIR"
-    echo "Press Ctrl+D or type 'exit' to close"
+    echo "Config file: $TEST_CONFIG_DIR/wezmacs/wezmacs.lua"
+    echo ""
+    echo "Press Ctrl+D or type 'exit' to close WezTerm"
     echo ""
 
     # Run wezterm with test config
