@@ -15,6 +15,7 @@
 
 local wezterm = require("wezterm")
 local act = wezterm.action
+local actions = require("wezmacs.modules.docker.actions")
 
 local M = {}
 
@@ -29,12 +30,6 @@ M._CONFIG = {
 
 function M.apply_to_config(wezterm_config)
   local mod = wezmacs.get_module(M._NAME)
-  local split = require("wezmacs.utils.split")
-
-  -- Lazydocker in smart split
-  local function lazydocker_split(window, pane)
-    split.smart_split(pane, { "lazydocker" })
-  end
 
   -- Create docker key table
   wezterm_config.key_tables = wezterm_config.key_tables or {}
