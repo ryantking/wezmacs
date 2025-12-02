@@ -130,29 +130,23 @@ test:
     #!/bin/bash
     set -e
 
-    # Create temporary test config directory
-    TEST_CONFIG_DIR=$(mktemp -d)
-    trap "rm -rf $TEST_CONFIG_DIR" EXIT
+    # Generate local test config if it doesn't exist
+    if [ ! -f test-wezmacs.lua ]; then
+        echo "Generating test configuration..."
+        lua wezmacs/generate-config.lua test-wezmacs.lua
+        echo ""
+    fi
 
-    # Copy framework files to temp location
-    mkdir -p "$TEST_CONFIG_DIR/wezterm"
-    cp -r wezmacs "$TEST_CONFIG_DIR/wezterm/"
-    cp wezterm.lua "$TEST_CONFIG_DIR/wezterm/"
-
-    # Create test user config directory and copy templates
-    mkdir -p "$TEST_CONFIG_DIR/wezmacs/custom-modules"
-    cp user/modules.lua "$TEST_CONFIG_DIR/wezmacs/modules.lua"
-    cp user/config.lua "$TEST_CONFIG_DIR/wezmacs/config.lua"
-
-    echo "Testing WezMacs with current branch configuration..."
-    echo "Config directory: $TEST_CONFIG_DIR"
-    echo "Press Ctrl+D or type 'exit' to close"
+    echo "Testing WezMacs with local configuration..."
+    echo "Config file: $(pwd)/test-wezmacs.lua"
+    echo "Framework: $(pwd)/wezmacs/"
+    echo ""
+    echo "Press Ctrl+D or type 'exit' to close WezTerm"
     echo ""
 
-    # Run wezterm with test config
-    WEZTERM_CONFIG_DIR="$TEST_CONFIG_DIR/wezterm" \
-    XDG_CONFIG_HOME="$TEST_CONFIG_DIR" \
-    wezterm
+    # Run wezterm with test config using WEZMACS_CONFIG
+    WEZMACS_CONFIG="$(pwd)/test-wezmacs.lua" \
+    wezterm --config-file "$(pwd)/wezterm.lua" start
 
 # Show documentation
 docs:
@@ -189,62 +183,23 @@ watch:
 
 # Create a new module from template
 new-module MODULE_NAME:
-    #!/bin/bash
-    set -e
-
-    MODULE_DIR="wezmacs/modules/{{MODULE_NAME}}"
-
-    if [ -d "$MODULE_DIR" ]; then
-        echo "Error: Module already exists at $MODULE_DIR"
-        exit 1
-    fi
-
-    echo "Creating new module: {{MODULE_NAME}}"
-    mkdir -p "$MODULE_DIR"
-
-    # Copy template
-    cp wezmacs/templates/module.lua "$MODULE_DIR/init.lua"
-
-    # Create README
-    cat > "$MODULE_DIR/README.md" << 'EOF'
-# {{MODULE_NAME}} module
-
-Brief description of what this module does.
-
-## Features
-
-- Feature 1
-- Feature 2
-
-## Configuration
-
-```lua
-flags = {
-  category = {
-    {{MODULE_NAME}} = {}
-  }
-}
-```
-
-## External Dependencies
-
-None
-
-## Keybindings
-
-None
-
-## Related Modules
-
-None
-EOF
-
-    echo "✓ Module created at $MODULE_DIR"
-    echo ""
-    echo "Next steps:"
-    echo "1. Edit $MODULE_DIR/init.lua to implement your module"
-    echo "2. Update $MODULE_DIR/README.md with documentation"
-    echo "3. Test by enabling in ~/.config/wezmacs/config.lua"
+    @echo "Creating new module: {{MODULE_NAME}}"
+    @mkdir -p "wezmacs/modules/{{MODULE_NAME}}"
+    @cp wezmacs/templates/module.lua "wezmacs/modules/{{MODULE_NAME}}/init.lua"
+    @echo "# {{MODULE_NAME}} module" > "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "Brief description of what this module does" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "## Configuration" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo '```lua' >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "{{MODULE_NAME}} = {}" >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo '```' >> "wezmacs/modules/{{MODULE_NAME}}/README.md"
+    @echo "✓ Module created at wezmacs/modules/{{MODULE_NAME}}"
+    @echo ""
+    @echo "Next steps:"
+    @echo "1. Edit wezmacs/modules/{{MODULE_NAME}}/init.lua"
+    @echo "2. Update wezmacs/modules/{{MODULE_NAME}}/README.md"
 
 # Clean temporary files
 clean:
