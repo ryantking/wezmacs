@@ -26,10 +26,6 @@ M._EXTERNAL_DEPS = { "lazygit", "git", "delta" }
 M._CONFIG = {
   leader_key = "g",
   leader_mod = "LEADER",
-  riff = {
-    enabled = false,
-    deps = { "riff" },
-  },
 }
 
 -- Git diff in new window
