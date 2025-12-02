@@ -85,8 +85,8 @@ function M.apply_to_config(config)
 
   -- Example: Access feature config
   -- if mod.complex_feature and mod.complex_feature.enabled then
-  --   local feat_config = mod.complex_feature.config
-  --   -- Use feat_config.option
+  --   -- Use mod.complex_feature.option directly
+  --   local option_value = mod.complex_feature.option
   -- end
 
   -- Example: Apply a keybinding using configuration values
