@@ -18,6 +18,7 @@
 
 local wezterm = require("wezterm")
 local act = wezterm.action
+local actions = require("wezmacs.modules.file-manager.actions")
 
 local M = {}
 
@@ -33,17 +34,6 @@ M._CONFIG = {
 
 function M.apply_to_config(wezterm_config)
   local mod = wezmacs.get_module(M._NAME)
-  local split = require("wezmacs.utils.split")
-
-  -- File manager in smart split
-  local function file_manager_split(window, pane)
-    split.smart_split(pane, { mod.file_manager })
-  end
-
-  -- File manager with sudo in smart split
-  local function file_manager_sudo_split(window, pane)
-    split.smart_split(pane, { "sudo", mod.file_manager, "/" })
-  end
 
   -- Create file-manager key table
   wezterm_config.key_tables = wezterm_config.key_tables or {}
