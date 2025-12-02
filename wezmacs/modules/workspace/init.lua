@@ -27,6 +27,7 @@ M._CATEGORY = "workflows"
 M._DESCRIPTION = "Workspace switching and management"
 M._EXTERNAL_DEPS = {} -- Uses WezTerm plugin: smart_workspace_switcher
 M._CONFIG = {
+  default_workspace = "~",
   switch_key = "s",
   switch_mod = "LEADER",
   prev_key = "S",
@@ -35,9 +36,8 @@ M._CONFIG = {
 
 function M.apply_to_config(config)
   local mod = wezmacs.get_module(M._NAME)
-
-  -- Plugin setup
-  workspace_switcher.apply_to_config(config)
+  
+  config.default_workspace = mod.default_workspace
 
   -- Keybindings
   config.keys = config.keys or {}
