@@ -37,7 +37,9 @@ local function load_unified_config()
   }
 
   for _, file_path in ipairs(paths) do
-    if wezterm.path_exists(file_path) then
+    local f = io.open(file_path, "r")
+    if f then
+      f:close()
       local chunk, err = loadfile(file_path)
       if chunk then
         return chunk()
