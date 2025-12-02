@@ -130,30 +130,23 @@ test:
     #!/bin/bash
     set -e
 
-    # Create temporary test config directory
-    TEST_CONFIG_DIR=$(mktemp -d)
-    trap "rm -rf $TEST_CONFIG_DIR" EXIT
+    # Generate local test config if it doesn't exist
+    if [ ! -f test-wezmacs.lua ]; then
+        echo "Generating test configuration..."
+        lua wezmacs/generate-config.lua test-wezmacs.lua
+        echo ""
+    fi
 
-    # Copy framework files to temp location
-    mkdir -p "$TEST_CONFIG_DIR/wezterm"
-    cp -r wezmacs "$TEST_CONFIG_DIR/wezterm/"
-    cp wezterm.lua "$TEST_CONFIG_DIR/wezterm/"
-
-    # Generate test user config
-    mkdir -p "$TEST_CONFIG_DIR/wezmacs/custom-modules"
-    echo "Generating test configuration..."
-    lua wezmacs/generate-config.lua "$TEST_CONFIG_DIR/wezmacs/wezmacs.lua"
-
-    echo ""
-    echo "Testing WezMacs with current branch configuration..."
-    echo "Config directory: $TEST_CONFIG_DIR"
-    echo "Config file: $TEST_CONFIG_DIR/wezmacs/wezmacs.lua"
+    echo "Testing WezMacs with local configuration..."
+    echo "Config file: $(pwd)/test-wezmacs.lua"
+    echo "Framework: $(pwd)/wezmacs/"
     echo ""
     echo "Press Ctrl+D or type 'exit' to close WezTerm"
     echo ""
 
-    # Run wezterm with test config (use --config-file to override)
-    wezterm --config-file "$TEST_CONFIG_DIR/wezterm/wezterm.lua" start
+    # Run wezterm with test config using WEZMACS_CONFIG
+    WEZMACS_CONFIG="$(pwd)/test-wezmacs.lua" \
+    wezterm --config-file "$(pwd)/wezterm.lua" start
 
 # Show documentation
 docs:
