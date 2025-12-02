@@ -52,7 +52,191 @@ These are global guidelines to ALWAYS take into account when answering user quer
 
 23. **Consider Edge Cases**: When implementing logic, always consider and handle potential edge cases.
 
-24. **Use Working Directory**: When reading files, implementing changes, and running commands always use paths relevant to the current directory unless explicitly required to use a file outside the repo.
+24. **Use Working Directory**: When reading files, implementing changes, and running commands always use paths relevant to the current directory unless explicitly required to use a file outside the repo. For temporary files, use `.claude/scratch/` within the working directory instead of `/tmp`.
+
+## Tool Selection Guidelines
+
+**APPLIES TO**: Main agent AND all subagents (Explore, Plan, engineer, historian, researcher)
+
+### Mandatory Tool Preferences (Reduce Permission Prompts)
+
+Claude Code provides specialized tools that are pre-approved and don't require permission prompts. **Always prefer these over Bash commands** when possible:
+
+1. **File Reading** → Use `Read` tool
+   - Replaces: `cat`, `head`, `tail`, `less`
+   - Supports: line ranges, images, PDFs, notebooks
+   - Example: `Read(file_path="src/main.py", offset=50, limit=100)`
+
+2. **Content Search** → Use `Grep` tool
+   - Replaces: `grep`, `rg`, `ag`, `ack`
+   - Supports: regex, context lines, multiline, file type filtering
+   - Example: `Grep(pattern="def .*:", type="py", output_mode="content", -A=2)`
+
+3. **File Finding** → Use `Glob` tool
+   - Replaces: `find`, `ls` with patterns
+   - Supports: recursive wildcards, multiple extensions
+   - Example: `Glob(pattern="**/*.{py,pyx}")`
+
+### When Bash is Acceptable
+
+Use Bash ONLY for operations that have no tool equivalent:
+
+- **Git operations**: `git log`, `git show`, `git blame`, `git diff`, `git rm`
+- **Multi-stage pipelines**: When you need `|`, `xargs`, `sort`, `uniq`
+- **Process output**: `npm list`, `docker ps`, package manager queries
+- **File metadata**: File sizes, permissions (when content isn't enough)
+- **Simple directory listing**: `ls`, `ls -la` (for basic overview)
+
+### File Deletion Guidelines
+
+**CRITICAL**: Always use the safest method for file deletion to avoid permission prompts.
+
+**For tracked files (files in git):**
+- ✅ **ALWAYS use**: `git rm <relative-path>`
+- ✅ Example: `git rm src/module.py`
+- **Why**: `git rm` is pre-approved via `Bash(git:*)` pattern
+
+**For untracked files (not in git):**
+- ✅ **ALWAYS use relative paths**: `rm <relative-path>`
+- ✅ Example: `rm .claude/scratch/temp.txt`
+- ❌ **NEVER use absolute paths**: `rm /Users/...`
+- **Why**: Absolute paths starting with `/` cannot be safely pre-approved
+
+**How to determine if a file is tracked:**
+- Run `git ls-files <path>` - if it returns the path, use `git rm`
+- If file is in `.claude/scratch/`, use relative path `rm`
+- If uncertain, prefer `git rm` (safe even for untracked files)
+
+### Bash Command Sequencing
+
+**CRITICAL**: Chained bash commands break permission matching and trigger prompts.
+
+#### When to Use Multiple Tool Calls (Preferred)
+
+Use **separate parallel Bash tool calls** for independent operations:
+
+✅ **DO THIS:**
+```
+Tool Call 1: Bash(git status)
+Tool Call 2: Bash(git diff HEAD)
+Tool Call 3: Bash(git log --oneline -5)
+```
+
+**Why:** Each command matches pre-approved patterns independently. Zero prompts.
+
+❌ **DON'T DO THIS:**
+```
+Bash(git status && git diff HEAD && git log --oneline -5)
+```
+
+**Why:** Chained command doesn't match `Bash(git status:*)` pattern. Triggers prompt.
+
+#### When Chaining is Acceptable
+
+Use `&&` chaining ONLY when commands are **dependent** (later commands need earlier ones to succeed):
+
+✅ **Acceptable chains:**
+- `mkdir -p dir && cp file dir/` (cp depends on dir existing)
+- `git add . && git commit -m "msg" && git push` (each depends on previous)
+- `cd /path && npm install` (npm needs to be in /path)
+
+✅ **Even better - use single commands when possible:**
+- `cp file dir/` (many tools auto-create parent dirs)
+- Use absolute paths: `npm install --prefix /path`
+
+#### Operator Reference
+
+| Operator | Meaning | When to Use | Example |
+|----------|---------|-------------|---------|
+| `&&` | AND (run next if previous succeeds) | Dependent sequence | `mkdir dir && cd dir` |
+| `\|\|` | OR (run next if previous fails) | Fallback behavior | `npm ci \|\| npm install` |
+| `;` | Sequential (run regardless) | Rarely needed | Avoid - use separate calls |
+| `\|` | Pipe (send output to next) | Data transformation | When specialized tools can't help |
+
+**General Rule:** If commands don't depend on each other, split into multiple tool calls.
+
+### Temporary Files and Directories
+
+**IMPORTANT**: Avoid using `/tmp` for temporary operations as each bash command triggers permission prompts.
+
+Use these alternatives instead:
+
+1. **For Testing Artifacts** → Use `.claude/scratch/` in working directory
+   - Auto-cleaned after session
+   - No permission prompts
+   - Workspace-isolated
+
+2. **For Research/Plans** → Use `.claude/research/` or `.claude/plans/`
+   - Already established pattern
+   - Version controlled
+   - Persistent across sessions
+
+3. **For Build/Runtime Caches** → Use `.cache/claudectl/` (gitignored)
+   - Follows npm/webpack convention
+   - Persists across sessions
+   - Excluded from git
+
+4. **When /tmp is Required** → Use built-in tools, not bash:
+   - ❌ `Bash(mkdir /tmp/test && echo "data" > /tmp/test/file.txt)`
+   - ✅ `Write(file_path="/tmp/test/file.txt", content="data")`
+   - Only use bash for git operations, pipelines, or when absolutely necessary
+
+**Cleanup Rules**:
+- Delete `.claude/scratch/` contents when done
+- Never commit `.claude/scratch/` to git
+- Document any persistent artifacts in `.claude/research/`
+
+### Anti-Patterns (Will Trigger Permission Prompts)
+
+❌ **DON'T**: Chain independent commands
+```
+Bash(pytest tests/ && npm run lint && docker ps)
+```
+✅ **DO**: Make parallel tool calls
+```
+Tool Call 1: Bash(pytest tests/)
+Tool Call 2: Bash(npm run lint)
+Tool Call 3: Bash(docker ps)
+```
+
+❌ **DON'T**: Use /tmp with bash commands
+```
+Bash(mkdir /tmp/test-run && python test.py > /tmp/test-run/output.txt)
+```
+✅ **DO**: Use project-local scratch directory
+```
+Bash(mkdir .claude/scratch/test-run && python test.py > .claude/scratch/test-run/output.txt)
+```
+
+❌ **DON'T**: `find . -name "*.py" | xargs grep "pattern"`
+✅ **DO**: `Grep(pattern="pattern", glob="**/*.py")`
+
+❌ **DON'T**: `cat src/main.py | grep "import"`
+✅ **DO**: `Grep(pattern="import", path="src/main.py")`
+
+❌ **DON'T**: `find . -name "*.js" -type f`
+✅ **DO**: `Glob(pattern="**/*.js")`
+
+❌ **DON'T**: `head -50 README.md`
+✅ **DO**: `Read(file_path="README.md", limit=50)`
+
+### Why This Matters
+
+- Specialized tools are **pre-approved** in settings.json → no permission prompts
+- Bash commands use **prefix matching only** → hard to pre-approve complex patterns
+- Complex one-liners (`find | xargs | grep | sort`) are impossible to pre-approve
+- Each unique Bash variant requires a new permission prompt
+
+### Tool Capability Reference
+
+| Need | Tool | Bash Equivalent | Notes |
+|------|------|----------------|-------|
+| Find files by name | `Glob(pattern="**/*.py")` | `find . -name "*.py"` | Faster, cleaner |
+| Search in files | `Grep(pattern="TODO", glob="**/*")` | `grep -r "TODO" .` | Supports context, counts |
+| Read file | `Read(file_path="file.txt")` | `cat file.txt` | Supports ranges, images |
+| Git history | `Bash(git log --oneline)` | N/A | No tool equivalent |
+| Count matches | `Grep(pattern="error", output_mode="count")` | `grep -c "error"` | Built-in counting |
+| Multi-line search | `Grep(pattern="class.*:", multiline=True)` | Complex `grep` | Better than bash |
 
 ## Workspaces
 
@@ -307,13 +491,45 @@ BREAKING-CHANGE MUST be synonymous with BREAKING CHANGE, when used as a token in
 
 ### Agent Selection
 
-| Task Type | Agent(s) | Execution | When to Use |
-|-----------|----------|-----------|------------|
-| Find files/code patterns | Explore | Single | "Where is X defined?", "Show structure of Y" |
-| Understand git history | historian | Single | "Why was this changed?", "How did this evolve?" |
-| External research | researcher | Parallel (3-5) | Web docs, API references, best practices |
-| Create implementation plan | Plan | Single | "Plan this feature", "Design approach for X" |
-| Implement code changes | engineer | Single/Parallel | Code work, file modifications |
+| Task Type | Agent(s) | Execution | Primary Tools | When to Use |
+|-----------|----------|-----------|---------------|------------|
+| Find files/code patterns | Explore | Single | Read, Grep, Glob | "Where is X defined?", "Show structure of Y" |
+| Understand git history | historian | Single | Bash (git), Read | "Why was this changed?", "How did this evolve?" |
+| External research | researcher | Parallel (3-5) | WebSearch, WebFetch | Web docs, API references, best practices |
+| Create implementation plan | Plan | Single/Multiple | Read, Grep, Glob | Explicitly spawn via Task tool for thorough planning analysis |
+| Implement code changes | engineer | Single/Parallel | Edit, Write, Read, Bash | Code work, file modifications |
+
+### Tool Access Patterns
+
+**Explore Agent** (Read-only specialist):
+- **Primary tools**: Read, Grep, Glob (always prefer these)
+- **Bash fallback**: Git commands, `ls`, pipelines when absolutely necessary
+- **Prohibited**: Any write operations, network calls, destructive commands
+
+**Plan Agent** (Strategy specialist):
+- **Primary tools**: Read, Grep, Glob for code analysis
+- **Bash fallback**: Git history, dependency trees, build tool queries
+- **Prohibited**: Implementation commands (that's engineer's job)
+
+**Engineer Agent** (Implementation specialist):
+- **All tools**: Read, Edit, Write, Grep, Glob, Bash (full access)
+- **Bash usage**: Build commands, tests, git operations, file modifications
+- **Best practice**: Still prefer Read/Grep/Glob for exploration phase
+
+### Tool Selection Decision Tree
+
+```
+Need to explore codebase?
+├─ Finding files by pattern? → Use Glob
+├─ Searching file contents? → Use Grep
+├─ Reading specific files? → Use Read
+└─ Git history/metadata? → Use Bash (git/ls)
+
+Need to implement changes?
+├─ Creating new file? → Use Write
+├─ Modifying existing? → Use Edit (after Read)
+└─ Running builds/tests? → Use Bash
+```
 
 ### Workflow Patterns
 
@@ -335,23 +551,32 @@ Explore (parallel 1-3 agents) + historian + researcher (parallel 3-5 agents) →
 ```
 Example: "Implement authentication system"
 
+**Note:** "Plan" in workflow patterns refers to spawning Plan agent(s) explicitly via Task tool with `subagent_type="Plan"`, NOT entering Plan Mode with Shift+Tab.
+
 ### Workflow Details
 
 1. **Discovery Phase** (Wave 1)
     - Use Explore agents (1-3 in parallel) to understand existing files and codebase structure
     - Use historian to understand past decisions and designs from git history
     - Quality over quantity: Use minimum agents needed (usually just 1 Explore agent)
+    - **Tool Usage**: Explore agents should use Read/Grep/Glob for 95% of operations
+    - Only fall back to Bash for git history or when piping is unavoidable
+    - Example good pattern: `Glob(**/*.py)` → `Grep(pattern="class ", glob="**/*.py")` → `Read(file_path="src/main.py")`
+    - Example bad pattern: `Bash(find . -name "*.py" | xargs grep "class")`
 
 2. **Research Phase** (Wave 2 - if needed)
     - Use researcher agents (3-5 in parallel) for external web searches, API docs, best practices
     - Write findings to `.claude/research/<date>-<topic>.md` (relative path in working directory)
     - Can run parallel to historian
 
-3. **Planning Phase**
-    - Use EnterPlanMode to start planning for complex tasks
-    - Plan agent receives findings from Discovery and Research phases
-    - Plan agent handles writing plan file automatically - do not manually write to ~/.claude/plans/
-    - Use ExitPlanMode when plan is ready for user review and approval
+3. **Planning Phase** (when needed for complex tasks)
+    - Spawn Plan agent(s) explicitly via Task tool: `subagent_type="Plan"`
+    - Provide context from Discovery and Research phases to each Plan agent
+    - Plan agent(s) conduct read-only analysis and return recommendations as text
+    - Main agent synthesizes findings from multiple Plan agents (if used)
+    - Main agent writes consolidated plan to `.claude/plans/<filename>.md` for VCS tracking
+    - Engineer agents later read from `.claude/plans/` during implementation
+    - Can spawn multiple Plan agents for different perspectives on complex problems
 
 4. **Implementation Phase** (Wave 3)
     - Use engineer agent to implement code changes from approved plan
@@ -362,9 +587,16 @@ Example: "Implement authentication system"
 - **Max 10 concurrent agents** across all waves
 - **Pass full context** between agents (agents are stateless)
 - **Agents read from** `.claude/research/` (relative path, local to working directory) for cached knowledge
-- **Plan agent manages plan files** - use EnterPlanMode and ExitPlanMode, do not manually write to ~/.claude/plans/
+- **Plan agents via Task tool** - spawn Plan subagents with `subagent_type="Plan"` for analysis
+- **Main agent writes plans** - after receiving Plan subagent output, write to `.claude/plans/<filename>.md`
+- **Plans tracked in VCS** - `.claude/plans/` directory (local repo) allows version control of planning artifacts
+- **Engineer agents read plans** - they expect plans at `.claude/plans/<filename>.md` during implementation
+- **Plan Mode is optional** - toggle with Shift+Tab for manual read-only exploration if desired
 - **Use relative paths** for files in working directory (known via `<context-refresh>`)
 - **Use absolute paths** only when accessing files outside working directory
+- **Use `.claude/scratch/` for temp files** - avoid `/tmp` to reduce permission prompts
+- **Prefer parallel tool calls over chaining** - split independent bash commands to avoid permission prompts
+- **Clean up after yourself** - remove temporary artifacts when done
 - **Don't skip Wave 1** for non-trivial tasks (need codebase context)
 - **Wave 2 is conditional** (skip if no research/history needed)
 - **Always plan before Wave 3** for complex tasks
@@ -375,64 +607,67 @@ Example: "Implement authentication system"
 <!-- REPOSITORY_INDEX_START -->
 ### Repository Overview
 
-**Wezmacs** is a modular WezTerm terminal configuration framework inspired by the design patterns of Doom Emacs and Spacemacs.
+**wezmacs** is a modular WezTerm terminal emulator configuration framework inspired by Doom Emacs and Spacemacs design patterns.
 
-### Main Purpose & Technologies
+### Key Technologies
 
-- **Primary Function**: Highly customized terminal emulator configuration for WezTerm
 - **Language**: Lua
-- **Key Features**: 
-  - Leader key-based keybindings (CMD+Space)
-  - Nested submenus for git and Claude Code operations
-  - Smart window splits based on aspect ratio
-  - Workspace management integration with claudectl
-  - Custom tab bar with process icons
+- **Platform**: WezTerm Terminal Emulator
+- **Dependencies**: 
+  - Fish shell (default shell)
+  - External tools: lazygit, yazi, btm, lazydocker, k9s, spotify_player, Helix, Cursor
+  - Plugins: smart_workspace_switcher, quick_domains
 
 ### Directory Structure
 
 ```
 wezmacs/
-├── wezterm-config/
-│   ├── wezterm.lua              # Main orchestrator (44 lines)
-│   └── modules/
-│       ├── appearance.lua       # Colors, fonts, visual styling
-│       ├── window.lua           # Window behavior and settings
-│       ├── tabs.lua             # Custom tab bar with icons
-│       ├── keys.lua             # Keyboard bindings (366 lines)
-│       ├── mouse.lua            # Mouse behavior
-│       └── plugins.lua          # Plugin integrations
-├── .claude/                     # Claude Code configuration
-├── CLAUDE.md                    # Repository-specific Claude instructions
-└── README.md                    # Basic project description
+├── .claude/              # Claude Code configuration
+├── wezterm-config/       # Main configuration directory
+│   ├── wezterm.lua       # Entry point orchestrator (44 lines)
+│   └── modules/          # Modular components (~815 lines total)
+│       ├── appearance.lua    # Colors, fonts, visual styling
+│       ├── window.lua        # Window behavior
+│       ├── tabs.lua          # Custom tab bar with icons
+│       ├── keys.lua          # Keyboard bindings (366 lines)
+│       ├── mouse.lua         # Mouse behavior
+│       └── plugins.lua       # Plugin integrations
+├── CLAUDE.md             # Project memory and instructions
+└── README.md             # Project overview
 ```
 
-### Entry Points & Main Files
+### Entry Points
 
-- **Primary Entry**: `wezterm-config/wezterm.lua` - Main configuration file that WezTerm loads
-- **Module Pattern**: All modules export an `apply_to_config(config)` function for clean orchestration
-- **Installation**: Symlink or copy `wezterm-config/` to `~/.config/wezterm/`
+- **Main configuration**: `wezterm-config/wezterm.lua`
+- **Configuration loader**: WezTerm reads from `~/.config/wezterm/wezterm.lua` (symlink target)
+- **Theme**: Horizon Dark (Gogh)
+- **Font**: Iosevka Mono (16pt, medium weight)
+- **Leader key**: CMD+Space (5-second timeout)
 
 ### Build/Run Commands
 
-No build process required - WezTerm directly loads the Lua configuration.
+No build process required (Lua interpreted). Configuration testing:
 
-**Verify configuration:**
 ```bash
+# Verify configuration loads
 wezterm --config-file ~/.config/wezterm/wezterm.lua --version
-```
 
-**Check for errors:**
-```bash
+# Monitor for errors
 tail -f ~/.local/share/wezterm/wezterm.log
 ```
 
-### Key Configuration Details
+### Key Features
 
-- **Theme**: Horizon Dark (Gogh)
-- **Font**: Iosevka Mono, 16pt with ligatures and 8 stylistic sets
-- **Default Shell**: Fish shell via Homebrew
-- **Plugins**: smart_workspace_switcher, quick_domains
-- **Total LOC**: ~815 lines across 7 modular files
+- **Modular architecture**: Clean separation of concerns with `apply_to_config()` pattern
+- **Hierarchical keybindings**: Modal submenus for git (LEADER+g) and Claude (LEADER+c) operations
+- **Workspace management**: Integration with Claude Code via `claudectl`
+- **Smart splits**: Auto-orientation based on window aspect ratio
+- **Custom tab bar**: Process-specific icons (25+ applications), zoom indicators
+- **Plugin system**: Lazy-loaded for performance
 
-The configuration emphasizes discoverability through hierarchical keybindings (git submenu, Claude submenu) and reduces conflicts with terminal applications by using a leader key pattern.
+### Configuration Metrics
+
+- **Total size**: ~815 lines across 7 files
+- **Reduction**: 21% smaller than original (removed ~216 lines of dead code)
+- **Load time**: ~10ms
 <!-- REPOSITORY_INDEX_END -->
