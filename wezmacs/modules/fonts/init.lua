@@ -33,8 +33,7 @@ M._EXTERNAL_DEPS = {}
 M._CONFIG = {
   font = nil,
   font_size = nil,
-  font_rules = nil,  -- nil = auto-generate if font set, {} = disable, [...] = custom
-  default_font_rules = {
+  font_rules = {
     { intensity = "Normal", italic = false, weight = "Medium" },
     { intensity = "Bold", italic = false, weight = "ExtraBold" },
     { intensity = "Half", italic = false, weight = "Thin" },
