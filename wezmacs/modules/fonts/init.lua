@@ -76,14 +76,8 @@ function M.apply_to_config(config)
   end
 
   -- Font rules for different text styles
-  -- nil = auto-generate if font is set, {} = disable, [...] = custom
-  if mod.font_rules ~= nil then
-    -- User explicitly set font_rules (empty or custom)
-    if type(mod.font_rules) == "table" and #mod.font_rules > 0 then
-      config.font_rules = mod.font_rules
-    end
-    -- else: font_rules = {} means disable, don't set anything
-  elseif mod.font then
+  -- User can set: nil = auto-generate, {} = disable, [...] = custom
+  if mod.font_rules == nil and mod.font then
     -- Auto-generate font rules if font is configured and font_rules is nil
     config.font_rules = {
       {
@@ -129,7 +123,11 @@ function M.apply_to_config(config)
         }),
       },
     }
+  elseif mod.font_rules and type(mod.font_rules) == "table" and #mod.font_rules > 0 then
+    -- User provided custom font rules
+    config.font_rules = mod.font_rules
   end
+  -- else: font_rules = {} means disable, don't set anything
 
   -- UI fonts (for UI elements) - only if configured
   if mod.ui_font or mod.ui_font_size then
