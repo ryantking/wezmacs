@@ -48,16 +48,16 @@ function M.apply_to_config(config)
   -- Create git key table
   config.key_tables = config.key_tables or {}
   config.key_tables.git = {
-    { key = "g", action = wezterm.action_callback(lazygit_smart_split) },
+    { key = "g", action = wezterm.action_callback(actions.lazygit_smart_split) },
     { key = "G", action = act.SpawnCommandInNewTab({ args = { "lazygit" } }) },
-    { key = "d", action = wezterm.action_callback(git_diff_smart_split) },
+    { key = "d", action = wezterm.action_callback(actions.git_diff_smart_split) },
     { key = "D", action = git_diff_new_window },
     { key = "Escape", action = "PopKeyTable" },
   }
 
   -- Add riff binding if enabled
   if mod.riff and mod.riff.enabled then
-    table.insert(config.key_tables.git, { key = "r", action = wezterm.action_callback(riff_smart_split) })
+    table.insert(config.key_tables.git, { key = "r", action = wezterm.action_callback(actions.riff_smart_split) })
   end
 
   -- Add keybinding to activate git menu
