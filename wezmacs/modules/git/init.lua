@@ -28,7 +28,6 @@ M._CONFIG = {
   leader_mod = "LEADER",
   riff = {
     enabled = false,
-    config = {},
     deps = { "riff" },
   },
 }
