@@ -86,51 +86,22 @@ function M.apply_to_config(config)
   -- Font rules for different text styles
   -- User can set: nil = auto-generate, {} = disable, [...] = custom
   if mod.font_rules == nil and mod.font then
-    -- Auto-generate font rules if font is configured and font_rules is nil
-    config.font_rules = {
-      {
-        intensity = "Normal",
-        italic = false,
+    -- Auto-generate font rules from default_font_rules if font is configured
+    config.font_rules = {}
+    for _, rule_template in ipairs(mod.default_font_rules) do
+      local rule = {
+        intensity = rule_template.intensity,
+        italic = rule_template.italic,
         font = wezterm.font_with_fallback({
-          { family = mod.font, weight = "Medium" },
+          {
+            family = mod.font,
+            weight = rule_template.weight,
+            style = rule_template.style,
+          },
         }),
-      },
-      {
-        intensity = "Bold",
-        italic = false,
-        font = wezterm.font_with_fallback({
-          { family = mod.font, weight = "ExtraBold" },
-        }),
-      },
-      {
-        intensity = "Half",
-        italic = false,
-        font = wezterm.font_with_fallback({
-          { family = mod.font, weight = "Thin" },
-        }),
-      },
-      {
-        intensity = "Normal",
-        italic = true,
-        font = wezterm.font_with_fallback({
-          { family = mod.font, weight = "Regular", style = "Italic" },
-        }),
-      },
-      {
-        intensity = "Bold",
-        italic = true,
-        font = wezterm.font_with_fallback({
-          { family = mod.font, weight = "Bold", style = "Italic" },
-        }),
-      },
-      {
-        intensity = "Half",
-        italic = true,
-        font = wezterm.font_with_fallback({
-          { family = mod.font, weight = "Thin", style = "Italic" },
-        }),
-      },
-    }
+      }
+      table.insert(config.font_rules, rule)
+    end
   elseif mod.font_rules and type(mod.font_rules) == "table" and #mod.font_rules > 0 then
     -- User provided custom font rules
     config.font_rules = mod.font_rules
