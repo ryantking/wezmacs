@@ -34,7 +34,7 @@ function M.apply_to_config(wezterm_config)
   -- Create docker key table
   wezterm_config.key_tables = wezterm_config.key_tables or {}
   wezterm_config.key_tables.docker = {
-    { key = "d", action = wezterm.action_callback(lazydocker_split) },
+    { key = "d", action = wezterm.action_callback(actions.lazydocker_split) },
     { key = "D", action = act.SpawnCommandInNewTab({ args = { "lazydocker" } }) },
     { key = "Escape", action = "PopKeyTable" },
   }
