@@ -152,10 +152,8 @@ test:
     echo "Press Ctrl+D or type 'exit' to close WezTerm"
     echo ""
 
-    # Run wezterm with test config
-    WEZTERM_CONFIG_DIR="$TEST_CONFIG_DIR/wezterm" \
-    XDG_CONFIG_HOME="$TEST_CONFIG_DIR" \
-    wezterm
+    # Run wezterm with test config (use --config-file to override)
+    wezterm --config-file "$TEST_CONFIG_DIR/wezterm/wezterm.lua" start
 
 # Show documentation
 docs:
