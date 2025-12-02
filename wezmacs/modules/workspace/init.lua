@@ -46,23 +46,16 @@ function M.apply_to_config(config)
 
   -- Workspace switcher
   table.insert(config.keys, {
-    key = mod.leader_key,
-    mods = mod.leader_mod,
+    key = mod.switch_key,
+    mods = mod.switch_mod,
     action = workspace_switcher.switch_workspace(),
   })
 
   -- Switch to previous workspace
   table.insert(config.keys, {
-    key = "S",
-    mods = mod.leader_mod,
+    key = mod.prev_key,
+    mods = mod.prev_mod,
     action = workspace_switcher.switch_to_prev_workspace(),
-  })
-
-  -- Jump to System workspace
-  table.insert(config.keys, {
-    key = "B",
-    mods = mod.leader_mod,
-    action = wezterm.action_callback(actions.jump_to_system_workspace),
   })
 end
 
