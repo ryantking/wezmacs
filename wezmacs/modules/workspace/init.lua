@@ -59,16 +59,7 @@ function M.apply_to_config(config)
   table.insert(config.keys, {
     key = "B",
     mods = mod.leader_mod,
-    action = wezterm.action_callback(function(window, pane)
-      window:perform_action(
-        act.SwitchToWorkspace({
-          name = "~/System",
-          spawn = { cwd = wezterm.home_dir .. "/System" },
-        }),
-        pane
-      )
-      window:set_right_status(window:active_workspace())
-    end),
+    action = wezterm.action_callback(actions.jump_to_system_workspace),
   })
 end
 
