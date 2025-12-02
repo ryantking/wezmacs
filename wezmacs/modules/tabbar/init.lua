@@ -10,8 +10,14 @@
   - Dynamic working directory fallback for editors
   - Auto-hide tab bar when only one tab
 
-  Configurable flags:
-    none currently
+  Configuration:
+    arrow_solid - Solid arrow character for tab separators (default: "")
+    arrow_thin - Thin arrow character for tab separators (default: "")
+    use_fancy_tab_bar - Use fancy or retro tab bar (default: true)
+    tab_bar_at_bottom - Position tab bar at bottom (default: false)
+    hide_tab_bar_if_only_one_tab - Auto-hide when single tab (default: true)
+    tab_max_width - Maximum width for tab titles (default: 60)
+    unzoom_on_switch_pane - Unzoom when switching panes (default: true)
 ]]
 
 local wezterm = require("wezterm")
@@ -23,10 +29,15 @@ M._NAME = "tabbar"
 M._CATEGORY = "ui"
 M._DESCRIPTION = "Custom tab bar with process icons and decorative separators"
 M._EXTERNAL_DEPS = {}
-M._CONFIG = {}
-
-M.arrow_solid = ""
-M.arrow_thin = ""
+M._CONFIG = {
+  arrow_solid = "",
+  arrow_thin = "",
+  use_fancy_tab_bar = true,
+  tab_bar_at_bottom = false,
+  hide_tab_bar_if_only_one_tab = true,
+  tab_max_width = 60,
+  unzoom_on_switch_pane = true,
+}
 
 function M.apply_to_config(config)
   config.use_fancy_tab_bar = true
