@@ -18,6 +18,7 @@
 
 local wezterm = require("wezterm")
 local act = wezterm.action
+local actions = require("wezmacs.modules.editors.actions")
 
 local M = {}
 
@@ -34,19 +35,6 @@ M._CONFIG = {
 
 function M.apply_to_config(wezterm_config)
   local mod = wezmacs.get_module(M._NAME)
-  local split = require("wezmacs.utils.split")
-
-  -- Terminal editor in smart split
-  local function terminal_editor_split(window, pane)
-    split.smart_split(pane, { mod.terminal_editor, "." })
-  end
-
-  -- IDE launcher
-  local function launch_ide(window, pane)
-    local cwd_uri = pane:get_current_working_dir()
-    local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
-    wezterm.background_child_process({ mod.ide, cwd })
-  end
 
   -- Create editors key table
   wezterm_config.key_tables = wezterm_config.key_tables or {}
