@@ -605,69 +605,70 @@ Example: "Implement authentication system"
 ## Repository Context
 
 <!-- REPOSITORY_INDEX_START -->
-### Repository Overview
+### WezMacs Repository Overview
 
-**wezmacs** is a modular WezTerm terminal emulator configuration framework inspired by Doom Emacs and Spacemacs design patterns.
+**Main Purpose**: A modular, Doom Emacs-inspired configuration framework for WezTerm that allows users to mix and match features through a clean module system.
 
-### Key Technologies
-
-- **Language**: Lua
-- **Platform**: WezTerm Terminal Emulator
-- **Dependencies**: 
-  - Fish shell (default shell)
-  - External tools: lazygit, yazi, btm, lazydocker, k9s, spotify_player, Helix, Cursor
-  - Plugins: smart_workspace_switcher, quick_domains
+**Key Technologies**: Lua, WezTerm, Just (task runner)
 
 ### Directory Structure
 
 ```
 wezmacs/
-├── .claude/              # Claude Code configuration
-├── wezterm-config/       # Main configuration directory
-│   ├── wezterm.lua       # Entry point orchestrator (44 lines)
-│   └── modules/          # Modular components (~815 lines total)
-│       ├── appearance.lua    # Colors, fonts, visual styling
-│       ├── window.lua        # Window behavior
-│       ├── tabs.lua          # Custom tab bar with icons
-│       ├── keys.lua          # Keyboard bindings (366 lines)
-│       ├── mouse.lua         # Mouse behavior
-│       └── plugins.lua       # Plugin integrations
-├── CLAUDE.md             # Project memory and instructions
-└── README.md             # Project overview
+├── wezterm.lua              # Entry point at ~/.config/wezterm/
+├── justfile                 # Build/install automation
+├── wezmacs/                 # Framework core
+│   ├── init.lua            # Framework bootstrap
+│   ├── module.lua          # Module loading system
+│   ├── generate-config.lua # Config generator
+│   ├── modules/            # Built-in modules (flat structure)
+│   │   ├── claude/         # Claude Code integration
+│   │   ├── core/           # Core settings
+│   │   ├── docker/         # Docker management (lazydocker)
+│   │   ├── domains/        # SSH/Docker/K8s domains
+│   │   ├── editors/        # Editor launchers
+│   │   ├── file-manager/   # Yazi integration
+│   │   ├── fonts/          # Font configuration
+│   │   ├── git/            # Lazygit integration
+│   │   ├── keybindings/    # Pane/tab management
+│   │   ├── kubernetes/     # K8s management (k9s)
+│   │   ├── media/          # Media player integration
+│   │   ├── mouse/          # Mouse behavior
+│   │   ├── system-monitor/ # System monitoring (btm)
+│   │   ├── tabbar/         # Custom tab bar with icons
+│   │   ├── theme/          # Color schemes
+│   │   ├── window/         # Window settings
+│   │   └── workspace/      # Workspace switching
+│   ├── templates/          # Module template
+│   └── utils/              # Shared utilities (keybindings, colors, split)
+└── user/                   # Example configs (modules.lua, config.lua)
 ```
 
 ### Entry Points
 
-- **Main configuration**: `wezterm-config/wezterm.lua`
-- **Configuration loader**: WezTerm reads from `~/.config/wezterm/wezterm.lua` (symlink target)
-- **Theme**: Horizon Dark (Gogh)
-- **Font**: Iosevka Mono (16pt, medium weight)
-- **Leader key**: CMD+Space (5-second timeout)
+- **wezterm.lua**: Main entry point loaded by WezTerm
+- **wezmacs/init.lua**: Framework initialization
+- **~/.config/wezmacs/wezmacs.lua**: User configuration (generated via `just init`)
 
 ### Build/Run Commands
 
-No build process required (Lua interpreted). Configuration testing:
+Available Just recipes:
 
-```bash
-# Verify configuration loads
-wezterm --config-file ~/.config/wezterm/wezterm.lua --version
+| Command | Purpose |
+|---------|---------|
+| `just install` | Install framework to ~/.config/wezterm |
+| `just init` | Generate user config at ~/.config/wezmacs/wezmacs.lua |
+| `just update` | Update existing installation via git |
+| `just uninstall` | Remove framework (preserves user config) |
+| `just test` | Test with local config using WEZMACS_CONFIG |
+| `just status` | Show installation status |
+| `just fmt` | Format Lua files with StyLua |
+| `just lint` | Check code quality with Luacheck |
+| `just check` | Run both fmt and lint |
+| `just new-module NAME` | Create new module from template |
+| `just clean` | Remove temporary files |
 
-# Monitor for errors
-tail -f ~/.local/share/wezterm/wezterm.log
-```
+### Available Scripts
 
-### Key Features
-
-- **Modular architecture**: Clean separation of concerns with `apply_to_config()` pattern
-- **Hierarchical keybindings**: Modal submenus for git (LEADER+g) and Claude (LEADER+c) operations
-- **Workspace management**: Integration with Claude Code via `claudectl`
-- **Smart splits**: Auto-orientation based on window aspect ratio
-- **Custom tab bar**: Process-specific icons (25+ applications), zoom indicators
-- **Plugin system**: Lazy-loaded for performance
-
-### Configuration Metrics
-
-- **Total size**: ~815 lines across 7 files
-- **Reduction**: 21% smaller than original (removed ~216 lines of dead code)
-- **Load time**: ~10ms
+Development automation via justfile includes dependency installation (`just deps`), code formatting/linting, and a module generator. Users customize by editing two files: `modules.lua` (which modules to load) and `config.lua` (per-module settings).
 <!-- REPOSITORY_INDEX_END -->
