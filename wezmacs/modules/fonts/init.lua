@@ -38,9 +38,7 @@ M._CONFIG = {
   ui_font_size = nil,
   ligatures = {
     enabled = false,
-    config = {
-      harfbuzz_features = nil,  -- nil = use default ligatures
-    },
+    harfbuzz_features = nil,  -- nil = use default ligatures
   },
 }
 
