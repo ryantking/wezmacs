@@ -38,9 +38,19 @@ function M.apply_to_config(wezterm_config)
   -- Create file-manager key table
   wezterm_config.key_tables = wezterm_config.key_tables or {}
   wezterm_config.key_tables["file-manager"] = {
-    { key = "f", action = wezterm.action_callback(file_manager_split) },
+    {
+      key = "f",
+      action = wezterm.action_callback(function(window, pane)
+        actions.file_manager_split(window, pane, mod.file_manager)
+      end),
+    },
     { key = "F", action = act.SpawnCommandInNewTab({ args = { mod.file_manager } }) },
-    { key = "s", action = wezterm.action_callback(file_manager_sudo_split) },
+    {
+      key = "s",
+      action = wezterm.action_callback(function(window, pane)
+        actions.file_manager_sudo_split(window, pane, mod.file_manager)
+      end),
+    },
     { key = "S", action = act.SpawnCommandInNewTab({ args = { "sudo", mod.file_manager, "/" } }) },
     { key = "Escape", action = "PopKeyTable" },
   }
