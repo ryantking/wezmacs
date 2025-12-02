@@ -4,16 +4,17 @@
   Description: WezTerm workspace switching and management with fuzzy search
 
   Provides:
-  - Fuzzy workspace switcher (LEADER s)
-  - Previous workspace navigation (LEADER S)
-  - System workspace quick access (LEADER B)
+  - Fuzzy workspace switcher (default: LEADER s)
+  - Previous workspace navigation (default: LEADER S)
   - Integration with smart_workspace_switcher plugin
 
   Note: For Claude Code workspace management, see the claude module.
 
   Configuration:
-    leader_key - Key for workspace switcher (default: "s")
-    leader_mod - Modifier for leader key (default: "LEADER")
+    switch_key - Key for workspace switcher (default: "s")
+    switch_mod - Modifier for switch key (default: "LEADER")
+    prev_key - Key for previous workspace (default: "S")
+    prev_mod - Modifier for previous key (default: "LEADER")
 ]]
 
 local wezterm = require("wezterm")
