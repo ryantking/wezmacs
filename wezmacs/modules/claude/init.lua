@@ -50,7 +50,7 @@ function M.apply_to_config(config)
 
   -- Add keybinding to activate claude menu
   config.keys = config.keys or {}
-  table.insert(config.keys, { key = "Enter", mods = "SHIFT", action = act.SendString("\\x1b\\r") })
+  table.insert(config.keys, { key = "Enter", mods = "SHIFT", action = act.SendString("\x1b\r") })
   table.insert(config.keys, {
     key = mod.leader_key,
     mods = mod.leader_mod,

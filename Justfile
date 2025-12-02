@@ -33,11 +33,8 @@ check: fmt lint
 
 # Generate user configuration at ~/.config/wezmacs/wezmacs.lua
 init:
-    @if [ -f ~/.wezmacs.lua ] || [ -f ~/.config/wezmacs/wezmacs.lua ]; then \
-        echo "WezMacs config already exists:"; \
-        [ -f ~/.wezmacs.lua ] && echo "  ~/.wezmacs.lua"; \
-        [ -f ~/.config/wezmacs/wezmacs.lua ] && echo "  ~/.config/wezmacs/wezmacs.lua"; \
-        echo ""; \
+    @if [ -f ~/.config/wezmacs/wezmacs.lua ]; then \
+        echo "WezMacs config already exists: ~/.config/wezmacs/wezmacs.lua"; \
         echo "Remove existing config first or run 'just init --force' to overwrite"; \
         exit 1; \
     fi
@@ -47,7 +44,7 @@ init:
     @echo ""
     @echo "Next steps:"
     @echo "1. Edit ~/.config/wezmacs/wezmacs.lua to enable/configure modules"
-    @echo "2. Reload WezTerm configuration (Cmd+Option+R on macOS)"
+    @echo "2. Reload WezTerm configuration (LEADER+R on macOS)"
 
 # Install WezMacs to ~/.config/wezterm
 install:
@@ -59,10 +56,7 @@ install:
         fi \
     fi
     @echo "Installing WezMacs framework to ~/.config/wezterm..."
-    @mkdir -p ~/.config/wezterm
-    @cp -r wezmacs ~/.config/wezterm/
-    @cp wezterm.lua ~/.config/wezterm/
-    @mkdir -p ~/.config/wezmacs/custom-modules
+    @git clone "https://github.com/ryantking/wezmacs" ~/.config/wezterm
     @echo "✓ WezMacs framework installed"
     @echo ""
     @echo "Next steps:"
