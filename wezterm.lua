@@ -27,6 +27,23 @@ local config = wezterm.config_builder()
 -- Load unified configuration from ~/.wezmacs.lua or ~/.config/wezmacs/wezmacs.lua
 
 local function load_unified_config()
+  -- Check for WEZMACS_CONFIG environment variable first (for testing)
+  local wezmacs_config = os.getenv("WEZMACS_CONFIG")
+  if wezmacs_config then
+    local f = io.open(wezmacs_config, "r")
+    if f then
+      f:close()
+      local chunk, err = loadfile(wezmacs_config)
+      if chunk then
+        return chunk()
+      else
+        error("Failed to load " .. wezmacs_config .. ": " .. err)
+      end
+    end
+    -- If WEZMACS_CONFIG is set but file doesn't exist, that's an error
+    error("WEZMACS_CONFIG is set but file not found: " .. wezmacs_config)
+  end
+
   local home = os.getenv("HOME")
   local config_dir = os.getenv("XDG_CONFIG_HOME") or (home .. "/.config")
 
