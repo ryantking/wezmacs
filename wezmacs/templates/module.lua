@@ -50,14 +50,11 @@ M._CONFIG = {
   -- Optional features (user must enable via `enabled = true`)
   -- simple_feature = {
   --   enabled = false,
-  --   config = {},
   -- },
   --
   -- complex_feature = {
   --   enabled = false,
-  --   config = {
-  --     option = "default",   -- Feature-specific config defaults
-  --   },
+  --   option = "default",   -- Feature-specific config defaults
   --   deps = { "external_tool" },  -- Feature-specific dependencies
   -- },
 }
