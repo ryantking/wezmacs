@@ -1,85 +1,11 @@
-# window module
+# Window
 
-Configures WezTerm window behavior, padding, scrolling, cursor appearance, and UI widget styling.
+Window behavior, padding, and cursor settings for the terminal interface.
 
-## Features
+## Required Packages
 
-- **Window Decorations**: Configurable window chrome (default: RESIZE)
-- **Padding**: Configurable uniform padding around terminal content
-- **Scrollback**: Large 5000-line scrollback buffer (default)
-- **Scroll Bar**: Visual indicator in window chrome
-- **Cursor**: Blinking block cursor with smooth easing animations
-- **No Audio Bell**: Disabled for quiet operation
-- **Theme Integration**: Applies theme colors to window frame, char select, and command palette
+None
 
-## Configuration
+## Key Bindings
 
-Enable in `~/.config/wezmacs/config.lua`:
-```lua
-return {
-  window = {
-    decorations = "RESIZE",  -- Window chrome style
-    padding = 16,            -- Pixels of padding (all sides)
-    scrollback_lines = 5000, -- Lines to keep in buffer
-  }
-}
-```
-
-## Options
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `decorations` | string | "RESIZE" | Window decoration style |
-| `padding` | number | 16 | Pixels of padding on all sides |
-| `scrollback_lines` | number | 5000 | Lines to keep in scrollback buffer |
-
-### Window Decoration Options
-
-- `"RESIZE"` - Only resize handle (minimal chrome)
-- `"TITLE"` - Title bar + resize handle
-- `"TITLE | RESIZE"` - Both title and resize
-- `"NONE"` - No window decorations
-
-## Cursor Settings
-
-- **Style**: Blinking block (█)
-- **Blink Rate**: 500ms per blink cycle
-- **Ease-in**: EaseIn animation
-- **Ease-out**: EaseOut animation
-
-## Scrollback
-
-- **Default Size**: 5000 lines
-- **Indicator**: Visual scroll bar enabled
-- **Access**: Scroll with mouse wheel or trackpad
-
-## Window Behavior
-
-- **Close Confirmation**: Never prompt (instant close)
-- **Decorations**: Resize handle only (minimal chrome)
-
-## Theme Integration
-
-When the `theme` module is enabled and a color_scheme is set, the window module automatically applies theme colors to:
-
-- **Window Frame**: Active/inactive titlebar background and foreground
-- **Character Selector**: Background and foreground colors (Ctrl+Shift+U)
-- **Command Palette**: Background and foreground colors (Ctrl+Shift+P)
-
-This ensures UI widgets match your chosen theme seamlessly.
-
-## External Dependencies
-
-None. Uses only WezTerm builtin features.
-
-## Related Modules
-
-- `ui/theme` - Color scheme selection (provides colors for UI widgets)
-- `ui/fonts` - Font configuration
-- `ui/tabbar` - Tab bar styling
-
-## Keybindings
-
-This module does not define any keybindings. See related modules:
-- `behavior/scrolling` for scroll-related keybindings
-- `editing/keybindings` for general navigation
+None (module provides no direct key bindings)
