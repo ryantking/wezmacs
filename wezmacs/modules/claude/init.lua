@@ -33,10 +33,10 @@ M._CONFIG = {
 -- Create and open claudectl workspace
 local function create_claudectl_workspace(window, pane)
   -- Get color from theme or use default
-  local theme_config = wezmacs.get_config("theme")
+  local theme_mod = wezmacs.get_module("theme")
   local prompt_color = "#56be8d" -- fallback
-  if theme_config and theme_config.color_scheme then
-    local theme = wezterm.get_builtin_color_schemes()[theme_config.color_scheme]
+  if theme_mod and theme_mod.color_scheme then
+    local theme = wezterm.get_builtin_color_schemes()[theme_mod.color_scheme]
     if theme and theme.ansi and theme.ansi[3] then
       prompt_color = theme.ansi[3] -- Use cyan/green from theme
     end
