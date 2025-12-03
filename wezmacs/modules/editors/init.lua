@@ -18,7 +18,6 @@
 
 local wezterm = require("wezterm")
 local act = wezterm.action
-local actions = require("wezmacs.modules.editors.actions")
 
 local M = {}
 
@@ -27,45 +26,34 @@ M._CATEGORY = "development"
 M._DESCRIPTION = "External code editor launchers"
 M._EXTERNAL_DEPS = {}
 M._CONFIG = {
-  terminal_editor = "vim",
+  editor = "vim",
   ide = "code",
-  leader_key = "e",
-  leader_mod = "LEADER",
+  editor_split_key = "e",
+  editor_tab_key = "E",
+  ide_key = "i",
 }
 
 function M.apply_to_config(wezterm_config)
   local mod = wezmacs.get_module(M._NAME)
+  local actions = require("wezmacs.modules.editors.actions").setup(mod.editor, mod.ide)
 
-  -- Create editors key table
-  wezterm_config.key_tables = wezterm_config.key_tables or {}
-  wezterm_config.key_tables.editors = {
-    {
-      key = "t",
-      action = wezterm.action_callback(function(window, pane)
-        actions.terminal_editor_split(window, pane, mod.terminal_editor)
-      end),
-    },
-    { key = "T", action = act.SpawnCommandInNewTab({ args = { mod.terminal_editor, "." } }) },
-    {
-      key = "i",
-      action = wezterm.action_callback(function(window, pane)
-        actions.launch_ide(window, pane, mod.ide)
-      end),
-    },
-    { key = "Escape", action = "PopKeyTable" },
-  }
-
-  -- Add keybinding to activate editors menu
   wezterm_config.keys = wezterm_config.keys or {}
-  table.insert(wezterm_config.keys, {
-    key = mod.leader_key,
-    mods = mod.leader_mod,
-    action = act.ActivateKeyTable({
-      name = "editors",
-      one_shot = false,
-      until_unknown = true,
-    }),
-  })
+  table.insert(
+    wezterm_config.keys,
+    { key = mod.editor_split_key, mods = "LEADER", action = wezterm.action_callback(actions.terminal_smart_split) }
+  )
+  table.insert(
+    wezterm_config.keys,
+    {
+      key = mod.editor_tab_key,
+      mods = "LEADER",
+      action = act.SpawnCommandInNewTab({args = { os.getenv("SHELL") or "/bin/bash", "-lc", mod.editor }})
+    }
+  )
+  table.insert(
+    wezterm_config.keys,
+    { key = mod.ide_key, mods = "LEADER", action = wezterm.action_callback(actions.launch_ide) }
+  )
 end
 
 return M

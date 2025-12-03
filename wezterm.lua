@@ -49,7 +49,6 @@ local function load_unified_config()
 
   -- Priority order: ~/.wezmacs.lua, then ~/.config/wezmacs/wezmacs.lua
   local paths = {
-    home .. "/.wezmacs.lua",
     config_dir .. "/wezmacs/wezmacs.lua",
   }
 
@@ -68,6 +67,7 @@ local function load_unified_config()
 
   return nil
 end
+
 
 -- Load unified config or fail
 local unified_config = load_unified_config()
