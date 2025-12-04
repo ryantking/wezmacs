@@ -43,13 +43,20 @@ function M.setup(config, opts)
   -- Create global wezmacs API table (captured closure over states)
   _G.wezmacs = {
     -- Get full merged config for a module (includes features)
+    -- Returns a shallow copy to prevent closures from sharing mutable references
     get_module = function(module_name)
       local state = states[module_name]
       if not state then
         log("warn", "No config found for module: " .. module_name)
         return { features = {} }
       end
-      return state
+
+      -- Return shallow copy to avoid shared mutable state in closures
+      local copy = {}
+      for k, v in pairs(state) do
+        copy[k] = v
+      end
+      return copy
     end,
   }
 
