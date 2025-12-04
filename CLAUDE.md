@@ -430,50 +430,60 @@ Example: "Implement authentication system"
 <!-- REPOSITORY_INDEX_START -->
 ### WezMacs: Modular WezTerm Configuration Framework
 
-**Purpose & Technologies**
-WezMacs is a modular configuration framework for WezTerm inspired by Doom Emacs and LazyVim. It provides a plugin-like system for organizing WezTerm settings, enabling users to compose terminal configurations from discrete, reusable modules written in Lua.
+**Main Purpose & Technologies**
+WezMacs is a modular configuration framework for WezTerm inspired by Doom Emacs and LazyVim. Built entirely in Lua, it provides a plugin-like module system for composing terminal configurations from discrete, reusable components. The framework enables users to mix-and-match features like themes, keybindings, git integration, and workflow tools.
 
 **Directory Structure**
 ```
 wezmacs/
-├── init.lua              # Framework bootstrap & setup
-├── module.lua            # Module loading system
-├── generate-config.lua   # Configuration generator
-├── modules/              # Built-in modules (flat structure)
-│   ├── core/            # Core WezTerm settings
-│   ├── keybindings/     # Custom key bindings
-│   ├── tabbar/          # Tab bar customization
-│   ├── theme/           # Theme management
-│   └── ... (12 more modules for editors, git, docker, etc.)
-├── utils/               # Helper utilities (colors, keybindings, etc.)
-└── templates/           # Module scaffolding templates
-wezterm.lua             # Entry point at ~/.config/wezterm/
+├── wezterm.lua              # Entry point (symlinked to ~/.config/wezterm/)
+├── wezmacs/
+│   ├── init.lua             # Framework initialization
+│   ├── module.lua           # Module loading system
+│   ├── generate-config.lua  # Configuration generator
+│   ├── modules/             # Built-in modules (flat structure)
+│   │   ├── core/           # Core WezTerm settings
+│   │   ├── keybindings/    # Pane/tab management (50+ bindings)
+│   │   ├── theme/          # Color schemes and fonts
+│   │   ├── git/            # Lazygit integration
+│   │   ├── workspace/      # Workspace switching
+│   │   ├── claude/         # Claude Code integration
+│   │   └── ... (12 more: docker, k8s, editors, etc.)
+│   ├── utils/              # Helpers (colors, keybindings, split utils)
+│   └── templates/          # Module scaffolding templates
+└── user config at ~/.config/wezmacs/wezmacs.lua  # User module selection
 ```
 
 **Entry Points & Main Files**
-- **wezterm.lua**: Primary entry point; loads unified config from `~/.wezmacs.lua` or `~/.config/wezmacs/wezmacs.lua`
-- **wezmacs/init.lua**: Framework initialization and module orchestration
-- **wezmacs/module.lua**: Module discovery and loading system
-- **wezmacs/generate-config.lua**: Generates user configuration templates
+- `wezterm.lua:1` - Primary entry point loaded by WezTerm
+- `wezmacs/init.lua:1` - Framework bootstrapper, orchestrates module loading
+- `wezmacs/module.lua:1` - Module discovery and loading system
+- `wezmacs/generate-config.lua:1` - Generates user configuration templates
 
 **Build/Run Commands** (Justfile)
+
 | Command | Purpose |
 |---------|---------|
 | `just deps` | Install luacheck & stylua |
 | `just fmt` | Format Lua files with StyLua |
 | `just lint` | Lint with luacheck |
-| `just check` | Full code quality check |
+| `just check` | Full code quality check (fmt + lint) |
 | `just test` | Launch WezTerm with local test config |
 | `just install` | Install framework to ~/.config/wezterm |
-| `just init` | Generate user configuration |
-| `just update` | Update existing installation |
+| `just init` | Generate user config at ~/.config/wezmacs/wezmacs.lua |
+| `just update` | Update existing installation via git pull |
+| `just uninstall` | Remove framework from ~/.config/wezterm |
+| `just status` | Show installation status |
 | `just new-module NAME` | Create new module from template |
+| `just clean` | Remove temp files |
+| `just docs` | Show documentation paths |
+| `just version` | Display version info |
 
-**Available Scripts**
-- Development: deps, fmt, lint, check, watch
-- Lifecycle: install, init, update, uninstall, status
-- Utility: test, clean, docs, version
-- Module: new-module
+**Available Scripts & Automation**
+- **Development**: `deps`, `fmt`, `lint`, `check`, `watch` (continuous linting)
+- **Lifecycle**: `install`, `init`, `update`, `uninstall`, `status`
+- **Testing**: `test` (launches WezTerm with local config via `WEZMACS_CONFIG` env var)
+- **Module Creation**: `new-module` (scaffolds from template)
 <!-- REPOSITORY_INDEX_END -->
 
 ## Tool Selection Guidelines
