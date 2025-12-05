@@ -5,11 +5,11 @@
 
   Provides:
   - Open Claude in new tab (LEADER c c or LEADER c C)
-  - Create new claudectl workspace (LEADER c w)
+  - Create new agentctl workspace (LEADER c w)
   - Switch to existing workspace (LEADER c s)
-  - Delete claudectl workspace (LEADER c d)
+  - Delete agentctl workspace (LEADER c d)
 
-  Note: This module depends on claudectl being installed.
+  Note: This module depends on agentctl being installed.
   If not available, only basic claude launching works.
 
   Configuration:
@@ -27,7 +27,7 @@ local M = {}
 M._NAME = "claude"
 M._CATEGORY = "workflows"
 M._DESCRIPTION = "Claude Code integration and workspace management"
-M._EXTERNAL_DEPS = { "claude", "claudectl" }
+M._EXTERNAL_DEPS = { "claude", "agentctl" }
 M._CONFIG = {
   leader_key = "c",
   leader_mod = "LEADER",
@@ -41,10 +41,10 @@ function M.apply_to_config(config)
   config.key_tables.claude = {
     { key = "c", action = wezterm.action_callback(actions.claude_smart_split) },
     { key = "C", action = act.SpawnCommandInNewTab({ args = { os.getenv("SHELL") or "/bin/bash", "-c", "claude" } }) },
-    { key = "w", action = wezterm.action_callback(actions.create_claudectl_workspace) },
-    { key = "Space", action = wezterm.action_callback(actions.list_claudectl_sessions) },
-    { key = "s", action = wezterm.action_callback(actions.list_claudectl_sessions) },
-    { key = "d", action = wezterm.action_callback(actions.delete_claudectl_session) },
+    { key = "w", action = wezterm.action_callback(actions.create_agentctl_workspace) },
+    { key = "Space", action = wezterm.action_callback(actions.list_agentctl_sessions) },
+    { key = "s", action = wezterm.action_callback(actions.list_agentctl_sessions) },
+    { key = "d", action = wezterm.action_callback(actions.delete_agentctl_session) },
     { key = "Escape", action = "PopKeyTable" },
   }
 

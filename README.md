@@ -309,7 +309,7 @@ Required tools depend on which modules you enable:
 
 - **git module**: lazygit, git, delta
 - **workspace module**: smart_workspace_switcher (plugin, auto-installed)
-- **claude module**: claude CLI, claudectl (optional)
+- **claude module**: claude CLI, agentctl (optional)
 - **plugins module**: smart_workspace_switcher, quick_domains (both plugins, auto-installed)
 
 Install recommended tools:

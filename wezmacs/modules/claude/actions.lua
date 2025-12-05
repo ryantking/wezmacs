@@ -14,8 +14,8 @@ function M.claude_smart_split(window, pane)
   split.smart_split(pane, { os.getenv("SHELL") or "/bin/bash", "-lc", "claude" })
 end
 
--- Create and open claudectl workspace
-function M.create_claudectl_workspace(window, pane)
+-- Create and open agentctl workspace
+function M.create_agentctl_workspace(window, pane)
   -- Get color from theme or use default
   local theme_mod = wezmacs.get_module("theme")
   local prompt_color = "#56be8d" -- fallback
@@ -42,11 +42,11 @@ function M.create_claudectl_workspace(window, pane)
 
         local cmd = "cd "
           .. wezterm.shell_quote_arg(cwd)
-          .. " && claudectl workspace create "
+          .. " && agentctl workspace create "
           .. wezterm.shell_quote_arg(line)
           .. ' && cd "$(cd '
           .. wezterm.shell_quote_arg(cwd)
-          .. " && claudectl workspace show "
+          .. " && agentctl workspace show "
           .. wezterm.shell_quote_arg(line)
           .. ')\" && claude'
         inner_window:perform_action(
@@ -61,15 +61,15 @@ function M.create_claudectl_workspace(window, pane)
   )
 end
 
--- List and select claudectl workspace
-function M.list_claudectl_sessions(window, pane)
+-- List and select agentctl workspace
+function M.list_agentctl_sessions(window, pane)
   local cwd_uri = pane:get_current_working_dir()
   local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
 
   local success, output, stderr = wezterm.run_child_process({
     os.getenv("SHELL") or "/bin/bash",
     "-lc",
-    "cd " .. wezterm.shell_quote_arg(cwd) .. " && claudectl workspace list --json",
+    "cd " .. wezterm.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
   })
 
   if not success or not output or output == "" then
@@ -105,7 +105,7 @@ function M.list_claudectl_sessions(window, pane)
         if id then
           local workspace_path_cmd = "cd "
             .. wezterm.shell_quote_arg(cwd)
-            .. " && claudectl workspace show "
+            .. " && agentctl workspace show "
             .. wezterm.shell_quote_arg(id)
           local cmd_success, workspace_path = wezterm.run_child_process({
             os.getenv("SHELL") or "/bin/bash",
@@ -134,15 +134,15 @@ function M.list_claudectl_sessions(window, pane)
   )
 end
 
--- Delete claudectl workspace
-function M.delete_claudectl_session(window, pane)
+-- Delete agentctl workspace
+function M.delete_agentctl_session(window, pane)
   local cwd_uri = pane:get_current_working_dir()
   local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
 
   local success, output, stderr = wezterm.run_child_process({
     os.getenv("SHELL") or "/bin/bash",
     "-lc",
-    "cd " .. wezterm.shell_quote_arg(cwd) .. " && claudectl workspace list --json",
+    "cd " .. wezterm.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
   })
 
   if not success or not output or output == "" then
@@ -178,7 +178,7 @@ function M.delete_claudectl_session(window, pane)
         if id then
           local del_cmd = "cd "
             .. wezterm.shell_quote_arg(cwd)
-            .. " && claudectl workspace delete "
+            .. " && agentctl workspace delete "
             .. wezterm.shell_quote_arg(id)
           local del_success, del_stdout, del_stderr = wezterm.run_child_process({
             os.getenv("SHELL") or "/bin/bash",
