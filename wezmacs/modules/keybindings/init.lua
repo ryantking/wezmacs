@@ -95,14 +95,15 @@ function M.apply_to_config(config)
   table.insert(config.keys, { key = "n", mods = "LEADER", action = act.SpawnWindow })
   table.insert(config.keys, { key = "m", mods = mod.modifier, action = act.Hide })
   table.insert(config.keys, { key = "h", mods = mod.modifier, action = act.HideApplication })
-  table.insert(config.keys, { key = "f", mods = "LEADER", action = act.ToggleFullScreen })
+  -- LEADER f reserved for file-manager module key table
+  table.insert(config.keys, { key = "F", mods = "LEADER", action = act.ToggleFullScreen })
   table.insert(config.keys, { key = "+", mods = mod.modifier, action = act.IncreaseFontSize })
   table.insert(config.keys, { key = "-", mods = mod.modifier, action = act.DecreaseFontSize })
   table.insert(config.keys, { key = "0", mods = mod.modifier, action = act.ResetFontSize })
 
   -- Tab Management
   table.insert(config.keys, { key = "t", mods = mod.modifier, action = act.SpawnTab("CurrentPaneDomain") })
-  table.insert(config.keys, { key = "t", mods = "LEADER", action = act.SpawnTab("CurrentPaneDomain") })
+  -- LEADER t reserved for domains module key table
   table.insert(config.keys, { key = "T", mods = "LEADER", action = act.SpawnTab("DefaultDomain") })
   table.insert(config.keys, { key = "w", mods = mod.modifier, action = act.CloseCurrentTab({ confirm = false }) })
   table.insert(config.keys, { key = "Tab", mods = "CTRL", action = act.ActivateTabRelative(1) })

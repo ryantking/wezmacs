@@ -14,6 +14,27 @@ local wezterm = require("wezterm")
 
 local M = {}
 
+-- Default load order (can be overridden by user via _load_order in config)
+-- Ensures deterministic module loading to prevent keybinding conflicts
+local DEFAULT_LOAD_ORDER = {
+  "core",        -- Must be first (base settings)
+  "theme",       -- Visual settings early
+  "keybindings", -- Core keybindings before modules that extend them
+  "workspace",   -- Workspace management
+  "git",
+  "claude",
+  "docker",
+  "file-manager",
+  "editors",
+  "domains",
+  "kubernetes",
+  "media",
+  "mouse",
+  "system-monitor",
+  "tabbar",
+  "window",
+}
+
 -- Deep merge two tables, with user values taking precedence
 ---@param schema table Config schema with default values
 ---@param user_config table User-provided configuration
@@ -51,7 +72,33 @@ function M.load_all(unified_config, log)
   local modules = {}
   local states = {}
 
-  for mod_name, mod_user_config in pairs(unified_config) do
+  -- Extract user-defined load order if present
+  local user_load_order = unified_config._load_order
+  local load_order = user_load_order or DEFAULT_LOAD_ORDER
+
+  -- Build ordered list: explicit order first, then remaining modules
+  local ordered_modules = {}
+  local seen = {}
+
+  -- Add modules in explicit order
+  for _, mod_name in ipairs(load_order) do
+    if unified_config[mod_name] then
+      table.insert(ordered_modules, mod_name)
+      seen[mod_name] = true
+    end
+  end
+
+  -- Add any remaining modules not in explicit order
+  for mod_name, _ in pairs(unified_config) do
+    if mod_name ~= "_load_order" and not seen[mod_name] then
+      table.insert(ordered_modules, mod_name)
+    end
+  end
+
+  -- Load modules in deterministic order
+  for _, mod_name in ipairs(ordered_modules) do
+    local mod_user_config = unified_config[mod_name]
+
     if type(mod_user_config) ~= "table" then
       log("warn", "Invalid config for module '" .. mod_name .. "' (must be a table)")
       goto continue
