@@ -37,20 +37,29 @@ function M.discover_modules(log)
   return specs
 end
 
--- Load a single module (LazyVim-style: single file returns spec table)
+-- Load a single module (supports both module.lua and module/init.lua)
 ---@param mod_name string Module name
 ---@param log function Logging function
 ---@return table|nil Loaded module spec or nil if failed
 function M.load_module(mod_name, log)
-  -- Load module (single file returns spec table directly)
-  -- Try: wezmacs.modules.git (for modules/git.lua)
+  -- Try module.lua first (flat structure)
   local require_path = "wezmacs.modules." .. mod_name
   local ok, spec = pcall(require, require_path)
+
+  -- If not found, try module/init.lua (nested structure)
+  if not ok then
+    require_path = "wezmacs.modules." .. mod_name .. ".init"
+    ok, spec = pcall(require, require_path)
+  end
 
   -- If not found in built-in, try custom modules
   if not ok then
     require_path = "user.custom-modules." .. mod_name
     ok, spec = pcall(require, require_path)
+    if not ok then
+      require_path = "user.custom-modules." .. mod_name .. ".init"
+      ok, spec = pcall(require, require_path)
+    end
   end
 
   if not ok then
@@ -69,9 +78,14 @@ function M.load_module(mod_name, log)
     log("warn", "Module '" .. mod_name .. "' spec missing 'name' field, using directory name")
   end
 
-  if not spec.apply_to_config then
-    log("error", "Module '" .. mod_name .. "' spec missing required 'apply_to_config' function")
+  if not spec.setup then
+    log("error", "Module '" .. mod_name .. "' spec missing required 'setup' function")
     return nil
+  end
+
+  if not spec.opts or type(spec.opts) ~= "function" then
+    log("warn", "Module '" .. mod_name .. "' spec missing 'opts' function, using empty defaults")
+    spec.opts = function() return {} end
   end
 
   -- Register spec
@@ -128,22 +142,50 @@ function M.load_all(unified_config, log)
       goto continue
     end
 
-    -- Check if module is enabled
-    local is_enabled = config_lib.is_enabled(spec, mod_user_config)
+    -- Check if module is enabled (check enabled field or function)
+    local is_enabled = true
+    if spec.enabled ~= nil then
+      if type(spec.enabled) == "function" then
+        -- Create context object for enabled check
+        local ctx = {
+          has_command = function(cmd)
+            return registry.has_command(cmd)
+          end,
+        }
+        is_enabled = spec.enabled(ctx)
+      else
+        is_enabled = spec.enabled
+      end
+    end
+
     if not is_enabled then
       log("info", "Module disabled: " .. mod_name)
       goto continue
     end
 
-    -- Validate dependencies
-    local deps_ok, missing = registry.validate_dependencies(spec)
-    if not deps_ok then
-      log("warn", "Module " .. mod_name .. " missing dependencies: " .. table.concat(missing, ", "))
-      -- Continue anyway (graceful degradation)
+    -- Validate dependencies (check deps field)
+    if spec.deps and type(spec.deps) == "table" then
+      local missing = {}
+      for _, dep in ipairs(spec.deps) do
+        if not registry.has_command(dep) then
+          table.insert(missing, dep)
+        end
+      end
+      if #missing > 0 then
+        log("warn", "Module " .. mod_name .. " missing dependencies: " .. table.concat(missing, ", "))
+        -- Continue anyway (graceful degradation)
+      end
+    end
+
+    -- Get default opts from spec function
+    local default_opts = spec.opts()
+    if type(default_opts) ~= "table" then
+      log("warn", "Module '" .. mod_name .. "' opts() did not return a table, using empty defaults")
+      default_opts = {}
     end
 
     -- Deep merge user config with defaults
-    local merged_config = config_lib.deep_merge(spec.opts or {}, mod_user_config)
+    local merged_config = config_lib.deep_merge(default_opts, mod_user_config)
 
     -- Store module spec and state
     states[mod_name] = merged_config

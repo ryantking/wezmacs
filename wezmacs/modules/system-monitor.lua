@@ -4,37 +4,36 @@
   Description: System monitoring with bottom (btm)
 ]]
 
+local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
-local action_lib = require("wezmacs.lib.actions")
 
--- Actions (inline)
-local actions = {
-  launch_btm = action_lib.new_tab_action("btm"),
-}
+-- Define keys function (captured in closure for setup)
+local function keys_fn()
+  return {
+    LEADER = {
+      h = {
+        action = act.NewTab("btm"),
+        desc = "system-monitor/btm",
+      },
+    },
+  }
+end
 
--- Module spec (LazyVim-style inline spec)
 return {
   name = "system-monitor",
   category = "tools",
   description = "System monitoring with bottom",
 
-  dependencies = {
-    external = { "btm" },
-    modules = { "keybindings" },
-  },
+  deps = { "btm" },
 
-  opts = {
-    keybinding = "h",
-    modifier = "LEADER",
-  },
+  opts = function()
+    return {
+      keybinding = "h",
+      modifier = "LEADER",
+    }
+  end,
 
-  keys = {
-    {
-      key = "h",
-      mods = "LEADER",
-      action = actions.launch_btm,
-    },
-  },
+  keys = keys_fn,
 
   enabled = function(ctx)
     return ctx.has_command("btm")
@@ -42,11 +41,11 @@ return {
 
   priority = 50,
 
-  -- Implementation function
-  apply_to_config = function(config, opts)
-    -- Get spec (self-reference via closure)
-    local spec = require("wezmacs.modules.system-monitor")
-    -- Apply keybindings using library
-    keybindings.apply_keys(config, spec)
+  setup = function(config, opts)
+    -- Apply keybindings using the keys function (captured in closure)
+    keybindings.apply_keys(config, {
+      name = "system-monitor",
+      keys = keys_fn,
+    })
   end,
 }

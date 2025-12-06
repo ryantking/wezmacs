@@ -74,11 +74,19 @@ local function scan_modules()
       local spec_ok, spec = pcall(require, require_path)
       
       if spec_ok and type(spec) == "table" and spec.name then
+        -- Get default opts from function
+        local default_opts = {}
+        if spec.opts and type(spec.opts) == "function" then
+          default_opts = spec.opts() or {}
+        elseif spec.opts then
+          default_opts = spec.opts
+        end
+        
         local module_info = {
-          name = spec.name or dir,
+          name = spec.name or mod_name,
           description = spec.description or "",
           category = spec.category or "integration",
-          opts = spec.opts or {},
+          opts = default_opts,
         }
         
         -- Extract features from opts

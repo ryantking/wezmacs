@@ -4,55 +4,50 @@
   Description: File management with configurable terminal file manager
 ]]
 
+local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
-local action_lib = require("wezmacs.lib.actions")
 
--- Actions (inline) - these will be set up with config values
-local _file_manager = "yazi"
-local actions = {
-  file_manager_split = function(window, pane)
-    return action_lib.smart_split_action(_file_manager)(window, pane)
-  end,
-  file_manager_new_tab = function(window, pane)
-    return action_lib.new_tab_action(_file_manager)
-  end,
-  file_manager_sudo_split = function(window, pane)
-    return action_lib.smart_split_action("sudo " .. _file_manager .. " /")(window, pane)
-  end,
-  file_manager_sudo_tab = function(window, pane)
-    return action_lib.new_tab_action("sudo " .. _file_manager .. " /")
-  end,
-}
+-- Define keys function (captured in closure for setup)
+local function keys_fn(opts)
+  local file_manager = opts.file_manager or "yazi"
+  
+  return {
+    LEADER = {
+      f = {
+        f = { action = act.SmartSplit(file_manager), desc = "file-manager/split" },
+        F = { action = act.NewTab(file_manager), desc = "file-manager/tab" },
+        s = {
+          action = act.SmartSplit("sudo " .. file_manager .. " /"),
+          desc = "file-manager/sudo-split",
+        },
+        S = {
+          action = act.NewTab("sudo " .. file_manager .. " /"),
+          desc = "file-manager/sudo-tab",
+        },
+      },
+    },
+  }
+end
 
--- Module spec (LazyVim-style inline spec)
 return {
   name = "file-manager",
   category = "tools",
   description = "File management with yazi terminal file manager",
 
-  dependencies = {
-    external = { "yazi" },
-    modules = { "keybindings" },
-  },
+  deps = { "yazi" },
 
-  opts = {
-    file_manager = "yazi",
-    leader_key = "f",
-    leader_mod = "LEADER",
-  },
+  opts = function()
+    return {
+      file_manager = "yazi",
+      leader_key = "f",
+      leader_mod = "LEADER",
+    }
+  end,
 
-  keys = {
-    {
-      leader = "f",
-      submenu = "file-manager",
-      bindings = {
-        { key = "f", desc = "File manager in split", action = actions.file_manager_split },
-        { key = "F", desc = "File manager in new tab", action = actions.file_manager_new_tab },
-        { key = "s", desc = "File manager with sudo in split", action = actions.file_manager_sudo_split },
-        { key = "S", desc = "File manager with sudo in tab", action = actions.file_manager_sudo_tab },
-      },
-    },
-  },
+  keys = function()
+    -- Return empty for now, will be populated in setup with opts
+    return {}
+  end,
 
   enabled = function(ctx)
     return ctx.has_command("yazi")
@@ -60,17 +55,13 @@ return {
 
   priority = 50,
 
-  -- Implementation function
-  apply_to_config = function(config, opts)
-    opts = opts or {}
-    local mod = opts.file_manager ~= nil and opts or wezmacs.get_module("file-manager")
-    
-    -- Update action closures with config values
-    _file_manager = mod.file_manager
-
-    -- Get spec (self-reference via closure)
-    local spec = require("wezmacs.modules.file-manager")
-    -- Apply keybindings using library
-    keybindings.apply_keys(config, spec)
+  setup = function(config, opts)
+    -- Apply keybindings using the keys function with opts
+    keybindings.apply_keys(config, {
+      name = "file-manager",
+      keys = function()
+        return keys_fn(opts)
+      end,
+    })
   end,
 }

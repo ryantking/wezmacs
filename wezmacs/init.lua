@@ -75,18 +75,19 @@ function M.setup(config, opts)
     lib = {
       keybindings = require("wezmacs.lib.keybindings"),
       theme = require("wezmacs.lib.theme"),
-      actions = require("wezmacs.lib.actions"),
       config = require("wezmacs.lib.config"),
     },
+    -- Action API (top-level, not in lib)
+    action = require("wezmacs.action"),
   }
 
   -- Apply CORE module first if present (core settings must be applied before others)
   for i, spec in ipairs(modules) do
     if spec.name == "core" then
       log("info", "Applying CORE module first")
-      if spec.apply_to_config then
+      if spec.setup then
         local opts = states[spec.name]
-        spec.apply_to_config(config, opts)
+        spec.setup(config, opts)
       end
       table.remove(modules, i)
       break
@@ -98,10 +99,10 @@ function M.setup(config, opts)
     local mod_name = spec.name or "unknown"
     log("info", "Applying module: " .. mod_name)
 
-    -- Call apply_to_config with config and opts
-    if spec.apply_to_config then
+    -- Call setup with config and opts
+    if spec.setup then
       local opts = states[mod_name]
-      spec.apply_to_config(config, opts)
+      spec.setup(config, opts)
     end
   end
 

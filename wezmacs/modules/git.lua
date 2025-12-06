@@ -4,58 +4,56 @@
   Description: Lazygit integration with smart splitting and git utilities
 ]]
 
+local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
-local action_lib = require("wezmacs.lib.actions")
 
--- Actions (inline)
-local actions = {
-  lazygit_smart_split = action_lib.smart_split_action("lazygit -sm half"),
-  lazygit_new_tab = action_lib.new_tab_action("lazygit"),
-  git_diff_smart_split = action_lib.smart_split_action(
-    "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status"
-  ),
-  git_diff_new_window = action_lib.new_window_action(
-    "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status"
-  ),
-}
+-- Define keys function (captured in closure for setup)
+local function keys_fn()
+  return {
+    LEADER = {
+      g = {
+        g = { action = act.SmartSplit("lazygit -sm half"), desc = "git/lazygit-split" },
+        G = { action = act.NewTab("lazygit"), desc = "git/lazygit-tab" },
+        d = {
+          action = act.SmartSplit(
+            "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status"
+          ),
+          desc = "git/diff-split",
+        },
+        D = {
+          action = act.NewWindow(
+            "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status"
+          ),
+          desc = "git/diff-window",
+        },
+      },
+    },
+  }
+end
 
--- Module spec (LazyVim-style inline spec)
-local spec = {
+return {
   name = "git",
   category = "integration",
   description = "Lazygit integration with smart splitting and git utilities",
 
-  dependencies = {
-    external = { "lazygit", "delta", "git" },
-    modules = { "theme", "keybindings" },
-  },
+  deps = { "lazygit", "delta", "git" },
 
-  opts = {
-    leader_key = "g",
-    leader_mod = "LEADER",
-
-    features = {
-      lazygit = {
-        enabled = true,
-        split_mode = "half",
+  opts = function()
+    return {
+      leader_key = "g",
+      leader_mod = "LEADER",
+      features = {
+        lazygit = {
+          enabled = true,
+          split_mode = "half",
+        },
+        git_diff = { enabled = true },
+        git_log = { enabled = true },
       },
-      git_diff = { enabled = true },
-      git_log = { enabled = true },
-    },
-  },
+    }
+  end,
 
-  keys = {
-    {
-      leader = "g",
-      submenu = "git",
-      bindings = {
-        { key = "g", desc = "Open lazygit", action = actions.lazygit_smart_split },
-        { key = "G", desc = "Lazygit in new tab", action = actions.lazygit_new_tab },
-        { key = "d", desc = "Git diff", action = actions.git_diff_smart_split },
-        { key = "D", desc = "Git diff in new window", action = actions.git_diff_new_window },
-      },
-    },
-  },
+  keys = keys_fn,
 
   enabled = function(ctx)
     return ctx.has_command("git")
@@ -63,14 +61,11 @@ local spec = {
 
   priority = 50,
 
-  -- Implementation function (called by module loader)
-  apply_to_config = function(config, opts)
-    -- Apply keybindings using library (spec captured in closure)
-    keybindings.apply_keys(config, spec)
-
-    -- Any other git-specific config
-    -- (none needed for this module)
+  setup = function(config, opts)
+    -- Apply keybindings using the keys function (captured in closure)
+    keybindings.apply_keys(config, {
+      name = "git",
+      keys = keys_fn,
+    })
   end,
 }
-
-return spec

@@ -4,41 +4,36 @@
   Description: Docker container management with lazydocker
 ]]
 
+local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
-local action_lib = require("wezmacs.lib.actions")
 
--- Actions (inline)
-local actions = {
-  lazydocker_split = action_lib.smart_split_action("lazydocker"),
-  lazydocker_new_tab = action_lib.new_tab_action("lazydocker"),
-}
+-- Define keys function (captured in closure for setup)
+local function keys_fn()
+  return {
+    LEADER = {
+      d = {
+        d = { action = act.SmartSplit("lazydocker"), desc = "docker/lazydocker-split" },
+        D = { action = act.NewTab("lazydocker"), desc = "docker/lazydocker-tab" },
+      },
+    },
+  }
+end
 
--- Module spec (LazyVim-style inline spec)
 return {
   name = "docker",
   category = "devops",
   description = "Docker container management with lazydocker",
 
-  dependencies = {
-    external = { "lazydocker" },
-    modules = { "keybindings" },
-  },
+  deps = { "lazydocker" },
 
-  opts = {
-    leader_key = "d",
-    leader_mod = "LEADER",
-  },
+  opts = function()
+    return {
+      leader_key = "d",
+      leader_mod = "LEADER",
+    }
+  end,
 
-  keys = {
-    {
-      leader = "d",
-      submenu = "docker",
-      bindings = {
-        { key = "d", desc = "Lazydocker in split", action = actions.lazydocker_split },
-        { key = "D", desc = "Lazydocker in new tab", action = actions.lazydocker_new_tab },
-      },
-    },
-  },
+  keys = keys_fn,
 
   enabled = function(ctx)
     return ctx.has_command("lazydocker")
@@ -46,10 +41,11 @@ return {
 
   priority = 50,
 
-  -- Implementation function
-  apply_to_config = function(config, opts)
-    local spec = require("wezmacs.modules.docker")
-    -- Apply keybindings using library
-    keybindings.apply_keys(config, spec)
+  setup = function(config, opts)
+    -- Apply keybindings using the keys function (captured in closure)
+    keybindings.apply_keys(config, {
+      name = "docker",
+      keys = keys_fn,
+    })
   end,
 }

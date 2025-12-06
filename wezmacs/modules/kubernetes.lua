@@ -4,37 +4,36 @@
   Description: Kubernetes cluster management with k9s
 ]]
 
+local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
-local action_lib = require("wezmacs.lib.actions")
 
--- Actions (inline)
-local actions = {
-  launch_k9s = action_lib.new_tab_action("k9s"),
-}
+-- Define keys function (captured in closure for setup)
+local function keys_fn()
+  return {
+    LEADER = {
+      k = {
+        action = act.NewTab("k9s"),
+        desc = "kubernetes/k9s",
+      },
+    },
+  }
+end
 
--- Module spec (LazyVim-style inline spec)
 return {
   name = "kubernetes",
   category = "devops",
   description = "Kubernetes cluster management with k9s",
 
-  dependencies = {
-    external = { "k9s" },
-    modules = { "keybindings" },
-  },
+  deps = { "k9s" },
 
-  opts = {
-    keybinding = "k",
-    modifier = "LEADER",
-  },
+  opts = function()
+    return {
+      keybinding = "k",
+      modifier = "LEADER",
+    }
+  end,
 
-  keys = {
-    {
-      key = "k",
-      mods = "LEADER",
-      action = actions.launch_k9s,
-    },
-  },
+  keys = keys_fn,
 
   enabled = function(ctx)
     return ctx.has_command("k9s")
@@ -42,11 +41,11 @@ return {
 
   priority = 50,
 
-  -- Implementation function
-  apply_to_config = function(config, opts)
-    -- Get spec (self-reference via closure)
-    local spec = require("wezmacs.modules.kubernetes")
-    -- Apply keybindings using library
-    keybindings.apply_keys(config, spec)
+  setup = function(config, opts)
+    -- Apply keybindings using the keys function (captured in closure)
+    keybindings.apply_keys(config, {
+      name = "kubernetes",
+      keys = keys_fn,
+    })
   end,
 }

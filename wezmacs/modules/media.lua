@@ -4,37 +4,36 @@
   Description: Media player control with spotify_player
 ]]
 
+local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
-local action_lib = require("wezmacs.lib.actions")
 
--- Actions (inline)
-local actions = {
-  launch_spotify_player = action_lib.new_tab_action("spotify_player"),
-}
+-- Define keys function (captured in closure for setup)
+local function keys_fn()
+  return {
+    LEADER = {
+      m = {
+        action = act.NewTab("spotify_player"),
+        desc = "media/spotify-player",
+      },
+    },
+  }
+end
 
--- Module spec (LazyVim-style inline spec)
 return {
   name = "media",
   category = "tools",
   description = "Media player control with spotify_player",
 
-  dependencies = {
-    external = { "spotify_player" },
-    modules = { "keybindings" },
-  },
+  deps = { "spotify_player" },
 
-  opts = {
-    keybinding = "m",
-    modifier = "LEADER",
-  },
+  opts = function()
+    return {
+      keybinding = "m",
+      modifier = "LEADER",
+    }
+  end,
 
-  keys = {
-    {
-      key = "m",
-      mods = "LEADER",
-      action = actions.launch_spotify_player,
-    },
-  },
+  keys = keys_fn,
 
   enabled = function(ctx)
     return ctx.has_command("spotify_player")
@@ -42,11 +41,11 @@ return {
 
   priority = 50,
 
-  -- Implementation function
-  apply_to_config = function(config, opts)
-    -- Get spec (self-reference via closure)
-    local spec = require("wezmacs.modules.media")
-    -- Apply keybindings using library
-    keybindings.apply_keys(config, spec)
+  setup = function(config, opts)
+    -- Apply keybindings using the keys function (captured in closure)
+    keybindings.apply_keys(config, {
+      name = "media",
+      keys = keys_fn,
+    })
   end,
 }

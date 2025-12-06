@@ -6,35 +6,32 @@
 
 local wezterm = require("wezterm")
 
--- Module spec (LazyVim-style inline spec)
 return {
   name = "domains",
   category = "devops",
   description = "Quick domain management for SSH/Docker/Kubernetes",
 
-  dependencies = {
-    external = {},
-    modules = { "keybindings" },
-  },
+  deps = {},
 
-  opts = {
-    leader_key = "t",
-    leader_mod = "LEADER",
-    ssh_ignore = true,
-    docker_ignore = false,
-    kubernetes_ignore = true,
-  },
+  opts = function()
+    return {
+      leader_key = "t",
+      leader_mod = "LEADER",
+      ssh_ignore = true,
+      docker_ignore = false,
+      kubernetes_ignore = true,
+    }
+  end,
 
-  keys = {},
+  keys = function()
+    return {}
+  end,
 
   enabled = true,
 
   priority = 50,
 
-  -- Implementation function
-  apply_to_config = function(config, opts)
-    opts = opts or {}
-    local mod = opts.leader_key ~= nil and opts or wezmacs.get_module("domains")
+  setup = function(config, opts)
     local domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
     
     -- Configure quick_domains to use the domains key table
@@ -45,11 +42,11 @@ return {
         hsplit = { key = "|", mods = "LEADER", tbl = nil },
       },
       auto = {
-        ssh_ignore = mod.ssh_ignore,
+        ssh_ignore = opts.ssh_ignore,
         exec_ignore = {
-          ssh = mod.ssh_ignore,
-          docker = mod.docker_ignore,
-          kubernetes = mod.kubernetes_ignore,
+          ssh = opts.ssh_ignore,
+          docker = opts.docker_ignore,
+          kubernetes = opts.kubernetes_ignore,
         },
       },
     })

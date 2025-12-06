@@ -6,37 +6,33 @@
 
 local wezterm = require("wezterm")
 
--- Module spec (LazyVim-style inline spec)
 return {
   name = "theme",
   category = "ui",
   description = "Color scheme selection and tab bar colors",
 
-  dependencies = {
-    external = {},
-    modules = {},
-  },
+  deps = {},
 
-  opts = {
-    color_scheme = nil,  -- nil = use WezTerm default
-  },
+  opts = function()
+    return {
+      color_scheme = nil,  -- nil = use WezTerm default
+    }
+  end,
 
-  keys = {},
+  keys = function()
+    return {}
+  end,
 
   enabled = true,
 
   priority = 100,  -- High priority, loads early
 
-  -- Implementation function
-  apply_to_config = function(config, opts)
-    opts = opts or {}
-    local mod = opts.color_scheme ~= nil and opts or wezmacs.get_module("theme")
-
+  setup = function(config, opts)
     -- Only apply theme if configured
-    if mod.color_scheme then
-      local theme = wezterm.get_builtin_color_schemes()[mod.color_scheme]
+    if opts.color_scheme then
+      local theme = wezterm.get_builtin_color_schemes()[opts.color_scheme]
       if not theme then
-        wezterm.log_error("WezMacs: Color scheme '" .. mod.color_scheme .. "' not found, using default")
+        wezterm.log_error("WezMacs: Color scheme '" .. opts.color_scheme .. "' not found, using default")
         -- Don't apply anything, let WezTerm use its default
         return
       end

@@ -67,6 +67,8 @@ function M.resolve_load_order(module_names)
     visiting[name] = true
 
     local spec = _specs[name]
+    -- Support both old format (dependencies.modules) and new format (deps for external only)
+    -- Module dependencies would be in a separate field if needed
     if spec and spec.dependencies and spec.dependencies.modules then
       for _, dep in ipairs(spec.dependencies.modules) do
         visit(dep)
@@ -116,14 +118,19 @@ end
 ---@param spec table Module spec
 ---@return boolean, table True if all dependencies met, array of missing dependencies
 function M.validate_dependencies(spec)
-  if not spec.dependencies then
-    return true, {}
-  end
-
   local missing = {}
 
-  -- Check external dependencies
-  if spec.dependencies.external then
+  -- Check deps (external binaries) - new format
+  if spec.deps and type(spec.deps) == "table" then
+    for _, cmd in ipairs(spec.deps) do
+      if not M.has_command(cmd) then
+        table.insert(missing, "external:" .. cmd)
+      end
+    end
+  end
+
+  -- Check dependencies.external - old format (backward compat)
+  if spec.dependencies and spec.dependencies.external then
     for _, cmd in ipairs(spec.dependencies.external) do
       if not M.has_command(cmd) then
         table.insert(missing, "external:" .. cmd)
@@ -131,8 +138,8 @@ function M.validate_dependencies(spec)
     end
   end
 
-  -- Check module dependencies
-  if spec.dependencies.modules then
+  -- Check module dependencies - old format (backward compat)
+  if spec.dependencies and spec.dependencies.modules then
     for _, dep_name in ipairs(spec.dependencies.modules) do
       if not _specs[dep_name] then
         table.insert(missing, "module:" .. dep_name)

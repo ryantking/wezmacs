@@ -6,34 +6,30 @@
 
 local wezterm = require("wezterm")
 
--- Module spec (LazyVim-style inline spec)
 return {
   name = "mouse",
   category = "behavior",
   description = "Mouse bindings and behavior",
 
-  dependencies = {
-    external = {},
-    modules = {},
-  },
+  deps = {},
 
-  opts = {
-    leader_mod = "CMD",
-  },
+  opts = function()
+    return {
+      leader_mod = "CMD",
+    }
+  end,
 
-  keys = {},
+  keys = function()
+    return {}
+  end,
 
   enabled = true,
 
   priority = 50,
 
-  -- Implementation function
-  apply_to_config = function(config, opts)
-    opts = opts or {}
-    local mod = opts.leader_mod ~= nil and opts or wezmacs.get_module("mouse")
-
+  setup = function(config, opts)
     config.alternate_buffer_wheel_scroll_speed = 1
-    config.bypass_mouse_reporting_modifiers = mod.leader_mod
+    config.bypass_mouse_reporting_modifiers = opts.leader_mod
     config.hide_mouse_cursor_when_typing = false
 
     config.mouse_bindings = {
@@ -46,7 +42,7 @@ return {
       -- Leader+left-click: Open link or extend selection
       {
         event = { Up = { streak = 1, button = "Left" } },
-        mods = mod.leader_mod,
+        mods = opts.leader_mod,
         action = wezterm.action.CompleteSelectionOrOpenLinkAtMouseCursor("ClipboardAndPrimarySelection"),
       },
 
