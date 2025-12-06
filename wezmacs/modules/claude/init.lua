@@ -41,7 +41,7 @@ return {
         C = { action = act.NewTab("claude"), desc = "claude/claude-tab" },
         w = {
           action = function(window, pane)
-            local prompt_color = theme.get_accent_color("#56be8d")
+            local prompt_color = get_accent_color("#56be8d")
             window:perform_action(
               term.PromptInputLine({
                 description = wezterm.format({
