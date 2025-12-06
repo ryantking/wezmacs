@@ -18,19 +18,19 @@
 ]]
 
 local wezterm = require("wezterm")
+local spec = require("wezmacs.modules.theme.spec")
 
 local M = {}
 
-M._NAME = "theme"
-M._CATEGORY = "ui"
-M._DESCRIPTION = "Color scheme selection and tab bar colors"
-M._EXTERNAL_DEPS = {}
-M._CONFIG = {
-  color_scheme = nil,  -- nil = use WezTerm default
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(config)
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.color_scheme ~= nil and opts or wezmacs.get_module(M._NAME)
 
   -- Only apply theme if configured
   if mod.color_scheme then

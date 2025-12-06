@@ -16,44 +16,27 @@
     leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
-local wezterm = require("wezterm")
-local act = wezterm.action
+local keybindings = require("wezmacs.lib.keybindings")
+local actions = require("wezmacs.modules.editors.actions")
+local spec = require("wezmacs.modules.editors.spec")
 
 local M = {}
 
-M._NAME = "editors"
-M._CATEGORY = "development"
-M._DESCRIPTION = "External code editor launchers"
-M._EXTERNAL_DEPS = {}
-M._CONFIG = {
-  editor = "vim",
-  ide = "code",
-  editor_split_key = "e",
-  editor_tab_key = "E",
-  ide_key = "i",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(wezterm_config)
-  local mod = wezmacs.get_module(M._NAME)
-  local actions = require("wezmacs.modules.editors.actions").setup(mod.editor, mod.ide)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.editor ~= nil and opts or wezmacs.get_module(M._NAME)
+  
+  -- Setup actions with editor/ide config
+  actions.setup(mod.editor, mod.ide)
 
-  wezterm_config.keys = wezterm_config.keys or {}
-  table.insert(
-    wezterm_config.keys,
-    { key = mod.editor_split_key, mods = "LEADER", action = wezterm.action_callback(actions.terminal_smart_split) }
-  )
-  table.insert(
-    wezterm_config.keys,
-    {
-      key = mod.editor_tab_key,
-      mods = "LEADER",
-      action = act.SpawnCommandInNewTab({args = { os.getenv("SHELL") or "/bin/bash", "-lc", mod.editor }})
-    }
-  )
-  table.insert(
-    wezterm_config.keys,
-    { key = mod.ide_key, mods = "LEADER", action = wezterm.action_callback(actions.launch_ide) }
-  )
+  -- Apply keybindings using library
+  keybindings.apply_keys(config, spec, actions)
 end
 
 return M

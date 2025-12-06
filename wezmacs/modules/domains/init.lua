@@ -19,23 +19,19 @@
 ]]
 
 local wezterm = require("wezterm")
+local spec = require("wezmacs.modules.domains.spec")
 
 local M = {}
 
-M._NAME = "domains"
-M._CATEGORY = "devops"
-M._DESCRIPTION = "Quick domain management for SSH/Docker/Kubernetes"
-M._EXTERNAL_DEPS = {} -- Uses WezTerm plugin: quick_domains
-M._CONFIG = {
-  leader_key = "t",
-  leader_mod = "LEADER",
-  ssh_ignore = true,
-  docker_ignore = false,
-  kubernetes_ignore = true,
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(wezterm_config)
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.leader_key ~= nil and opts or wezmacs.get_module(M._NAME)
   local domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
   
   -- Configure quick_domains to use the domains key table

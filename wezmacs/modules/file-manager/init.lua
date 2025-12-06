@@ -16,56 +16,27 @@
     leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
-local wezterm = require("wezterm")
-local act = wezterm.action
+local keybindings = require("wezmacs.lib.keybindings")
 local actions = require("wezmacs.modules.file-manager.actions")
+local spec = require("wezmacs.modules.file-manager.spec")
 
 local M = {}
 
-M._NAME = "file-manager"
-M._CATEGORY = "tools"
-M._DESCRIPTION = "File management with yazi terminal file manager"
-M._EXTERNAL_DEPS = { "yazi" }
-M._CONFIG = {
-  file_manager = "yazi",
-  leader_key = "f",
-  leader_mod = "LEADER",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(wezterm_config)
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.file_manager ~= nil and opts or wezmacs.get_module(M._NAME)
+  
+  -- Setup actions with file manager config
+  actions.setup(mod.file_manager)
 
-  -- Create file-manager key table
-  wezterm_config.key_tables = wezterm_config.key_tables or {}
-  wezterm_config.key_tables["file-manager"] = {
-    {
-      key = "f",
-      action = wezterm.action_callback(function(window, pane)
-        actions.file_manager_split(window, pane, mod.file_manager)
-      end),
-    },
-    { key = "F", action = act.SpawnCommandInNewTab({ args = { mod.file_manager } }) },
-    {
-      key = "s",
-      action = wezterm.action_callback(function(window, pane)
-        actions.file_manager_sudo_split(window, pane, mod.file_manager)
-      end),
-    },
-    { key = "S", action = act.SpawnCommandInNewTab({ args = { "sudo", mod.file_manager, "/" } }) },
-    { key = "Escape", action = "PopKeyTable" },
-  }
-
-  -- Add keybinding to activate file-manager menu
-  wezterm_config.keys = wezterm_config.keys or {}
-  table.insert(wezterm_config.keys, {
-    key = mod.leader_key,
-    mods = mod.leader_mod,
-    action = act.ActivateKeyTable({
-      name = "file-manager",
-      one_shot = false,
-      until_unknown = true,
-    }),
-  })
+  -- Apply keybindings using library
+  keybindings.apply_keys(config, spec, actions)
 end
 
 return M

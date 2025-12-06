@@ -58,6 +58,26 @@ function M.setup(config, opts)
       end
       return copy
     end,
+
+    -- Get module spec (new format)
+    get_spec = function(module_name)
+      local registry = require("wezmacs.lib.registry")
+      return registry.get_spec(module_name)
+    end,
+
+    -- Check if module is loaded
+    has_module = function(module_name)
+      local registry = require("wezmacs.lib.registry")
+      return registry.is_loaded(module_name)
+    end,
+
+    -- Library access
+    lib = {
+      keybindings = require("wezmacs.lib.keybindings"),
+      theme = require("wezmacs.lib.theme"),
+      actions = require("wezmacs.lib.actions"),
+      config = require("wezmacs.lib.config"),
+    },
   }
 
   -- Apply CORE module first if present (core settings must be applied before others)
@@ -65,7 +85,14 @@ function M.setup(config, opts)
     if mod._NAME == "core" then
       log("info", "Applying CORE module first")
       if mod.apply_to_config then
-        mod.apply_to_config(config)
+        local mod_name = mod._NAME
+        local opts = states[mod_name]
+        -- Support both old format (no opts param) and new format (with opts)
+        if opts then
+          mod.apply_to_config(config, opts)
+        else
+          mod.apply_to_config(config)
+        end
       end
       table.remove(modules, i)
       break
@@ -77,9 +104,15 @@ function M.setup(config, opts)
     local mod_name = mod._NAME or "unknown"
     log("info", "Applying module: " .. mod_name)
 
-    -- Call apply_to_config with only config parameter
+    -- Call apply_to_config with config and opts (new format)
+    -- Old format modules will ignore the second parameter
     if mod.apply_to_config then
-      mod.apply_to_config(config)
+      local opts = states[mod_name]
+      if opts then
+        mod.apply_to_config(config, opts)
+      else
+        mod.apply_to_config(config)
+      end
     end
   end
 

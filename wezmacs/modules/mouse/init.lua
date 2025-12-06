@@ -14,19 +14,19 @@
 ]]
 
 local wezterm = require("wezterm")
+local spec = require("wezmacs.modules.mouse.spec")
+
 local M = {}
 
-M._NAME = "mouse"
-M._CATEGORY = "behavior"
-M._DESCRIPTION = "Mouse bindings and behavior"
-M._EXTERNAL_DEPS = {}
-M._CONFIG = {
-  leader_mod = "CMD",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(config)
-  -- Get configuration
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.leader_mod ~= nil and opts or wezmacs.get_module(M._NAME)
 
   config.alternate_buffer_wheel_scroll_speed = 1
   config.bypass_mouse_reporting_modifiers = mod.leader_mod

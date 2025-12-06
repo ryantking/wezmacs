@@ -18,21 +18,19 @@
 local wezterm = require("wezterm")
 local keys_util = require("wezmacs.utils.keys")
 local act = wezterm.action
+local spec = require("wezmacs.modules.keybindings.spec")
 
 local M = {}
 
-M._NAME = "keybindings"
-M._CATEGORY = "editing"
-M._DESCRIPTION = "Core keyboard bindings for pane and tab management"
-M._EXTERNAL_DEPS = {}
-M._CONFIG = {
-  modifier = "CTRL|SHIFT",
-  leader_key = "Space",
-  leader_mod = "SUPER",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(config)
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.modifier ~= nil and opts or wezmacs.get_module(M._NAME)
 
   config.leader = { key = mod.leader_key, mods = mod.leader_mod, timeout_milliseconds = 5000 }
 

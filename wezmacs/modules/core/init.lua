@@ -19,21 +19,19 @@
 ]]
 
 local wezterm = require("wezterm")
+local spec = require("wezmacs.modules.core.spec")
 
 local M = {}
 
-M._NAME = "core"
-M._CATEGORY = "system"
-M._DESCRIPTION = "Core WezTerm settings and global event handlers"
-M._EXTERNAL_DEPS = {}
-M._CONFIG = {
-  enable_kitty_keyboard = false,
-  enable_kitty_graphics = true,
-  default_prog = nil,  -- nil = use WezTerm default
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(config)
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.default_prog ~= nil and opts or wezmacs.get_module(M._NAME)
 
   -- Terminal protocol support
   config.enable_kitty_keyboard = mod.enable_kitty_keyboard

@@ -14,23 +14,20 @@
     scrollback_lines - Number of lines to keep in scrollback (default: 5000)
 ]]
 
+local wezterm = require("wezterm")
+local spec = require("wezmacs.modules.window.spec")
+
 local M = {}
 
-M._NAME = "window"
-M._CATEGORY = "ui"
-M._DESCRIPTION = "Window behavior, padding, and cursor settings"
-M._EXTERNAL_DEPS = {}
-M._CONFIG = {
-  padding = 16,
-  scrollback_lines = 5000,
-  decorations = "RESIZE",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(config)
-  local wezterm = require("wezterm")
-
-  -- Get configuration
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.padding ~= nil and opts or wezmacs.get_module(M._NAME)
 
   -- Window decorations and behavior
   config.window_decorations = mod.decorations

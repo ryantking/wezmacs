@@ -13,43 +13,21 @@
     leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
-local wezterm = require("wezterm")
-local act = wezterm.action
+local keybindings = require("wezmacs.lib.keybindings")
 local actions = require("wezmacs.modules.docker.actions")
+local spec = require("wezmacs.modules.docker.spec")
 
 local M = {}
 
-M._NAME = "docker"
-M._CATEGORY = "devops"
-M._DESCRIPTION = "Docker container management with lazydocker"
-M._EXTERNAL_DEPS = { "lazydocker" }
-M._CONFIG = {
-  leader_key = "d",
-  leader_mod = "LEADER",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(wezterm_config)
-  local mod = wezmacs.get_module(M._NAME)
-
-  -- Create docker key table
-  wezterm_config.key_tables = wezterm_config.key_tables or {}
-  wezterm_config.key_tables.docker = {
-    { key = "d", action = wezterm.action_callback(actions.lazydocker_split) },
-    { key = "D", action = act.SpawnCommandInNewTab({ args = { "lazydocker" } }) },
-    { key = "Escape", action = "PopKeyTable" },
-  }
-
-  -- Add keybinding to activate docker menu
-  wezterm_config.keys = wezterm_config.keys or {}
-  table.insert(wezterm_config.keys, {
-    key = mod.leader_key,
-    mods = mod.leader_mod,
-    action = act.ActivateKeyTable({
-      name = "docker",
-      one_shot = false,
-      until_unknown = true,
-    }),
-  })
+function M.apply_to_config(config, opts)
+  -- Apply keybindings using library
+  keybindings.apply_keys(config, spec, actions)
 end
 
 return M

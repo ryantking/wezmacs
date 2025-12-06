@@ -12,30 +12,21 @@
     modifier - Key modifier (default: "LEADER")
 ]]
 
-local wezterm = require("wezterm")
-local act = wezterm.action
+local keybindings = require("wezmacs.lib.keybindings")
+local actions = require("wezmacs.modules.kubernetes.actions")
+local spec = require("wezmacs.modules.kubernetes.spec")
 
 local M = {}
 
-M._NAME = "kubernetes"
-M._CATEGORY = "devops"
-M._DESCRIPTION = "Kubernetes cluster management with k9s"
-M._EXTERNAL_DEPS = { "k9s" }
-M._CONFIG = {
-  keybinding = "k",
-  modifier = "LEADER",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(wezterm_config)
-  local mod = wezmacs.get_module(M._NAME)
-
-  wezterm_config.keys = wezterm_config.keys or {}
-
-  table.insert(wezterm_config.keys, {
-    key = mod.keybinding,
-    mods = mod.modifier,
-    action = act.SpawnCommandInNewTab({ args = { "k9s" } })
-  })
+function M.apply_to_config(config, opts)
+  -- Apply keybindings using library
+  keybindings.apply_keys(config, spec, actions)
 end
 
 return M

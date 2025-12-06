@@ -24,45 +24,19 @@
 ]]
 
 local wezterm = require("wezterm")
+local spec = require("wezmacs.modules.fonts.spec")
+
 local M = {}
 
-M._NAME = "fonts"
-M._CATEGORY = "ui"
-M._DESCRIPTION = "Font configuration for terminal and UI elements"
-M._EXTERNAL_DEPS = {}
-M._CONFIG = {
-  font = nil,
-  font_size = nil,
-  font_rules = {
-    { intensity = "Normal", italic = false, weight = "Medium" },
-    { intensity = "Bold", italic = false, weight = "ExtraBold" },
-    { intensity = "Half", italic = false, weight = "Thin" },
-    { intensity = "Normal", italic = true, weight = "Regular", style = "Italic" },
-    { intensity = "Bold", italic = true, weight = "Bold", style = "Italic" },
-    { intensity = "Half", italic = true, weight = "Thin", style = "Italic" },
-  },
-  ui_font = nil,
-  ui_font_size = nil,
-  ligatures = {
-    enabled = false,
-    harfbuzz_features = {
-      "ss01", -- Contextual alternatives
-      "ss02", -- Stylistic Set 2
-      "ss03", -- Stylistic Set 3
-      "ss04", -- Stylistic Set 4
-      "ss05", -- Stylistic Set 5
-      "ss06", -- Stylistic Set 6
-      "ss07", -- Stylistic Set 7
-      "ss08", -- Stylistic Set 8
-      "calt", -- Contextual alternates
-      "liga", -- Standard ligatures
-      "dlig", -- Discretionary ligatures
-    },
-  },
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(config)
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.font ~= nil and opts or wezmacs.get_module(M._NAME)
 
   -- Only apply font if configured
   if mod.font then

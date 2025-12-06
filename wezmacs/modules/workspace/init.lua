@@ -17,44 +17,26 @@
     prev_mod - Modifier for previous key (default: "LEADER")
 ]]
 
-local wezterm = require("wezterm")
-local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+local keybindings = require("wezmacs.lib.keybindings")
+local actions = require("wezmacs.modules.workspace.actions")
+local spec = require("wezmacs.modules.workspace.spec")
 
 local M = {}
 
-M._NAME = "workspace"
-M._CATEGORY = "workflows"
-M._DESCRIPTION = "Workspace switching and management"
-M._EXTERNAL_DEPS = {} -- Uses WezTerm plugin: smart_workspace_switcher
-M._CONFIG = {
-  default_workspace = "~",
-  switch_key = "s",
-  switch_mod = "LEADER",
-  prev_key = "S",
-  prev_mod = "LEADER",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(config)
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.default_workspace ~= nil and opts or wezmacs.get_module(M._NAME)
   
   config.default_workspace = mod.default_workspace
 
-  -- Keybindings
-  config.keys = config.keys or {}
-
-  -- Workspace switcher
-  table.insert(config.keys, {
-    key = mod.switch_key,
-    mods = mod.switch_mod,
-    action = workspace_switcher.switch_workspace(),
-  })
-
-  -- Switch to previous workspace
-  table.insert(config.keys, {
-    key = mod.prev_key,
-    mods = mod.prev_mod,
-    action = workspace_switcher.switch_to_prev_workspace(),
-  })
+  -- Apply keybindings using library
+  keybindings.apply_keys(config, spec, actions)
 end
 
 return M

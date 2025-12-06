@@ -22,25 +22,19 @@
 
 local wezterm = require("wezterm")
 local titles = require("wezmacs.modules.tabbar.titles")
+local spec = require("wezmacs.modules.tabbar.spec")
 
 local M = {}
 
-M._NAME = "tabbar"
-M._CATEGORY = "ui"
-M._DESCRIPTION = "Custom tab bar with process icons and decorative separators"
-M._EXTERNAL_DEPS = {}
-M._CONFIG = {
-  arrow_solid = "",
-  arrow_thin = "",
-  use_fancy_tab_bar = true,
-  tab_bar_at_bottom = false,
-  hide_tab_bar_if_only_one_tab = true,
-  tab_max_width = 60,
-  unzoom_on_switch_pane = true,
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(config)
-  local mod = wezmacs.get_module(M._NAME)
+function M.apply_to_config(config, opts)
+  opts = opts or {}
+  local mod = opts.use_fancy_tab_bar ~= nil and opts or wezmacs.get_module(M._NAME)
 
   config.use_fancy_tab_bar = mod.use_fancy_tab_bar
   config.tab_bar_at_bottom = mod.tab_bar_at_bottom

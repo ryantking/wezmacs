@@ -12,30 +12,21 @@
     modifier - Key modifier (default: "LEADER")
 ]]
 
-local wezterm = require("wezterm")
-local act = wezterm.action
+local keybindings = require("wezmacs.lib.keybindings")
+local actions = require("wezmacs.modules.system-monitor.actions")
+local spec = require("wezmacs.modules.system-monitor.spec")
 
 local M = {}
 
-M._NAME = "system-monitor"
-M._CATEGORY = "tools"
-M._DESCRIPTION = "System monitoring with bottom"
-M._EXTERNAL_DEPS = { "btm" }
-M._CONFIG = {
-  keybinding = "h",
-  modifier = "LEADER",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(wezterm_config)
-  local mod = wezmacs.get_module(M._NAME)
-
-  wezterm_config.keys = wezterm_config.keys or {}
-
-  table.insert(wezterm_config.keys, {
-    key = mod.keybinding,
-    mods = mod.modifier,
-    action = act.SpawnCommandInNewTab({ args = { "btm" } })
-  })
+function M.apply_to_config(config, opts)
+  -- Apply keybindings using library
+  keybindings.apply_keys(config, spec, actions)
 end
 
 return M

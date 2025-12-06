@@ -5,26 +5,25 @@
 
 local wezterm = require("wezterm")
 local act = wezterm.action
-
-local split = require("wezmacs.utils.split")
+local action_lib = require("wezmacs.lib.actions")
+local theme = require("wezmacs.lib.theme")
 
 local M = {}
 
-function M.claude_smart_split(window, pane)
-  split.smart_split(pane, { os.getenv("SHELL") or "/bin/bash", "-lc", "claude" })
-end
+M.claude_smart_split = action_lib.shell_command_action(
+  "claude",
+  { smart_split = true }
+)
+
+M.claude_new_tab = action_lib.shell_command_action(
+  "claude",
+  { new_tab = true }
+)
 
 -- Create and open agentctl workspace
 function M.create_agentctl_workspace(window, pane)
-  -- Get color from theme or use default
-  local theme_mod = wezmacs.get_module("theme")
-  local prompt_color = "#56be8d" -- fallback
-  if theme_mod and theme_mod.color_scheme then
-    local theme = wezterm.get_builtin_color_schemes()[theme_mod.color_scheme]
-    if theme and theme.ansi and theme.ansi[3] then
-      prompt_color = theme.ansi[3] -- Use cyan/green from theme
-    end
-  end
+  -- Get color from theme library
+  local prompt_color = theme.get_accent_color("#56be8d")
 
   window:perform_action(
     act.PromptInputLine({

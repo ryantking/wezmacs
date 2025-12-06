@@ -17,49 +17,21 @@
     leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
-local wezterm = require("wezterm")
-local act = wezterm.action
+local keybindings = require("wezmacs.lib.keybindings")
 local actions = require("wezmacs.modules.claude.actions")
-local split = require("wezmacs.utils.split")
+local spec = require("wezmacs.modules.claude.spec")
 
 local M = {}
 
-M._NAME = "claude"
-M._CATEGORY = "workflows"
-M._DESCRIPTION = "Claude Code integration and workspace management"
-M._EXTERNAL_DEPS = { "claude", "agentctl" }
-M._CONFIG = {
-  leader_key = "c",
-  leader_mod = "LEADER",
-}
+M._NAME = spec.name
+M._CATEGORY = spec.category
+M._DESCRIPTION = spec.description
+M._EXTERNAL_DEPS = spec.dependencies.external or {}
+M._CONFIG = spec.opts
 
-function M.apply_to_config(config)
-  local mod = wezmacs.get_module(M._NAME)
-
-  -- Create claude key table
-  config.key_tables = config.key_tables or {}
-  config.key_tables.claude = {
-    { key = "c", action = wezterm.action_callback(actions.claude_smart_split) },
-    { key = "C", action = act.SpawnCommandInNewTab({ args = { os.getenv("SHELL") or "/bin/bash", "-c", "claude" } }) },
-    { key = "w", action = wezterm.action_callback(actions.create_agentctl_workspace) },
-    { key = "Space", action = wezterm.action_callback(actions.list_agentctl_sessions) },
-    { key = "s", action = wezterm.action_callback(actions.list_agentctl_sessions) },
-    { key = "d", action = wezterm.action_callback(actions.delete_agentctl_session) },
-    { key = "Escape", action = "PopKeyTable" },
-  }
-
-  -- Add keybinding to activate claude menu
-  config.keys = config.keys or {}
-  table.insert(config.keys, { key = "Enter", mods = "SHIFT", action = act.SendString("\x1b\r") })
-  table.insert(config.keys, {
-    key = mod.leader_key,
-    mods = mod.leader_mod,
-    action = act.ActivateKeyTable({
-      name = "claude",
-      one_shot = false,
-      until_unknown = true,
-    }),
-  })
+function M.apply_to_config(config, opts)
+  -- Apply keybindings using library
+  keybindings.apply_keys(config, spec, actions)
 end
 
 return M
