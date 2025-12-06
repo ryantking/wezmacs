@@ -11,12 +11,10 @@ local M = {}
 
 -- Lazygit in smart split (auto-orientation based on window aspect ratio)
 -- Note: lazygit's -sm flag is specific to lazygit, so we add it here
-M.lazygit_smart_split = action_lib.smart_split_action(
-  { "lazygit", "-sm", "half" }
-)
+M.lazygit_smart_split = action_lib.smart_split_action("lazygit -sm half")
 
 -- Lazygit in new tab
-M.lazygit_new_tab = action_lib.new_tab_action({ "lazygit" })
+M.lazygit_new_tab = action_lib.new_tab_action("lazygit")
 
 -- Git diff with smart split orientation
 M.git_diff_smart_split = action_lib.smart_split_action(

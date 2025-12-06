@@ -7,6 +7,6 @@ local action_lib = require("wezmacs.lib.actions")
 
 local M = {}
 
-M.launch_btm = action_lib.new_tab_action({ "btm" })
+M.launch_btm = action_lib.new_tab_action("btm")
 
 return M

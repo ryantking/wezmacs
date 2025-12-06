@@ -16,22 +16,22 @@ end
 
 -- File manager in smart split
 function M.file_manager_split(window, pane)
-  return action_lib.smart_split_action({ _file_manager })(window, pane)
+  return action_lib.smart_split_action(_file_manager)(window, pane)
 end
 
 -- File manager in new tab
 function M.file_manager_new_tab(window, pane)
-  return action_lib.new_tab_action({ _file_manager })
+  return action_lib.new_tab_action(_file_manager)
 end
 
 -- File manager with sudo in smart split
 function M.file_manager_sudo_split(window, pane)
-  return action_lib.smart_split_action({ "sudo", _file_manager, "/" })(window, pane)
+  return action_lib.smart_split_action("sudo " .. _file_manager .. " /")(window, pane)
 end
 
 -- File manager with sudo in new tab
 function M.file_manager_sudo_tab(window, pane)
-  return action_lib.new_tab_action({ "sudo", _file_manager, "/" })
+  return action_lib.new_tab_action("sudo " .. _file_manager .. " /")
 end
 
 return M
