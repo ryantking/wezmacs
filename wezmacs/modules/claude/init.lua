@@ -8,12 +8,6 @@ local act = require("wezmacs.action")
 local wezterm = require("wezterm")
 local term = act.term
 
--- Helper: get shell from config
-local function get_shell()
-  local wezmacs = require("wezmacs")
-  return wezmacs.config.shell or get_shell()
-end
-
 -- Theme helper function
 local function get_accent_color(fallback)
   local wezmacs = require("wezmacs")
