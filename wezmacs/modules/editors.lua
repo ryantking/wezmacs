@@ -8,33 +8,6 @@ local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
 local wezterm = require("wezterm")
 
--- Define keys function (captured in closure for setup)
-local function keys_fn(opts)
-  local editor = opts.editor or "vim"
-  local ide = opts.ide or "code"
-  
-  return {
-    LEADER = {
-      e = {
-        action = act.SmartSplit(editor),
-        desc = "editors/editor-split",
-      },
-      E = {
-        action = act.NewTab(editor),
-        desc = "editors/editor-tab",
-      },
-      i = {
-        action = function(window, pane)
-          local cwd_uri = pane:get_current_working_dir()
-          local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
-          wezterm.background_child_process({ ide, cwd })
-        end,
-        desc = "editors/launch-ide",
-      },
-    },
-  }
-end
-
 return {
   name = "editors",
   category = "development",
@@ -52,9 +25,30 @@ return {
     }
   end,
 
-  keys = function()
-    -- Return empty for now, will be populated in setup with opts
-    return {}
+  keys = function(opts)
+    local editor = opts.editor or "vim"
+    local ide = opts.ide or "code"
+    
+    return {
+      LEADER = {
+        e = {
+          action = act.SmartSplit(editor),
+          desc = "editors/editor-split",
+        },
+        E = {
+          action = act.NewTab(editor),
+          desc = "editors/editor-tab",
+        },
+        i = {
+          action = function(window, pane)
+            local cwd_uri = pane:get_current_working_dir()
+            local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
+            wezterm.background_child_process({ ide, cwd })
+          end,
+          desc = "editors/launch-ide",
+        },
+      },
+    }
   end,
 
   enabled = true,
@@ -62,12 +56,7 @@ return {
   priority = 50,
 
   setup = function(config, opts)
-    -- Apply keybindings using the keys function with opts
-    keybindings.apply_keys(config, {
-      name = "editors",
-      keys = function()
-        return keys_fn(opts)
-      end,
-    })
+    -- Apply keybindings
+    keybindings.apply_keys(config, require("wezmacs.modules.editors"), opts)
   end,
 }

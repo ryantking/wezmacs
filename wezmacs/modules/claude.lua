@@ -10,9 +10,21 @@ local theme = require("wezmacs.lib.theme")
 local wezterm = require("wezterm")
 local term = act.term
 
--- Define keys function (captured in closure for setup)
-local function keys_fn()
-  return {
+return {
+  name = "claude",
+  category = "workflows",
+  description = "Claude Code integration and workspace management",
+
+  deps = { "claude", "agentctl" },
+
+  opts = function()
+    return {
+      leader_key = "c",
+      leader_mod = "LEADER",
+    }
+  end,
+
+  keys = {
     LEADER = {
       c = {
         c = { action = act.SmartSplit("claude"), desc = "claude/claude-split" },
@@ -259,24 +271,7 @@ local function keys_fn()
         desc = "claude/send-enter",
       },
     },
-  }
-end
-
-return {
-  name = "claude",
-  category = "workflows",
-  description = "Claude Code integration and workspace management",
-
-  deps = { "claude", "agentctl" },
-
-  opts = function()
-    return {
-      leader_key = "c",
-      leader_mod = "LEADER",
-    }
-  end,
-
-  keys = keys_fn,
+  },
 
   enabled = function(ctx)
     return ctx.has_command("claude")
@@ -285,10 +280,7 @@ return {
   priority = 50,
 
   setup = function(config, opts)
-    -- Apply keybindings using the keys function (captured in closure)
-    keybindings.apply_keys(config, {
-      name = "claude",
-      keys = keys_fn,
-    })
+    -- Apply keybindings
+    keybindings.apply_keys(config, require("wezmacs.modules.claude"), opts)
   end,
 }

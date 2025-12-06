@@ -7,18 +7,6 @@
 local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
 
--- Define keys function (captured in closure for setup)
-local function keys_fn()
-  return {
-    LEADER = {
-      m = {
-        action = act.NewTab("spotify_player"),
-        desc = "media/spotify-player",
-      },
-    },
-  }
-end
-
 return {
   name = "media",
   category = "tools",
@@ -33,7 +21,14 @@ return {
     }
   end,
 
-  keys = keys_fn,
+  keys = {
+    LEADER = {
+      m = {
+        action = act.NewTab("spotify_player"),
+        desc = "media/spotify-player",
+      },
+    },
+  },
 
   enabled = function(ctx)
     return ctx.has_command("spotify_player")
@@ -42,10 +37,7 @@ return {
   priority = 50,
 
   setup = function(config, opts)
-    -- Apply keybindings using the keys function (captured in closure)
-    keybindings.apply_keys(config, {
-      name = "media",
-      keys = keys_fn,
-    })
+    -- Apply keybindings
+    keybindings.apply_keys(config, require("wezmacs.modules.media"), opts)
   end,
 }

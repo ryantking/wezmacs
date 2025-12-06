@@ -7,18 +7,6 @@
 local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
 
--- Define keys function (captured in closure for setup)
-local function keys_fn()
-  return {
-    LEADER = {
-      k = {
-        action = act.NewTab("k9s"),
-        desc = "kubernetes/k9s",
-      },
-    },
-  }
-end
-
 return {
   name = "kubernetes",
   category = "devops",
@@ -33,7 +21,14 @@ return {
     }
   end,
 
-  keys = keys_fn,
+  keys = {
+    LEADER = {
+      k = {
+        action = act.NewTab("k9s"),
+        desc = "kubernetes/k9s",
+      },
+    },
+  },
 
   enabled = function(ctx)
     return ctx.has_command("k9s")
@@ -42,10 +37,7 @@ return {
   priority = 50,
 
   setup = function(config, opts)
-    -- Apply keybindings using the keys function (captured in closure)
-    keybindings.apply_keys(config, {
-      name = "kubernetes",
-      keys = keys_fn,
-    })
+    -- Apply keybindings
+    keybindings.apply_keys(config, require("wezmacs.modules.kubernetes"), opts)
   end,
 }

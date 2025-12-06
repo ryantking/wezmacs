@@ -8,28 +8,6 @@ local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
 local wezterm = require("wezterm")
 
--- Define keys function (captured in closure for setup)
-local function keys_fn()
-  local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
-  
-  return {
-    LEADER = {
-      s = {
-        action = function()
-          return workspace_switcher.switch_workspace()
-        end,
-        desc = "workspace/switch",
-      },
-      S = {
-        action = function()
-          return workspace_switcher.switch_to_prev_workspace()
-        end,
-        desc = "workspace/switch-prev",
-      },
-    },
-  }
-end
-
 return {
   name = "workspace",
   category = "workflows",
@@ -47,7 +25,26 @@ return {
     }
   end,
 
-  keys = keys_fn,
+  keys = function()
+    local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+    
+    return {
+      LEADER = {
+        s = {
+          action = function()
+            return workspace_switcher.switch_workspace()
+          end,
+          desc = "workspace/switch",
+        },
+        S = {
+          action = function()
+            return workspace_switcher.switch_to_prev_workspace()
+          end,
+          desc = "workspace/switch-prev",
+        },
+      },
+    }
+  end,
 
   enabled = true,
 
@@ -56,10 +53,7 @@ return {
   setup = function(config, opts)
     config.default_workspace = opts.default_workspace
 
-    -- Apply keybindings using the keys function (captured in closure)
-    keybindings.apply_keys(config, {
-      name = "workspace",
-      keys = keys_fn,
-    })
+    -- Apply keybindings
+    keybindings.apply_keys(config, require("wezmacs.modules.workspace"), opts)
   end,
 }

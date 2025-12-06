@@ -194,13 +194,24 @@ end
 
 -- Apply nested keybindings from module spec
 ---@param config table WezTerm config object
----@param module_spec table Module spec with keys function
-function M.apply_keys(config, module_spec)
-  if not module_spec.keys or type(module_spec.keys) ~= "function" then
+---@param module_spec table Module spec with keys (table or function)
+---@param opts table Module options (passed to keys function if it's a function)
+function M.apply_keys(config, module_spec, opts)
+  if not module_spec.keys then
     return
   end
 
-  local key_map = module_spec.keys()
+  local key_map
+  if type(module_spec.keys) == "function" then
+    -- Keys is a function - call it with opts
+    key_map = module_spec.keys(opts or {})
+  elseif type(module_spec.keys) == "table" then
+    -- Keys is a table - use it directly
+    key_map = module_spec.keys
+  else
+    return
+  end
+
   if not key_map or type(key_map) ~= "table" then
     return
   end

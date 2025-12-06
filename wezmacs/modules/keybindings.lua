@@ -8,11 +8,6 @@ local wezterm = require("wezterm")
 local act = require("wezmacs.action")
 local term = act.term
 
--- Define keys function (captured in closure for setup)
-local function keys_fn()
-  return {}  -- Core keybindings are applied directly in setup, not via nested maps
-end
-
 return {
   name = "keybindings",
   category = "editing",
@@ -28,7 +23,7 @@ return {
     }
   end,
 
-  keys = keys_fn,
+  keys = {},
 
   enabled = true,
 
