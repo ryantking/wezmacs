@@ -140,6 +140,7 @@ local function generate_config_lua()
     "    mod_key - Modifier key (\"CMD\", \"ALT\", \"CTRL\", \"SHIFT\")",
     "    leader_key - Leader key (string, e.g., \"Space\")",
     "    leader_mod - Leader modifier (\"CMD\", \"ALT\", \"CTRL\", \"SHIFT\")",
+    "    shell - Shell path (string, defaults to $SHELL or /bin/bash)",
     "",
     "  Modules can access these via:",
     "    local wezmacs = require('wezmacs')",
