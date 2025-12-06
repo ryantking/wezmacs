@@ -41,20 +41,20 @@ return {
       -- Left-click: Copy selection to clipboard
       {
         event = { Up = { streak = 1, button = "Left" } },
-        action = term.CompleteSelection("ClipboardAndPrimarySelection"),
+        action = wezterm.action.CompleteSelection("ClipboardAndPrimarySelection"),
       },
 
       -- Leader+left-click: Open link or extend selection
       {
         event = { Up = { streak = 1, button = "Left" } },
         mods = leader_mod,
-        action = term.CompleteSelectionOrOpenLinkAtMouseCursor("ClipboardAndPrimarySelection"),
+        action = wezterm.action.CompleteSelectionOrOpenLinkAtMouseCursor("ClipboardAndPrimarySelection"),
       },
 
       -- Quadruple-click: Select semantic zone (word/code block)
       {
         event = { Down = { streak = 4, button = "Left" } },
-        action = term.SelectTextAtMouseCursor("SemanticZone"),
+        action = wezterm.action.SelectTextAtMouseCursor("SemanticZone"),
       },
     }
   end,
