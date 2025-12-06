@@ -4,13 +4,13 @@
   Description: Claude Code integration with workspace management
 ]]
 
+local wezmacs = require("wezmacs")
 local act = require("wezmacs.action")
 local wezterm = require("wezterm")
 local term = act.term
 
 -- Theme helper function
 local function get_accent_color(fallback)
-  local wezmacs = require("wezmacs")
   if wezmacs.config and wezmacs.config.color_scheme then
     local scheme = wezterm.get_builtin_color_schemes()[wezmacs.config.color_scheme]
     if scheme and scheme.ansi and scheme.ansi[3] then
