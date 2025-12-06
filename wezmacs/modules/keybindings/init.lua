@@ -16,7 +16,6 @@
 ]]
 
 local wezterm = require("wezterm")
-local keys_util = require("wezmacs.utils.keys")
 local act = wezterm.action
 local spec = require("wezmacs.modules.keybindings.spec")
 
