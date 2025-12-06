@@ -1,164 +1,256 @@
 --[[
   WezMacs Module Loader
 
-  Handles module discovery, loading, and config merging phases.
-
-  Unified config format:
-  - Single config.lua contains module configs: {module_name = {key = value, ...}, ...}
-  - Module enabled = key exists in config table
-  - Feature flags = nested objects within module config
-  - Modules use new API: apply_to_config(config) - config accessed via wezmacs.get_config()
+  Handles module discovery, loading, and config merging.
+  LazyVim-style: modules return spec tables that get merged with user config.
 ]]
 
-local wezterm = require("wezterm")
+local registry = require("wezmacs.lib.registry")
+local config_lib = require("wezmacs.lib.config")
 
 local M = {}
 
--- Default load order (can be overridden by user via _load_order in config)
--- Ensures deterministic module loading to prevent keybinding conflicts
-local DEFAULT_LOAD_ORDER = {
-  "core",        -- Must be first (base settings)
-  "theme",       -- Visual settings early
-  "keybindings", -- Core keybindings before modules that extend them
-  "workspace",   -- Workspace management
-  "git",
-  "claude",
-  "docker",
-  "file-manager",
-  "editors",
-  "domains",
-  "kubernetes",
-  "media",
-  "mouse",
-  "system-monitor",
-  "tabbar",
-  "window",
-}
-
--- Deep merge two tables, with user values taking precedence
----@param schema table Config schema with default values
----@param user_config table User-provided configuration
----@return table Merged configuration
-function M.deep_merge(schema, user_config)
-  local result = {}
-
-  -- Copy all schema keys
-  for k, v in pairs(schema) do
-    if type(v) == "table" and type(user_config[k]) == "table" then
-      -- Recursive merge for nested tables
-      result[k] = M.deep_merge(v, user_config[k])
+-- Discover all built-in modules
+---@param log function Logging function
+---@return table Array of module names
+local function discover_builtin_modules(log)
+  -- Hardcode known modules (we can scan directory later if needed)
+  local known_modules = {
+    "core", "keybindings", "theme", "git", "claude", "docker", "editors",
+    "file-manager", "kubernetes", "media", "system-monitor", "domains",
+    "workspace", "window", "tabbar", "mouse", "fonts"
+  }
+  
+  local modules = {}
+  for _, mod_name in ipairs(known_modules) do
+    local ok, _ = pcall(require, "wezmacs.modules." .. mod_name)
+    if ok then
+      table.insert(modules, mod_name)
     else
-      -- Use user value if present, otherwise use schema default
-      result[k] = user_config[k] ~= nil and user_config[k] or v
+      log("warn", "Could not load module: " .. mod_name)
     end
   end
-
-  -- Add any user keys not in schema
-  for k, v in pairs(user_config) do
-    if result[k] == nil then
-      result[k] = v
-    end
-  end
-
-  return result
+  
+  return modules
 end
 
-
--- Load all modules based on unified config
----@param unified_config table Unified config table where keys are module names
+-- Load a single module (supports both module.lua and module/init.lua)
+---@param mod_name string Module name
 ---@param log function Logging function
----@return table, table Loaded modules (flat array), states with merged configs
-function M.load_all(unified_config, log)
-  local modules = {}
-  local states = {}
+---@return table|nil Loaded module spec or nil if failed
+function M.load_module(mod_name, log)
+  -- Try module.lua first (flat structure)
+  local require_path = "wezmacs.modules." .. mod_name
+  local ok, spec = pcall(require, require_path)
 
-  -- Extract user-defined load order if present
-  local user_load_order = unified_config._load_order
-  local load_order = user_load_order or DEFAULT_LOAD_ORDER
+  -- If not found, try module/init.lua (nested structure)
+  if not ok then
+    require_path = "wezmacs.modules." .. mod_name .. ".init"
+    ok, spec = pcall(require, require_path)
+  end
 
-  -- Build ordered list: explicit order first, then remaining modules
-  local ordered_modules = {}
-  local seen = {}
-
-  -- Add modules in explicit order
-  for _, mod_name in ipairs(load_order) do
-    if unified_config[mod_name] then
-      table.insert(ordered_modules, mod_name)
-      seen[mod_name] = true
+  -- If not found in built-in, try user custom modules
+  if not ok then
+    require_path = "user.modules." .. mod_name
+    ok, spec = pcall(require, require_path)
+    if not ok then
+      require_path = "user.modules." .. mod_name .. ".init"
+      ok, spec = pcall(require, require_path)
     end
   end
 
-  -- Add any remaining modules not in explicit order
-  for mod_name, _ in pairs(unified_config) do
-    if mod_name ~= "_load_order" and not seen[mod_name] then
-      table.insert(ordered_modules, mod_name)
-    end
+  if not ok then
+    log("error", "Failed to load module '" .. mod_name .. "': " .. tostring(spec))
+    return nil
   end
 
-  -- Load modules in deterministic order
-  for _, mod_name in ipairs(ordered_modules) do
-    local mod_user_config = unified_config[mod_name]
+  if type(spec) ~= "table" then
+    log("error", "Module '" .. mod_name .. "' must return a spec table")
+    return nil
+  end
 
-    if type(mod_user_config) ~= "table" then
-      log("warn", "Invalid config for module '" .. mod_name .. "' (must be a table)")
-      goto continue
-    end
+  -- Validate spec has required fields
+  if not spec.name then
+    spec.name = mod_name  -- Use directory name as fallback
+    log("warn", "Module '" .. mod_name .. "' spec missing 'name' field, using directory name")
+  end
 
-    local mod = M.load_module(mod_name, log)
-    if mod then
-      -- Validate module has _CONFIG
-      if not mod._CONFIG then
-        log("error", "Module '" .. mod_name .. "' missing required '_CONFIG' definition")
+  if not spec.setup then
+    log("error", "Module '" .. mod_name .. "' spec missing required 'setup' function")
+    return nil
+  end
+
+  if not spec.opts or type(spec.opts) ~= "function" then
+    log("warn", "Module '" .. mod_name .. "' spec missing 'opts' function, using empty defaults")
+    spec.opts = function() return {} end
+  end
+
+  -- Default enabled to true if not specified
+  if spec.enabled == nil then
+    spec.enabled = true
+  end
+
+  -- Register spec
+  registry.register(spec)
+  log("info", "Registered spec for module: " .. spec.name)
+
+  return spec
+end
+
+-- Merge user config overrides into module specs
+---@param specs table Map of module name -> spec
+---@param user_config table User config list (e.g., { { "claude", enabled = false } })
+---@param log function Logging function
+local function merge_user_config(specs, user_config, log)
+  if not user_config or type(user_config) ~= "table" then
+    return
+  end
+
+  for _, override in ipairs(user_config) do
+    if type(override) == "table" then
+      local mod_name = override[1] or override.name
+      if not mod_name then
+        log("warn", "User config entry missing module name")
         goto continue
       end
 
-      -- Deep merge user config with module _CONFIG defaults
-      local merged_config = M.deep_merge(mod._CONFIG, mod_user_config)
+      local spec = specs[mod_name]
+      if not spec then
+        log("warn", "User config references unknown module: " .. mod_name)
+        goto continue
+      end
 
-      -- Store module and state
-      states[mod_name] = merged_config
-      table.insert(modules, mod)
+      -- Merge override into spec (deep merge for opts, override for other fields)
+      for key, value in pairs(override) do
+        if key ~= 1 and key ~= "name" then  -- Skip array index and name
+          if key == "opts" and type(value) == "table" then
+            -- Deep merge opts
+            local default_opts = spec.opts()
+            spec.opts = function()
+              return config_lib.deep_merge(default_opts, value)
+            end
+          elseif key == "opts" and type(value) == "function" then
+            -- Function opts - wrap to merge
+            local default_opts_fn = spec.opts
+            spec.opts = function()
+              local default_opts = default_opts_fn()
+              return value(default_opts)
+            end
+          else
+            -- Override other fields (enabled, priority, etc.)
+            spec[key] = value
+          end
+        end
+      end
 
-      log("info", "Loaded module: " .. mod_name)
+      ::continue::
     end
-
-    ::continue::
   end
-
-  return modules, states
 end
 
--- Load a single module by name
----@param mod_name string Module name
+-- Load all modules and merge with user config
 ---@param log function Logging function
----@return table|nil Loaded module or nil if failed
-function M.load_module(mod_name, log)
-  -- Try built-in modules first (flat structure under wezmacs/modules/)
-  local require_path = "wezmacs.modules." .. mod_name
-  local ok, mod = pcall(require, require_path)
-
-  -- If not found in built-in, try custom modules
-  if not ok then
-    require_path = "user.custom-modules." .. mod_name
-    ok, mod = pcall(require, require_path)
+---@return table Array of enabled module specs
+function M.load_all(log)
+  log("info", "Discovering modules...")
+  
+  -- Discover all built-in modules
+  local module_names = discover_builtin_modules(log)
+  
+  -- Load all module specs
+  local specs = {}
+  for _, mod_name in ipairs(module_names) do
+    local spec = M.load_module(mod_name, log)
+    if spec then
+      specs[mod_name] = spec
+    end
   end
 
-  if not ok then
-    log("error", "Failed to load module '" .. mod_name .. "': " .. tostring(mod))
+  -- Load user custom modules from ~/.config/wezmacs/modules/
+  -- (if directory exists and has .lua files)
+  local user_modules_path = (os.getenv("HOME") or "") .. "/.config/wezmacs/modules"
+  -- TODO: Scan user_modules_path for .lua files and load them
+  
+  -- Load user config from ~/.config/wezmacs/config.lua
+  local user_config = nil
+  local home = os.getenv("HOME") or ""
+  local user_config_path = home .. "/.config/wezmacs/config.lua"
+  
+  local ok, result = pcall(function()
+    -- Check if file exists
+    local file = io.open(user_config_path, "r")
+    if not file then
+      return nil
+    end
+    file:close()
+    
+    -- Load file using loadfile
+    local chunk, err = loadfile(user_config_path)
+    if not chunk then
+      log("error", "Failed to load user config: " .. tostring(err))
+      return nil
+    end
+    
+    -- Setup package.path for any requires in user config
+    local old_path = package.path
+    package.path = home .. "/.config/wezmacs/?.lua;" .. package.path
+    
+    -- Execute chunk
+    local success, user_config_module = pcall(chunk)
+    package.path = old_path
+    
+    if success and user_config_module then
+      return user_config_module
+    end
     return nil
+  end)
+  
+  if ok and result then
+    user_config = result
+    log("info", "Loaded user config from ~/.config/wezmacs/config.lua")
+  else
+    log("info", "No user config found at ~/.config/wezmacs/config.lua (this is optional)")
   end
 
-  -- Validate module has required interface
-  if not mod.apply_to_config then
-    log("error", "Module '" .. mod_name .. "' missing required 'apply_to_config' function")
-    return nil
+  -- Merge user config overrides
+  if user_config then
+    merge_user_config(specs, user_config, log)
   end
 
-  if not mod._NAME then
-    log("warn", "Module '" .. mod_name .. "' missing '_NAME' metadata")
+  -- Filter enabled modules and resolve load order
+  local enabled_modules = {}
+  for mod_name, spec in pairs(specs) do
+    -- Check if module is enabled
+    local is_enabled = true
+    if type(spec.enabled) == "function" then
+      local ctx = {
+        has_command = function(cmd)
+          return registry.has_command(cmd)
+        end,
+      }
+      is_enabled = spec.enabled(ctx)
+    elseif spec.enabled ~= nil then
+      is_enabled = spec.enabled
+    end
+
+    if is_enabled then
+      table.insert(enabled_modules, mod_name)
+    else
+      log("info", "Module disabled: " .. mod_name)
+    end
   end
 
-  return mod
+  -- Resolve load order
+  local load_order = registry.resolve_load_order(enabled_modules)
+  log("info", "Load order: " .. table.concat(load_order, " -> "))
+
+  -- Return specs in load order
+  local ordered_specs = {}
+  for _, mod_name in ipairs(load_order) do
+    table.insert(ordered_specs, specs[mod_name])
+  end
+
+  return ordered_specs, specs
 end
 
 return M

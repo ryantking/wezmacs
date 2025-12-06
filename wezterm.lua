@@ -16,6 +16,29 @@
 ]]
 
 local wezterm = require("wezterm")
+
+-- Ensure local wezmacs takes precedence over global installation
+-- This is critical for testing local changes with `just test`
+local function setup_local_wezmacs_path()
+  -- Try to get config directory from wezterm (available after require)
+  local config_dir = wezterm.config_dir
+  
+  -- If config_dir is available, check for local wezmacs
+  if config_dir then
+    local local_wezmacs_path = config_dir .. "/wezmacs"
+    local file = io.open(local_wezmacs_path .. "/init.lua", "r")
+    if file then
+      file:close()
+      -- Prepend local wezmacs to package.path so it takes precedence
+      -- Escape special characters for pattern matching
+      local escaped_path = local_wezmacs_path:gsub("%-", "%%-")
+      package.path = escaped_path .. "/?.lua;" .. escaped_path .. "/?/init.lua;" .. package.path
+    end
+  end
+end
+
+setup_local_wezmacs_path()
+
 local wezmacs = require("wezmacs.init")
 
 -- Create wezterm config
@@ -24,60 +47,11 @@ local config = wezterm.config_builder()
 -- ============================================================================
 -- WEZMACS FRAMEWORK INITIALIZATION
 -- ============================================================================
--- Load unified configuration from ~/.wezmacs.lua or ~/.config/wezmacs/wezmacs.lua
+-- Framework auto-discovers modules and loads user config from ~/.config/wezmacs/config.lua
 
-local function load_unified_config()
-  -- Check for WEZMACS_CONFIG environment variable first (for testing)
-  local wezmacs_config = os.getenv("WEZMACS_CONFIG")
-  if wezmacs_config then
-    local f = io.open(wezmacs_config, "r")
-    if f then
-      f:close()
-      local chunk, err = loadfile(wezmacs_config)
-      if chunk then
-        return chunk()
-      else
-        error("Failed to load " .. wezmacs_config .. ": " .. err)
-      end
-    end
-    -- If WEZMACS_CONFIG is set but file doesn't exist, that's an error
-    error("WEZMACS_CONFIG is set but file not found: " .. wezmacs_config)
-  end
-
-  local home = os.getenv("HOME")
-  local config_dir = os.getenv("XDG_CONFIG_HOME") or (home .. "/.config")
-
-  -- Priority order: ~/.wezmacs.lua, then ~/.config/wezmacs/wezmacs.lua
-  local paths = {
-    config_dir .. "/wezmacs/wezmacs.lua",
-  }
-
-  for _, file_path in ipairs(paths) do
-    local f = io.open(file_path, "r")
-    if f then
-      f:close()
-      local chunk, err = loadfile(file_path)
-      if chunk then
-        return chunk()
-      else
-        error("Failed to load " .. file_path .. ": " .. err)
-      end
-    end
-  end
-
-  return nil
-end
-
-
--- Load unified config or fail
-local unified_config = load_unified_config()
-if not unified_config then
-  error("WezMacs config not found at ~/.wezmacs.lua or ~/.config/wezmacs/wezmacs.lua\nRun 'just init' to create configuration")
-end
-
--- Initialize framework (core module will handle core settings)
+-- Initialize framework
+-- Modules are auto-discovered, user config is loaded from ~/.config/wezmacs/config.lua
 wezmacs.setup(config, {
-  unified_config = unified_config,
   log_level = "info",
 })
 
