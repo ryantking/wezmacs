@@ -5,7 +5,7 @@
   Reduces duplication in module action definitions.
 ]]
 
-local split = require("wezmacs.utils.split")
+local split = require("wezmacs.lib.split")
 local wezterm = require("wezterm")
 local act = wezterm.action
 
