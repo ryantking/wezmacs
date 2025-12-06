@@ -46,3 +46,4 @@ luac.out
 *.swp
 *.swo
 *~
+tests/
