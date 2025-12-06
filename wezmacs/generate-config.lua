@@ -156,6 +156,7 @@ local function generate_config_lua()
     "  -- mod_key = \"CMD\",",
     "  -- leader_key = \"Space\",",
     "  -- leader_mod = \"CTRL\",",
+    "  -- shell = nil,  -- nil = use $SHELL or /bin/bash",
     "}",
     "",
   }
