@@ -3,7 +3,7 @@
   WezMacs Config Generator
 
   Generates a user configuration file by scanning all modules and reading their
-  metadata (_CONFIG_SCHEMA, _FEATURES, _DESCRIPTION).
+  spec.lua files (opts, description, category).
 
   Usage:
     lua wezmacs/generate-config.lua [output_path]
@@ -52,77 +52,50 @@ end
 local function scan_modules()
   local modules_dir = get_modules_dir()
   local modules = {}
+  
+  -- Set up package.path to find wezmacs modules
+  local script_dir = arg[0]:match("^(.+)/[^/]+$") or "."
+  local wezmacs_dir = script_dir:match("^(.+)/[^/]+$") or script_dir
+  local old_path = package.path
+  package.path = wezmacs_dir .. "/?.lua;" .. wezmacs_dir .. "/?/init.lua;" .. package.path
 
   -- Use ls to get module directories
   local handle = io.popen("ls -1 '" .. modules_dir .. "'")
   if not handle then
+    package.path = old_path
     error("Failed to list modules directory: " .. modules_dir)
   end
 
   for dir in handle:lines() do
-    local init_path = modules_dir .. "/" .. dir .. "/init.lua"
-    if file_exists(init_path) then
-      local content = read_file(init_path)
-      if content then
+    local spec_path = modules_dir .. "/" .. dir .. "/spec.lua"
+    if file_exists(spec_path) then
+      -- Load spec.lua using require
+      local require_path = "wezmacs.modules." .. dir .. ".spec"
+      local spec_ok, spec = pcall(require, require_path)
+      
+      if spec_ok and type(spec) == "table" then
         local module_info = {
-          name = dir,
-          path = init_path,
+          name = spec.name or dir,
+          description = spec.description or "",
+          category = spec.category or "integration",
+          opts = spec.opts or {},
         }
-
-        -- Extract _DESCRIPTION
-        local desc = content:match('M%._DESCRIPTION%s*=%s*"([^"]+)"')
-        if desc then
-          module_info.description = desc
-        end
-
-        -- Extract _CONFIG (unified structure)
-        local config_start = content:find("M%._CONFIG%s*=%s*{")
-        if config_start then
-          local brace_count = 0
-          local in_config = false
-          local config_text = ""
-          for i = config_start, #content do
-            local char = content:sub(i, i)
-            if char == "{" then
-              brace_count = brace_count + 1
-              in_config = true
-            elseif char == "}" then
-              brace_count = brace_count - 1
-            end
-            if in_config then
-              config_text = config_text .. char
-            end
-            if in_config and brace_count == 0 then
-              break
-            end
-          end
-
-          -- Parse config fields (improved - only top-level, non-nested)
-          module_info.config = {}
-          module_info.features = {}
-
-          -- Look for top-level fields (field = value, where value is not {)
-          -- This captures simple values like strings, numbers, nil, booleans
-          for field, value in config_text:gmatch('\n  ([%w_]+)%s*=%s*([^{\n,]+),?') do
-            local trimmed = value:gsub("^%s+", ""):gsub("%s+$", ""):gsub(",$", "")
-            if trimmed ~= "" then
-              module_info.config[field] = trimmed
-            end
-          end
-
-          -- Look for feature definitions (top-level fields with nested enabled = )
-          -- Match: field_name = { ... enabled = ...
-          for feature_name in config_text:gmatch('\n  ([%w_]+)%s*=%s*{[^}]*enabled%s*=') do
+        
+        -- Extract features from opts
+        module_info.features = {}
+        if module_info.opts.features then
+          for feature_name, _ in pairs(module_info.opts.features) do
             table.insert(module_info.features, feature_name)
           end
         end
-
+        
         table.insert(modules, module_info)
       end
     end
   end
 
   handle:close()
+  package.path = old_path
 
   -- Sort modules by name
   table.sort(modules, function(a, b)
@@ -163,22 +136,10 @@ local function generate_config(modules)
   }
 
   for _, mod in ipairs(modules) do
-    local category = "integration" -- default
-    if mod.name == "core" then
-      category = "core"
-    elseif mod.description then
-      local desc_lower = mod.description:lower()
-      if desc_lower:match("color") or desc_lower:match("font") or desc_lower:match("tab") or desc_lower:match("window") or desc_lower:match("visual") then
-        category = "ui"
-      elseif desc_lower:match("mouse") or desc_lower:match("scroll") then
-        category = "behavior"
-      elseif desc_lower:match("key") or desc_lower:match("edit") then
-        category = "editing"
-      elseif desc_lower:match("git") or desc_lower:match("workspace") or desc_lower:match("claude") then
-        category = "workflows"
-      elseif desc_lower:match("docker") or desc_lower:match("kubernetes") or desc_lower:match("file") or desc_lower:match("editor") or desc_lower:match("system") or desc_lower:match("media") then
-        category = "tools"
-      end
+    -- Use category from spec, fallback to heuristic
+    local category = mod.category or "integration"
+    if not categories[category] then
+      category = "integration"  -- Fallback if category doesn't exist
     end
     table.insert(categories[category], mod)
   end
@@ -211,17 +172,32 @@ local function generate_config(modules)
         end
         table.insert(lines, "  " .. module_key .. " = {")
 
-        if mod.config then
-          for field, value in pairs(mod.config) do
-            table.insert(lines, "    -- " .. field .. " = " .. value .. ",")
+        -- Generate opts fields
+        if mod.opts then
+          for field, value in pairs(mod.opts) do
+            if field ~= "features" then  -- Features handled separately
+              local value_str
+              if type(value) == "string" then
+                value_str = '"' .. value .. '"'
+              elseif type(value) == "nil" then
+                value_str = "nil"
+              elseif type(value) == "boolean" then
+                value_str = tostring(value)
+              elseif type(value) == "number" then
+                value_str = tostring(value)
+              else
+                value_str = "-- " .. type(value) .. " (see spec.lua for details)"
+              end
+              table.insert(lines, "    -- " .. field .. " = " .. value_str .. ",")
+            end
           end
         end
 
         if mod.features and #mod.features > 0 then
           table.insert(lines, "")
-          table.insert(lines, "    -- Optional features (set enabled = true to enable):")
+          table.insert(lines, "    -- Optional features:")
           for _, feature in ipairs(mod.features) do
-            table.insert(lines, "    -- " .. feature .. " = { enabled = false },")
+            table.insert(lines, "    -- features." .. feature .. " = { enabled = true },")
           end
         end
 
