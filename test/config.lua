@@ -20,10 +20,10 @@
 ]]
 
 return {
-  -- font_size = 12.0,
-  -- font_family = nil,  -- nil = use WezTerm default
-  -- color_scheme = nil,  -- nil = use WezTerm default
-  -- mod_key = "CMD",
-  -- leader_key = "Space",
-  -- leader_mod = "CTRL",
+	font_size = 18.0,
+	font_family = "Iosevka Mono",
+	color_scheme = "Horizon Dark (Gogh)",
+	mod_key = "SUPER",
+	-- leader_key = "Space",
+	leader_mod = "SUPER",
 }
