@@ -52,8 +52,8 @@ return {
     table.insert(config.keys, { key = "Enter", mods = "LEADER", action = wezterm.action.ActivateCommandPalette })
     table.insert(config.keys, { key = "u", mods = "LEADER", action = wezterm.action.CharSelect })
     table.insert(config.keys, { key = "Space", mods = "LEADER", action = wezterm.action.QuickSelect })
-    table.insert(config.keys, { key = "f", mods = mod, action = term.Search({CaseInSensitiveString=""}) })
-    table.insert(config.keys, { key = "/", mods = "LEADER", action = term.Search({CaseInSensitiveString=""}) })
+    table.insert(config.keys, { key = "f", mods = mod, action = wezterm.action.Search({CaseInSensitiveString=""}) })
+    table.insert(config.keys, { key = "/", mods = "LEADER", action = wezterm.action.Search({CaseInSensitiveString=""}) })
 
     table.insert(config.keys, {
       key = "l",
