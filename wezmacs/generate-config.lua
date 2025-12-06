@@ -3,7 +3,7 @@
   WezMacs Config Generator
 
   Generates a user configuration file by scanning all modules and reading their
-  spec.lua files (opts, description, category).
+  init.lua files (LazyVim-style: init.lua returns spec table with opts, description, category).
 
   Usage:
     lua wezmacs/generate-config.lua [output_path]
@@ -59,21 +59,21 @@ local function scan_modules()
   local old_path = package.path
   package.path = wezmacs_dir .. "/?.lua;" .. wezmacs_dir .. "/?/init.lua;" .. package.path
 
-  -- Use ls to get module directories
-  local handle = io.popen("ls -1 '" .. modules_dir .. "'")
+  -- Use ls to get module files (single .lua files, not directories)
+  local handle = io.popen("ls -1 '" .. modules_dir .. "' | grep '\\.lua$'")
   if not handle then
     package.path = old_path
     error("Failed to list modules directory: " .. modules_dir)
   end
 
-  for dir in handle:lines() do
-    local spec_path = modules_dir .. "/" .. dir .. "/spec.lua"
-    if file_exists(spec_path) then
-      -- Load spec.lua using require
-      local require_path = "wezmacs.modules." .. dir .. ".spec"
+  for file in handle:lines() do
+    local mod_name = file:match("^(.+)%.lua$")
+    if mod_name then
+      -- Load module file (LazyVim-style: returns spec table directly)
+      local require_path = "wezmacs.modules." .. mod_name
       local spec_ok, spec = pcall(require, require_path)
       
-      if spec_ok and type(spec) == "table" then
+      if spec_ok and type(spec) == "table" and spec.name then
         local module_info = {
           name = spec.name or dir,
           description = spec.description or "",
@@ -186,7 +186,7 @@ local function generate_config(modules)
               elseif type(value) == "number" then
                 value_str = tostring(value)
               else
-                value_str = "-- " .. type(value) .. " (see spec.lua for details)"
+                value_str = "-- " .. type(value) .. " (see module init.lua for details)"
               end
               table.insert(lines, "    -- " .. field .. " = " .. value_str .. ",")
             end

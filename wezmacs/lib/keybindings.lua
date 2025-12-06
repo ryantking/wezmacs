@@ -52,16 +52,13 @@ local function is_wezterm_action(value)
   return false
 end
 
--- Resolve action from string path or function
--- Supports formats:
---   - "actions.function_name" (assumes current module)
---   - "module.actions.function_name" (explicit module)
---   - function (direct callback)
---   - WezTerm action (pass through)
----@param action string|function|table Action specification
----@param module_actions table|nil Module actions table (for resolving "actions.*" strings)
+-- Resolve action from function or WezTerm action
+-- Accepts:
+--   - function (direct callback) - wraps in wezterm.action_callback()
+--   - WezTerm action table/string (pass through)
+---@param action function|table|string Action specification
 ---@return function|table|string Resolved action
-function M.resolve_action(action, module_actions)
+function M.resolve_action(action)
   -- Handle WezTerm action tables or strings directly
   if is_wezterm_action(action) or type(action) == "string" and (action == "PopKeyTable" or action == "ActivateCopyMode") then
     return action
@@ -69,51 +66,16 @@ function M.resolve_action(action, module_actions)
 
   if type(action) == "function" then
     return wezterm.action_callback(action)
-  elseif type(action) == "string" then
-    -- Format: "actions.function_name" or "module.actions.function_name"
-    local parts = {}
-    for part in string.gmatch(action, "[^.]+") do
-      table.insert(parts, part)
-    end
-
-    if #parts == 2 and parts[1] == "actions" then
-      -- "actions.function_name" - resolve from module_actions
-      if module_actions and module_actions[parts[2]] then
-        local resolved = module_actions[parts[2]]
-        -- If resolved action is already a WezTerm action, pass through
-        if is_wezterm_action(resolved) then
-          return resolved
-        end
-        return wezterm.action_callback(resolved)
-      else
-        error("Action not found: " .. action)
-      end
-    elseif #parts == 3 then
-      -- "module.actions.function_name" - explicit module
-      local mod_path = "wezmacs.modules." .. parts[1] .. "." .. parts[2]
-      local ok, mod = pcall(require, mod_path)
-      if ok and mod[parts[3]] then
-        local resolved = mod[parts[3]]
-        -- If resolved action is already a WezTerm action, pass through
-        if is_wezterm_action(resolved) then
-          return resolved
-        end
-        return wezterm.action_callback(resolved)
-      else
-        error("Failed to load action: " .. action)
-      end
-    end
   end
 
-  -- Pass through other types (shouldn't reach here normally)
+  -- Pass through other types
   return action
 end
 
 -- Create a submenu (key table) from declarative spec
 ---@param config table WezTerm config object
 ---@param spec table Key spec with leader, submenu, and bindings
----@param module_actions table|nil Module actions table
-function M.create_submenu(config, spec, module_actions)
+function M.create_submenu(config, spec)
   local name = spec.submenu
   local leader_key = spec.leader
   local leader_mods = spec.leader_mods or "LEADER"
@@ -132,7 +94,7 @@ function M.create_submenu(config, spec, module_actions)
       -- Allow disabling individual keys
       table.insert(config.key_tables[name], {
         key = binding.key,
-        action = M.resolve_action(binding.action, module_actions),
+        action = M.resolve_action(binding.action),
       })
     end
   end
@@ -159,15 +121,14 @@ end
 -- Add direct keybinding (not in submenu)
 ---@param config table WezTerm config object
 ---@param spec table Key spec with key, mods, action
----@param module_actions table|nil Module actions table
-function M.add_key(config, spec, module_actions)
+function M.add_key(config, spec)
   config.keys = config.keys or {}
 
   if spec.enabled ~= false then
     table.insert(config.keys, {
       key = spec.key,
       mods = spec.mods,
-      action = M.resolve_action(spec.action, module_actions),
+      action = M.resolve_action(spec.action),
     })
   end
 end
@@ -175,8 +136,7 @@ end
 -- Process all keybindings from module spec
 ---@param config table WezTerm config object
 ---@param module_spec table Module spec with keys array
----@param module_actions table|nil Module actions table
-function M.apply_keys(config, module_spec, module_actions)
+function M.apply_keys(config, module_spec)
   if not module_spec.keys then
     return
   end
@@ -184,10 +144,10 @@ function M.apply_keys(config, module_spec, module_actions)
   for _, key_spec in ipairs(module_spec.keys) do
     if key_spec.submenu then
       -- Submenu (key table)
-      M.create_submenu(config, key_spec, module_actions)
+      M.create_submenu(config, key_spec)
     else
       -- Direct keybinding
-      M.add_key(config, key_spec, module_actions)
+      M.add_key(config, key_spec)
     end
   end
 end

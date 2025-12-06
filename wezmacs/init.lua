@@ -81,18 +81,12 @@ function M.setup(config, opts)
   }
 
   -- Apply CORE module first if present (core settings must be applied before others)
-  for i, mod in ipairs(modules) do
-    if mod._NAME == "core" then
+  for i, spec in ipairs(modules) do
+    if spec.name == "core" then
       log("info", "Applying CORE module first")
-      if mod.apply_to_config then
-        local mod_name = mod._NAME
-        local opts = states[mod_name]
-        -- Support both old format (no opts param) and new format (with opts)
-        if opts then
-          mod.apply_to_config(config, opts)
-        else
-          mod.apply_to_config(config)
-        end
+      if spec.apply_to_config then
+        local opts = states[spec.name]
+        spec.apply_to_config(config, opts)
       end
       table.remove(modules, i)
       break
@@ -100,19 +94,14 @@ function M.setup(config, opts)
   end
 
   -- Apply remaining modules
-  for _, mod in ipairs(modules) do
-    local mod_name = mod._NAME or "unknown"
+  for _, spec in ipairs(modules) do
+    local mod_name = spec.name or "unknown"
     log("info", "Applying module: " .. mod_name)
 
-    -- Call apply_to_config with config and opts (new format)
-    -- Old format modules will ignore the second parameter
-    if mod.apply_to_config then
+    -- Call apply_to_config with config and opts
+    if spec.apply_to_config then
       local opts = states[mod_name]
-      if opts then
-        mod.apply_to_config(config, opts)
-      else
-        mod.apply_to_config(config)
-      end
+      spec.apply_to_config(config, opts)
     end
   end
 

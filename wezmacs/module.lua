@@ -2,7 +2,7 @@
   WezMacs Module Loader
 
   Handles module discovery, loading, and config merging phases.
-  Supports both legacy format (modules with _CONFIG) and new spec format.
+  LazyVim-style: init.lua returns spec table directly.
 
   Unified config format:
   - Single config.lua contains module configs: {module_name = {key = value, ...}, ...}
@@ -29,69 +29,56 @@ function M.discover_modules(log)
 
   for _, base_path in ipairs(module_dirs) do
     -- Use Lua's package system to discover modules
-    -- Try to require spec.lua for each potential module
-    -- We'll use a simple approach: try common module names + spec
-    local pattern = base_path:gsub("%.", "/")
-    
-    -- For now, we'll discover specs when modules are loaded
+    -- LazyVim-style: init.lua returns spec table directly
+    -- We'll discover specs when modules are loaded
     -- This is simpler than trying to scan directories
   end
 
   return specs
 end
 
--- Load a single module (new format only)
+-- Load a single module (LazyVim-style: single file returns spec table)
 ---@param mod_name string Module name
 ---@param log function Logging function
----@return table|nil Loaded module or nil if failed
+---@return table|nil Loaded module spec or nil if failed
 function M.load_module(mod_name, log)
-  -- Try to load spec first (required for new format)
-  local spec_path = "wezmacs.modules." .. mod_name .. ".spec"
-  local spec_ok, spec = pcall(require, spec_path)
-  
-  if not spec_ok then
-    spec_path = "user.custom-modules." .. mod_name .. ".spec"
-    spec_ok, spec = pcall(require, spec_path)
+  -- Load module (single file returns spec table directly)
+  -- Try: wezmacs.modules.git (for modules/git.lua)
+  local require_path = "wezmacs.modules." .. mod_name
+  local ok, spec = pcall(require, require_path)
+
+  -- If not found in built-in, try custom modules
+  if not ok then
+    require_path = "user.custom-modules." .. mod_name
+    ok, spec = pcall(require, require_path)
   end
 
-  if not spec_ok or type(spec) ~= "table" then
-    log("error", "Module '" .. mod_name .. "' missing required spec.lua file")
+  if not ok then
+    log("error", "Failed to load module '" .. mod_name .. "': " .. tostring(spec))
+    return nil
+  end
+
+  if type(spec) ~= "table" then
+    log("error", "Module '" .. mod_name .. "' must return a spec table")
+    return nil
+  end
+
+  -- Validate spec has required fields
+  if not spec.name then
+    spec.name = mod_name  -- Use directory name as fallback
+    log("warn", "Module '" .. mod_name .. "' spec missing 'name' field, using directory name")
+  end
+
+  if not spec.apply_to_config then
+    log("error", "Module '" .. mod_name .. "' spec missing required 'apply_to_config' function")
     return nil
   end
 
   -- Register spec
   registry.register(spec)
-  log("info", "Registered spec for module: " .. mod_name)
+  log("info", "Registered spec for module: " .. spec.name)
 
-  -- Load module implementation
-  local require_path = "wezmacs.modules." .. mod_name
-  local ok, mod = pcall(require, require_path)
-
-  -- If not found in built-in, try custom modules
-  if not ok then
-    require_path = "user.custom-modules." .. mod_name
-    ok, mod = pcall(require, require_path)
-  end
-
-  if not ok then
-    log("error", "Failed to load module '" .. mod_name .. "': " .. tostring(mod))
-    return nil
-  end
-
-  -- Validate module has required interface
-  if not mod.apply_to_config then
-    log("error", "Module '" .. mod_name .. "' missing required 'apply_to_config' function")
-    return nil
-  end
-
-  -- Set metadata from spec
-  mod._NAME = spec.name
-  mod._CATEGORY = spec.category
-  mod._DESCRIPTION = spec.description
-  mod._EXTERNAL_DEPS = spec.dependencies.external or {}
-  mod._CONFIG = spec.opts
-
-  return mod
+  return spec
 end
 
 -- Load all modules based on unified config
@@ -112,9 +99,10 @@ function M.load_all(unified_config, log)
     end
   end
 
-  -- Pre-load all modules to register their specs
+  -- Pre-load all modules to register their specs (for dependency resolution)
   for _, mod_name in ipairs(module_names) do
-    M.load_module(mod_name, log)
+    local spec = M.load_module(mod_name, log)
+    -- Don't store yet, just register for dependency resolution
   end
 
   -- Resolve load order using registry (dependency-based)
@@ -122,7 +110,7 @@ function M.load_all(unified_config, log)
 
   log("info", "Load order: " .. table.concat(load_order, " -> "))
 
-  -- Load modules in resolved order
+  -- Load modules in resolved order (reload to get fresh spec)
   for _, mod_name in ipairs(load_order) do
     local mod_user_config = unified_config[mod_name] or {}
 
@@ -131,15 +119,12 @@ function M.load_all(unified_config, log)
       goto continue
     end
 
-    local mod = M.load_module(mod_name, log)
-    if not mod then
-      goto continue
-    end
-
-    -- Get spec (required for new format)
-    local spec = registry.get_spec(mod_name)
+    -- Reload module to get fresh spec (package.loaded cache might have old version)
+    package.loaded["wezmacs.modules." .. mod_name] = nil
+    package.loaded["user.custom-modules." .. mod_name] = nil
+    
+    local spec = M.load_module(mod_name, log)
     if not spec then
-      log("error", "Module '" .. mod_name .. "' spec not found after loading")
       goto continue
     end
 
@@ -160,9 +145,9 @@ function M.load_all(unified_config, log)
     -- Deep merge user config with defaults
     local merged_config = config_lib.deep_merge(spec.opts or {}, mod_user_config)
 
-    -- Store module and state
+    -- Store module spec and state
     states[mod_name] = merged_config
-    table.insert(modules, mod)
+    table.insert(modules, spec)
     registry.mark_loaded(mod_name)
 
     log("info", "Loaded module: " .. mod_name)
@@ -170,39 +155,6 @@ function M.load_all(unified_config, log)
   end
 
   return modules, states
-end
-
--- Load a single module by name
----@param mod_name string Module name
----@param log function Logging function
----@return table|nil Loaded module or nil if failed
-function M.load_module(mod_name, log)
-  -- Try built-in modules first (flat structure under wezmacs/modules/)
-  local require_path = "wezmacs.modules." .. mod_name
-  local ok, mod = pcall(require, require_path)
-
-  -- If not found in built-in, try custom modules
-  if not ok then
-    require_path = "user.custom-modules." .. mod_name
-    ok, mod = pcall(require, require_path)
-  end
-
-  if not ok then
-    log("error", "Failed to load module '" .. mod_name .. "': " .. tostring(mod))
-    return nil
-  end
-
-  -- Validate module has required interface
-  if not mod.apply_to_config then
-    log("error", "Module '" .. mod_name .. "' missing required 'apply_to_config' function")
-    return nil
-  end
-
-  if not mod._NAME then
-    log("warn", "Module '" .. mod_name .. "' missing '_NAME' metadata")
-  end
-
-  return mod
 end
 
 return M
