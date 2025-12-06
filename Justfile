@@ -18,13 +18,13 @@ deps:
 # Format all Lua files with StyLua
 fmt:
     @echo "Formatting Lua files..."
-    stylua --check-only wezmacs/ 2>/dev/null || stylua wezmacs/
+    stylua --check-only wezmacs.lua wezmacs/ 2>/dev/null || stylua wezmacs/
     @echo "✓ Formatting complete"
 
 # Check code quality with Luacheck
 lint:
     @echo "Linting with luacheck..."
-    luacheck wezmacs/ --codes 2>/dev/null || true
+    luacheck wezmacs.lua wezmacs/ --codes 2>/dev/null || true
     @echo "✓ Linting complete"
 
 # Format and lint (full code quality check)
@@ -119,10 +119,8 @@ status:
 
 # Test WezMacs with test/ directory
 test:
-    #!/usr/bin/env bash
-    export WEZTERM_CONFIG_FILE="$PWD/wezterm.lua"
-    export WEZMACSDIR=$PWD/test
-    wezterm start
+    @echo "Starting WezTerm with config from this repository..."
+    @WEZTERM_CONFIG_FILE="$PWD/wezterm.lua" WEZMACSDIR=$PWD/test wezterm start
 
 # Clean temporary files
 clean:
@@ -132,10 +130,3 @@ clean:
     @find . -type f -name "*.swo" -delete
     @find . -type f -name "*~" -delete
     @echo "✓ Cleanup complete"
-
-# Show version
-version:
-    @echo "WezMacs v0.1.0"
-    @echo "A modular configuration framework for WezTerm"
-    @echo ""
-    @echo "Repository: https://github.com/ryantking/wezmacs"

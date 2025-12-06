@@ -17,7 +17,11 @@ local wezmacs_framework_dir = config_dir .. "/wezmacs"
 -- Put local directory FIRST to ensure we load local version, not global cached one
 -- This allows us to require wezmacs.lib.*, wezmacs.action, wezmacs.module, etc.
 local old_path = package.path
-package.path = wezmacs_framework_dir .. "/?.lua;" .. wezmacs_framework_dir .. "/?/init.lua;" .. old_path
+package.path = wezmacs_framework_dir
+  .. "/?.lua;"
+  .. wezmacs_framework_dir
+  .. "/?/init.lua;"
+  .. old_path
 
 -- Clear any cached wezmacs modules to ensure we load fresh versions
 for k, _ in pairs(package.loaded) do
@@ -67,7 +71,9 @@ wezterm.log_info("[WezMacs] Config directory: " .. wezmacs.config_dir)
 local module_path = wezmacs_framework_dir .. "/module.lua"
 local chunk, err = loadfile(module_path)
 if not chunk then
-  wezterm.log_error("[WezMacs] Failed to load module.lua from " .. module_path .. ": " .. tostring(err))
+  wezterm.log_error(
+    "[WezMacs] Failed to load module.lua from " .. module_path .. ": " .. tostring(err)
+  )
   return wezterm.config_builder()
 end
 
@@ -104,7 +110,7 @@ for _, module_entry in ipairs(modules_list) do
   local module_name
   local user_opts = {}
   local user_keys = nil
-  
+
   -- Parse module entry (string or table)
   if type(module_entry) == "string" then
     module_name = module_entry
@@ -116,14 +122,14 @@ for _, module_entry in ipairs(modules_list) do
     wezterm.log_error("[WezMacs] Invalid module entry: " .. tostring(module_entry))
     goto continue
   end
-  
+
   -- Load module
   local mod = module_loader.load(module_name, wezmacs_framework_dir, config_dir)
   if not mod then
     wezterm.log_error("[WezMacs] Module not found: " .. module_name)
     goto continue
   end
-  
+
   -- Get default opts and merge with user opts
   local default_opts = {}
   if type(mod.opts) == "function" then
@@ -131,7 +137,7 @@ for _, module_entry in ipairs(modules_list) do
   elseif type(mod.opts) == "table" then
     default_opts = mod.opts
   end
-  
+
   -- Deep merge user opts into default opts
   local opts = default_opts
   for k, v in pairs(user_opts) do
@@ -144,12 +150,12 @@ for _, module_entry in ipairs(modules_list) do
       opts[k] = v
     end
   end
-  
+
   -- Run module setup (pass config and opts)
   if type(mod.setup) == "function" then
     mod.setup(config, opts)
   end
-  
+
   -- Apply keybindings using wezmacs.keys.map with rendered table structure
   local keys = user_keys
   if not keys then
@@ -159,11 +165,11 @@ for _, module_entry in ipairs(modules_list) do
       keys = mod.keys
     end
   end
-  
+
   if keys and type(keys) == "table" then
     wezmacs.keys.map(config, keys, mod.name or "unknown")
   end
-  
+
   ::continue::
 end
 
