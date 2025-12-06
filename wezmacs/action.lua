@@ -16,7 +16,8 @@ M.term = wezterm_act
 -- Helper: wrap command string in shell
 -- Commands should always run in shell to get correct environment (PATH, etc.)
 local function wrap_in_shell(command)
-  local shell = os.getenv("SHELL") or "/bin/bash"
+  local wezmacs = require("wezmacs")
+  local shell = wezmacs.config.shell or os.getenv("SHELL") or "/bin/bash"
   return { shell, "-lc", command }
 end
 
