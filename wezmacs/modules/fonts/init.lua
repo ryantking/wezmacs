@@ -45,8 +45,19 @@ return {
 
   priority = 90,
 
-  setup = function(config, spec)
-    local opts = spec.opts()
+  setup = function(config, opts)
+    -- Access global config via wezmacs API
+    local wezmacs = require("wezmacs")
+    
+    -- Use global font_size from config if not set in module opts
+    if not opts.font_size and wezmacs.config.font_size then
+      opts.font_size = wezmacs.config.font_size
+    end
+    
+    -- Use global font_family from config if not set in module opts
+    if not opts.font and wezmacs.config.font_family then
+      opts.font = wezmacs.config.font_family
+    end
     
     -- Only apply font if configured
     if opts.font then

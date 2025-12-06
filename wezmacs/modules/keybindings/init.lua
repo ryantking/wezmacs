@@ -29,10 +29,11 @@ return {
 
   priority = 100,  -- High priority, loads early
 
-  setup = function(config, spec)
-    local opts = spec.opts()
-    
-    config.leader = { key = opts.leader_key, mods = opts.leader_mod, timeout_milliseconds = 5000 }
+  setup = function(config, opts)
+    local wezmacs = require("wezmacs")
+    local leader_key = opts.leader_key or wezmacs.config.leader_key or "Space"
+    local leader_mod = opts.leader_mod or wezmacs.config.leader_mod or "CTRL"
+    config.leader = { key = leader_key, mods = leader_mod, timeout_milliseconds = 5000 }
 
     -- ============================================================================
     -- MAIN KEYBINDINGS

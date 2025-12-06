@@ -28,10 +28,12 @@ return {
 
   priority = 50,
 
-  setup = function(config, spec)
-    local opts = spec.opts()
+  setup = function(config, opts)
+    local wezmacs = require("wezmacs")
+    local leader_mod = opts.leader_mod or wezmacs.config.leader_mod or "CTRL"
+    
     config.alternate_buffer_wheel_scroll_speed = 1
-    config.bypass_mouse_reporting_modifiers = opts.leader_mod
+    config.bypass_mouse_reporting_modifiers = leader_mod
     config.hide_mouse_cursor_when_typing = false
 
     config.mouse_bindings = {
@@ -44,7 +46,7 @@ return {
       -- Leader+left-click: Open link or extend selection
       {
         event = { Up = { streak = 1, button = "Left" } },
-        mods = opts.leader_mod,
+        mods = leader_mod,
         action = term.CompleteSelectionOrOpenLinkAtMouseCursor("ClipboardAndPrimarySelection"),
       },
 

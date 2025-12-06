@@ -49,8 +49,7 @@ return {
 
   priority = 50,
 
-  setup = function(config, spec)
-    local opts = spec.opts()
+  setup = function(config, opts)
     config.default_workspace = opts.default_workspace
   end,
 }

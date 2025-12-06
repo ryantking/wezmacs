@@ -25,14 +25,15 @@ return {
 
   priority = 100,  -- High priority, loads early
 
-  setup = function(config, spec)
-    local opts = spec.opts()
+  setup = function(config, opts)
+    local wezmacs = require("wezmacs")
+    local color_scheme = opts.color_scheme or wezmacs.config.color_scheme
     
     -- Only apply theme if configured
-    if opts.color_scheme then
-      local theme = wezterm.get_builtin_color_schemes()[opts.color_scheme]
+    if color_scheme then
+      local theme = wezterm.get_builtin_color_schemes()[color_scheme]
       if not theme then
-        wezterm.log_error("WezMacs: Color scheme '" .. opts.color_scheme .. "' not found, using default")
+        wezterm.log_error("WezMacs: Color scheme '" .. color_scheme .. "' not found, using default")
         -- Don't apply anything, let WezTerm use its default
         return
       end

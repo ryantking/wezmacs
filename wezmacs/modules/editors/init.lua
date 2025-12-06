@@ -54,8 +54,7 @@ return {
 
   priority = 50,
 
-  setup = function(config, spec)
+  setup = function(config, opts)
     -- Module-specific setup (if any)
-    -- Use spec.opts() to get merged options
   end,
 }

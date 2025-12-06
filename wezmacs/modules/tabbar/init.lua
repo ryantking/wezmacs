@@ -5,7 +5,8 @@
 ]]
 
 local wezterm = require("wezterm")
-local titles = require("wezmacs.modules.tabbar.titles")
+-- Use local path for module-specific code
+local titles = require("titles")
 
 return {
   name = "tabbar",
@@ -34,9 +35,7 @@ return {
 
   priority = 70,
 
-  setup = function(config, spec)
-    local opts = spec.opts()
-    
+  setup = function(config, opts)
     config.use_fancy_tab_bar = opts.use_fancy_tab_bar
     config.tab_bar_at_bottom = opts.tab_bar_at_bottom
     config.hide_tab_bar_if_only_one_tab = opts.hide_tab_bar_if_only_one_tab

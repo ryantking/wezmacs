@@ -29,9 +29,7 @@ return {
 
   priority = 80,
 
-  setup = function(config, spec)
-    local opts = spec.opts()
-    
+  setup = function(config, opts)
     -- Window decorations and behavior
     config.window_decorations = opts.decorations
     config.window_close_confirmation = "NeverPrompt"

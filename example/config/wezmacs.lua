@@ -128,12 +128,18 @@ local function load_user_spec()
 end
 
 -- Main initialization
+-- Guard against double initialization (WezTerm can load config multiple times)
+if _G._WEZMACS_INITIALIZED then
+  -- Already initialized, return existing config
+  return wezterm.config_builder()
+end
+
 local wezmacs_dir = get_wezmacs_dir()
 
 -- Ensure wezmacs is installed
 if not ensure_wezmacs_installed(wezmacs_dir) then
   wezterm.log_error("[WezMacs] Failed to install WezMacs framework")
-  return
+  return wezterm.config_builder()
 end
 
 -- Setup package.path
@@ -150,5 +156,8 @@ local user_spec = load_user_spec()
 
 -- Initialize framework with user spec
 wezmacs.setup(config, user_spec)
+
+-- Mark as initialized
+_G._WEZMACS_INITIALIZED = true
 
 return config

@@ -4,6 +4,7 @@
   Description: Lazygit integration with smart splitting and git utilities
 ]]
 
+-- Use wezmacs.action for actions (available globally)
 local act = require("wezmacs.action")
 
 return {
@@ -53,8 +54,7 @@ return {
 
   priority = 50,
 
-  setup = function(config, spec)
+  setup = function(config, opts)
     -- Module-specific setup (if any)
-    -- spec contains the full merged spec, use spec.opts() to get merged options
   end,
 }
