@@ -2,16 +2,24 @@
   WezMacs Action API
 
   Provides action functions ready for use in keybindings.
-  Import as: local act = require("wezmacs.action")
+
+  Usage:
+    local wezmacs = require("wezmacs")
+    local act = wezmacs.action
+    local wezterm = require("wezterm")
+
+    -- Use wezmacs actions
+    act.SmartSplit("lazygit")
+    act.NewTab("htop")
+
+    -- Use wezterm actions directly
+    wezterm.action.ReloadConfiguration
 ]]
 
 local wezterm = require("wezterm")
-local wezterm_act = wezterm.action
+local act = wezterm.action
 
 local M = {}
-
--- Export wezterm.action as term for convenience
-M.term = wezterm_act
 
 -- Helper: wrap command string in shell
 -- Commands should always run in shell to get correct environment (PATH, etc.)
@@ -42,7 +50,7 @@ end
 ---@return table WezTerm action
 function M.NewTab(command)
   local args = wrap_in_shell(command)
-  return wezterm_act.SpawnCommandInNewTab({ args = args })
+  return act.SpawnCommandInNewTab({ args = args })
 end
 
 -- New window action
@@ -50,39 +58,7 @@ end
 ---@return table WezTerm action
 function M.NewWindow(command)
   local args = wrap_in_shell(command)
-  return wezterm_act.SpawnCommandInNewWindow({ args = args })
+  return act.SpawnCommandInNewWindow({ args = args })
 end
-
--- Re-export common WezTerm actions for convenience
-M.ReloadConfiguration = wezterm_act.ReloadConfiguration
-M.ShowDebugOverlay = wezterm_act.ShowDebugOverlay
-M.ActivateCommandPalette = wezterm_act.ActivateCommandPalette
-M.CharSelect = wezterm_act.CharSelect
-M.QuickSelect = wezterm_act.QuickSelect
-M.ActivateCopyMode = wezterm_act.ActivateCopyMode
-M.CopyTo = wezterm_act.CopyTo
-M.PasteFrom = wezterm_act.PasteFrom
-M.SpawnWindow = wezterm_act.SpawnWindow
-M.Hide = wezterm_act.Hide
-M.HideApplication = wezterm_act.HideApplication
-M.ToggleFullScreen = wezterm_act.ToggleFullScreen
-M.IncreaseFontSize = wezterm_act.IncreaseFontSize
-M.DecreaseFontSize = wezterm_act.DecreaseFontSize
-M.ResetFontSize = wezterm_act.ResetFontSize
-M.SpawnTab = wezterm_act.SpawnTab
-M.CloseCurrentTab = wezterm_act.CloseCurrentTab
-M.ActivateTabRelative = wezterm_act.ActivateTabRelative
-M.MoveTabRelative = wezterm_act.MoveTabRelative
-M.ActivateTab = wezterm_act.ActivateTab
-M.SplitVertical = wezterm_act.SplitVertical
-M.SplitHorizontal = wezterm_act.SplitHorizontal
-M.TogglePaneZoomState = wezterm_act.TogglePaneZoomState
-M.CloseCurrentPane = wezterm_act.CloseCurrentPane
-M.ActivatePaneDirection = wezterm_act.ActivatePaneDirection
-M.AdjustPaneSize = wezterm_act.AdjustPaneSize
-M.ScrollToPrompt = wezterm_act.ScrollToPrompt
-M.ClearScrollback = wezterm_act.ClearScrollback
-M.Search = wezterm_act.Search
-M.QuickSelectArgs = wezterm_act.QuickSelectArgs
 
 return M
