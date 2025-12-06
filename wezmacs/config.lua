@@ -16,6 +16,7 @@ M.defaults = {
   mod_key = "CMD",
   leader_key = "Space",
   leader_mod = "CTRL",
+  shell = os.getenv("SHELL") or "/bin/bash",  -- User's shell
   -- Add more defaults as needed
 }
 
