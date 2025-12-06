@@ -4,9 +4,9 @@
   Description: Core keyboard bindings for pane/tab management, selection, and navigation
 ]]
 
+local wezmacs = require("wezmacs")
+local act = wezmacs.action
 local wezterm = require("wezterm")
-local act = require("wezmacs.action")
-local term = act.term
 
 return {
   name = "keybindings",
