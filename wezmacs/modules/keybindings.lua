@@ -6,6 +6,7 @@
 
 local wezterm = require("wezterm")
 local act = require("wezmacs.action")
+local term = act.term
 
 -- Define keys function (captured in closure for setup)
 local function keys_fn()
@@ -53,8 +54,8 @@ return {
     table.insert(config.keys, { key = "Enter", mods = "LEADER", action = act.ActivateCommandPalette })
     table.insert(config.keys, { key = "u", mods = "LEADER", action = act.CharSelect })
     table.insert(config.keys, { key = "Space", mods = "LEADER", action = act.QuickSelect })
-    table.insert(config.keys, { key = "f", mods = mod, action = wezterm.action.Search({CaseInSensitiveString=""}) })
-    table.insert(config.keys, { key = "/", mods = "LEADER", action = wezterm.action.Search({CaseInSensitiveString=""}) })
+    table.insert(config.keys, { key = "f", mods = mod, action = term.Search({CaseInSensitiveString=""}) })
+    table.insert(config.keys, { key = "/", mods = "LEADER", action = term.Search({CaseInSensitiveString=""}) })
 
     table.insert(config.keys, {
       key = "l",

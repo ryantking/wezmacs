@@ -4,7 +4,8 @@
   Description: Mouse bindings and behavior (selection, link opening, etc.)
 ]]
 
-local wezterm = require("wezterm")
+local act = require("wezmacs.action")
+local term = act.term
 
 return {
   name = "mouse",
@@ -36,20 +37,20 @@ return {
       -- Left-click: Copy selection to clipboard
       {
         event = { Up = { streak = 1, button = "Left" } },
-        action = wezterm.action.CompleteSelection("ClipboardAndPrimarySelection"),
+        action = term.CompleteSelection("ClipboardAndPrimarySelection"),
       },
 
       -- Leader+left-click: Open link or extend selection
       {
         event = { Up = { streak = 1, button = "Left" } },
         mods = opts.leader_mod,
-        action = wezterm.action.CompleteSelectionOrOpenLinkAtMouseCursor("ClipboardAndPrimarySelection"),
+        action = term.CompleteSelectionOrOpenLinkAtMouseCursor("ClipboardAndPrimarySelection"),
       },
 
       -- Quadruple-click: Select semantic zone (word/code block)
       {
         event = { Down = { streak = 4, button = "Left" } },
-        action = wezterm.action.SelectTextAtMouseCursor("SemanticZone"),
+        action = term.SelectTextAtMouseCursor("SemanticZone"),
       },
     }
   end,

@@ -10,6 +10,9 @@ local wezterm_act = wezterm.action
 
 local M = {}
 
+-- Export wezterm.action as term for convenience
+M.term = wezterm_act
+
 -- Helper: wrap command string in shell
 -- Commands should always run in shell to get correct environment (PATH, etc.)
 local function wrap_in_shell(command)

@@ -8,7 +8,7 @@ local act = require("wezmacs.action")
 local keybindings = require("wezmacs.lib.keybindings")
 local theme = require("wezmacs.lib.theme")
 local wezterm = require("wezterm")
-local wezterm_act = wezterm.action
+local term = act.term
 
 -- Define keys function (captured in closure for setup)
 local function keys_fn()
@@ -21,7 +21,7 @@ local function keys_fn()
           action = function(window, pane)
             local prompt_color = theme.get_accent_color("#56be8d")
             window:perform_action(
-              wezterm_act.PromptInputLine({
+              term.PromptInputLine({
                 description = wezterm.format({
                   { Foreground = { Color = prompt_color } },
                   { Text = "Enter workspace name: " },
@@ -42,7 +42,7 @@ local function keys_fn()
                     .. wezterm.shell_quote_arg(line)
                     .. ')\" && claude'
                   inner_window:perform_action(
-                    wezterm_act.SpawnCommandInNewTab({
+                    term.SpawnCommandInNewTab({
                       args = { os.getenv("SHELL") or "/bin/bash", "-lc", cmd },
                     }),
                     inner_pane
@@ -83,7 +83,7 @@ local function keys_fn()
               return
             end
             window:perform_action(
-              wezterm_act.InputSelector({
+              term.InputSelector({
                 title = "Select Workspace",
                 choices = choices,
                 fuzzy = true,
@@ -102,7 +102,7 @@ local function keys_fn()
                     if cmd_success and workspace_path then
                       workspace_path = workspace_path:gsub("\n", ""):gsub("\r", "")
                       inner_window:perform_action(
-                        wezterm_act.SpawnCommandInNewTab({
+                        term.SpawnCommandInNewTab({
                           args = {
                             os.getenv("SHELL") or "/bin/bash",
                             "-lc",
@@ -151,7 +151,7 @@ local function keys_fn()
               return
             end
             window:perform_action(
-              wezterm_act.InputSelector({
+              term.InputSelector({
                 title = "Select Workspace",
                 choices = choices,
                 fuzzy = true,
@@ -170,7 +170,7 @@ local function keys_fn()
                     if cmd_success and workspace_path then
                       workspace_path = workspace_path:gsub("\n", ""):gsub("\r", "")
                       inner_window:perform_action(
-                        wezterm_act.SpawnCommandInNewTab({
+                        term.SpawnCommandInNewTab({
                           args = {
                             os.getenv("SHELL") or "/bin/bash",
                             "-lc",
@@ -219,7 +219,7 @@ local function keys_fn()
               return
             end
             window:perform_action(
-              wezterm_act.InputSelector({
+              term.InputSelector({
                 title = "Delete Workspace",
                 choices = choices,
                 fuzzy = true,
@@ -254,7 +254,7 @@ local function keys_fn()
     SHIFT = {
       Enter = {
         action = function()
-          return wezterm_act.SendString("\x1b\r")
+          return term.SendString("\x1b\r")
         end,
         desc = "claude/send-enter",
       },
