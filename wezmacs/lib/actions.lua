@@ -5,7 +5,6 @@
   Reduces duplication in module action definitions.
 ]]
 
-local split = require("wezmacs.lib.split")
 local wezterm = require("wezterm")
 local act = wezterm.action
 
@@ -20,6 +19,8 @@ end
 
 -- Create a smart split action for a command
 -- Commands are always run in shell to get correct environment (PATH, etc.)
+-- Smart split auto-orients based on window aspect ratio:
+--   Tall windows split horizontally (Bottom), wide windows split vertically (Right)
 ---@param command string|function Shell command string or function that returns command string
 ---@return function Action callback
 function M.smart_split_action(command)
@@ -34,7 +35,14 @@ function M.smart_split_action(command)
     -- Wrap in shell
     local args = wrap_in_shell(cmd)
 
-    split.smart_split(pane, args)
+    -- Smart split: auto-orient based on pane dimensions
+    local dims = pane:get_dimensions()
+    local direction = dims.pixel_height > dims.pixel_width and "Bottom" or "Right"
+    pane:split({
+      direction = direction,
+      size = 0.5,
+      args = args,
+    })
   end
 end
 
