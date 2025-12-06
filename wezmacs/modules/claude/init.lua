@@ -11,7 +11,7 @@ local term = act.term
 -- Helper: get shell from config
 local function get_shell()
   local wezmacs = require("wezmacs")
-  return wezmacs.config.shell or os.getenv("SHELL") or "/bin/bash"
+  return wezmacs.config.shell or get_shell()
 end
 
 -- Theme helper function
@@ -71,7 +71,7 @@ return {
                     .. ')\" && claude'
                   inner_window:perform_action(
                     term.SpawnCommandInNewTab({
-                      args = { os.getenv("SHELL") or "/bin/bash", "-lc", cmd },
+                      args = { get_shell(), "-lc", cmd },
                     }),
                     inner_pane
                   )
@@ -87,7 +87,7 @@ return {
             local cwd_uri = pane:get_current_working_dir()
             local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
             local success, output, stderr = wezterm.run_child_process({
-              os.getenv("SHELL") or "/bin/bash",
+              get_shell(),
               "-lc",
               "cd " .. wezterm.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
             })
@@ -123,7 +123,7 @@ return {
                       .. " && agentctl workspace show "
                       .. wezterm.shell_quote_arg(id)
                     local cmd_success, workspace_path = wezterm.run_child_process({
-                      os.getenv("SHELL") or "/bin/bash",
+                      get_shell(),
                       "-lc",
                       workspace_path_cmd,
                     })
@@ -132,7 +132,7 @@ return {
                       inner_window:perform_action(
                         term.SpawnCommandInNewTab({
                           args = {
-                            os.getenv("SHELL") or "/bin/bash",
+                            get_shell(),
                             "-lc",
                             "cd " .. wezterm.shell_quote_arg(workspace_path) .. " && claude",
                           },
@@ -155,7 +155,7 @@ return {
             local cwd_uri = pane:get_current_working_dir()
             local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
             local success, output, stderr = wezterm.run_child_process({
-              os.getenv("SHELL") or "/bin/bash",
+              get_shell(),
               "-lc",
               "cd " .. wezterm.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
             })
@@ -191,7 +191,7 @@ return {
                       .. " && agentctl workspace show "
                       .. wezterm.shell_quote_arg(id)
                     local cmd_success, workspace_path = wezterm.run_child_process({
-                      os.getenv("SHELL") or "/bin/bash",
+                      get_shell(),
                       "-lc",
                       workspace_path_cmd,
                     })
@@ -200,7 +200,7 @@ return {
                       inner_window:perform_action(
                         term.SpawnCommandInNewTab({
                           args = {
-                            os.getenv("SHELL") or "/bin/bash",
+                            get_shell(),
                             "-lc",
                             "cd " .. wezterm.shell_quote_arg(workspace_path) .. " && claude",
                           },
@@ -223,7 +223,7 @@ return {
             local cwd_uri = pane:get_current_working_dir()
             local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
             local success, output, stderr = wezterm.run_child_process({
-              os.getenv("SHELL") or "/bin/bash",
+              get_shell(),
               "-lc",
               "cd " .. wezterm.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
             })
@@ -259,7 +259,7 @@ return {
                       .. " && agentctl workspace delete "
                       .. wezterm.shell_quote_arg(id)
                     local del_success, del_stdout, del_stderr = wezterm.run_child_process({
-                      os.getenv("SHELL") or "/bin/bash",
+                      get_shell(),
                       "-lc",
                       del_cmd,
                     })
