@@ -16,6 +16,29 @@
 ]]
 
 local wezterm = require("wezterm")
+
+-- Ensure local wezmacs takes precedence over global installation
+-- This is critical for testing local changes with `just test`
+local function setup_local_wezmacs_path()
+  -- Try to get config directory from wezterm (available after require)
+  local config_dir = wezterm.config_dir
+  
+  -- If config_dir is available, check for local wezmacs
+  if config_dir then
+    local local_wezmacs_path = config_dir .. "/wezmacs"
+    local file = io.open(local_wezmacs_path .. "/init.lua", "r")
+    if file then
+      file:close()
+      -- Prepend local wezmacs to package.path so it takes precedence
+      -- Escape special characters for pattern matching
+      local escaped_path = local_wezmacs_path:gsub("%-", "%%-")
+      package.path = escaped_path .. "/?.lua;" .. escaped_path .. "/?/init.lua;" .. package.path
+    end
+  end
+end
+
+setup_local_wezmacs_path()
+
 local wezmacs = require("wezmacs.init")
 
 -- Create wezterm config
