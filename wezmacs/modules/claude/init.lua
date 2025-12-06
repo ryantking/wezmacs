@@ -5,9 +5,8 @@
 ]]
 
 local wezmacs = require("wezmacs")
-local act = require("wezmacs.action")
+local act = wezmacs.action
 local wezterm = require("wezterm")
-local term = act.term
 
 -- Theme helper function
 local function get_accent_color(fallback)
