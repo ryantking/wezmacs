@@ -4,8 +4,9 @@
   Description: Mouse bindings and behavior (selection, link opening, etc.)
 ]]
 
-local act = require("wezmacs.action")
-local term = act.term
+local wezmacs = require("wezmacs")
+local act = wezmacs.action
+local wezterm = require("wezterm")
 
 return {
   name = "mouse",
