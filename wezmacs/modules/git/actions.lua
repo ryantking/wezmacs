@@ -10,9 +10,9 @@ local act = wezterm.action
 local M = {}
 
 -- Lazygit in smart split (auto-orientation based on window aspect ratio)
+-- Note: lazygit's -sm flag is specific to lazygit, so we add it here
 M.lazygit_smart_split = action_lib.smart_split_action(
-  { "lazygit" },
-  { split_mode = "half" }
+  { "lazygit", "-sm", "half" }
 )
 
 -- Lazygit in new tab

@@ -13,31 +13,14 @@ local M = {}
 
 -- Create a smart split action for a command
 ---@param cmd_args table|function Command arguments or function that returns args
----@param opts table|nil Options table with split_mode
 ---@return function Action callback
-function M.smart_split_action(cmd_args, opts)
-  opts = opts or {}
-
+function M.smart_split_action(cmd_args)
   return function(window, pane)
     local args = cmd_args
 
     -- Support function for dynamic args
     if type(cmd_args) == "function" then
       args = cmd_args(window, pane)
-    end
-
-    -- Add split mode if specified
-    if opts.split_mode then
-      -- Check if args is a table (array)
-      if type(args) == "table" then
-        local new_args = {}
-        for i, v in ipairs(args) do
-          table.insert(new_args, v)
-        end
-        table.insert(new_args, "-sm")
-        table.insert(new_args, opts.split_mode)
-        args = new_args
-      end
     end
 
     split.smart_split(pane, args)
@@ -72,7 +55,7 @@ end
 
 -- Create a shell command action
 ---@param command string Shell command to execute
----@param opts table|nil Options with new_tab, new_window, smart_split, split_mode
+---@param opts table|nil Options with new_tab, new_window, smart_split
 ---@return function|table Action callback or WezTerm action
 function M.shell_command_action(command, opts)
   opts = opts or {}
@@ -85,7 +68,7 @@ function M.shell_command_action(command, opts)
     return M.new_window_action({ shell, "-lc", command })
   elseif opts.smart_split then
     local shell = os.getenv("SHELL") or "/bin/bash"
-    return M.smart_split_action({ shell, "-lc", command }, { split_mode = opts.split_mode })
+    return M.smart_split_action({ shell, "-lc", command })
   else
     -- Send command to current pane
     return function(window, pane)
