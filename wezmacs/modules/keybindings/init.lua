@@ -46,19 +46,19 @@ return {
     local mod = opts.modifier
 
     -- General
-    table.insert(config.keys, { key = "r", mods = mod, action = act.ReloadConfiguration })
-    table.insert(config.keys, { key = "r", mods = "LEADER", action = act.ReloadConfiguration })
-    table.insert(config.keys, { key = "L", mods = "LEADER", action = act.ShowDebugOverlay })
-    table.insert(config.keys, { key = "Enter", mods = "LEADER", action = act.ActivateCommandPalette })
-    table.insert(config.keys, { key = "u", mods = "LEADER", action = act.CharSelect })
-    table.insert(config.keys, { key = "Space", mods = "LEADER", action = act.QuickSelect })
+    table.insert(config.keys, { key = "r", mods = mod, action = wezterm.action.ReloadConfiguration })
+    table.insert(config.keys, { key = "r", mods = "LEADER", action = wezterm.action.ReloadConfiguration })
+    table.insert(config.keys, { key = "L", mods = "LEADER", action = wezterm.action.ShowDebugOverlay })
+    table.insert(config.keys, { key = "Enter", mods = "LEADER", action = wezterm.action.ActivateCommandPalette })
+    table.insert(config.keys, { key = "u", mods = "LEADER", action = wezterm.action.CharSelect })
+    table.insert(config.keys, { key = "Space", mods = "LEADER", action = wezterm.action.QuickSelect })
     table.insert(config.keys, { key = "f", mods = mod, action = term.Search({CaseInSensitiveString=""}) })
     table.insert(config.keys, { key = "/", mods = "LEADER", action = term.Search({CaseInSensitiveString=""}) })
 
     table.insert(config.keys, {
       key = "l",
       mods = "LEADER",
-      action = act.QuickSelectArgs({
+      action = wezterm.action.QuickSelectArgs({
         label = "open url/path/hash",
         patterns = {
           "https?://\\S+",
@@ -74,72 +74,72 @@ return {
     })
 
     -- Scrollback
-    table.insert(config.keys, { key = "PageUp", mods = "SHIFT", action = act.ScrollToPrompt(-1) })
-    table.insert(config.keys, { key = "PageDown", mods = "SHIFT", action = act.ScrollToPrompt(1) })
-    table.insert(config.keys, { key = "k", mods = mod, action = act.ClearScrollback("ScrollbackOnly") })
-    table.insert(config.keys, { key = "v", mods = "LEADER", action = act.ActivateCopyMode })
+    table.insert(config.keys, { key = "PageUp", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(-1) })
+    table.insert(config.keys, { key = "PageDown", mods = "SHIFT", action = wezterm.action.ScrollToPrompt(1) })
+    table.insert(config.keys, { key = "k", mods = mod, action = wezterm.action.ClearScrollback("ScrollbackOnly") })
+    table.insert(config.keys, { key = "v", mods = "LEADER", action = wezterm.action.ActivateCopyMode })
 
     -- Clipboard
-    table.insert(config.keys, { key = "c", mods = mod, action = act.CopyTo("Clipboard") })
-    table.insert(config.keys, { key = "v", mods = mod, action = act.PasteFrom("Clipboard") })
-    table.insert(config.keys, { key = "y", mods = "LEADER", action = act.CopyTo("Clipboard") })
-    table.insert(config.keys, { key = "p", mods = "LEADER", action = act.PasteFrom("Clipboard") })
-    table.insert(config.keys, { key = "Copy",  action = act.CopyTo("Clipboard") })
-    table.insert(config.keys, { key = "Paste", action = act.PasteFrom("Clipboard") })
-    table.insert(config.keys, { key = "Y", mods = "LEADER", action = act.CopyTo("PrimarySelection") })
-    table.insert(config.keys, { key = "P", mods = "LEADER", action = act.PasteFrom("PrimarySelection") })
-    table.insert(config.keys, { key = "Insert", mods = "CTRL", action = act.CopyTo("PrimarySelection") })
-    table.insert(config.keys, { key = "Insert", mods = "SHIFT", action = act.PasteFrom("PrimarySelection") })
+    table.insert(config.keys, { key = "c", mods = mod, action = wezterm.action.CopyTo("Clipboard") })
+    table.insert(config.keys, { key = "v", mods = mod, action = wezterm.action.PasteFrom("Clipboard") })
+    table.insert(config.keys, { key = "y", mods = "LEADER", action = wezterm.action.CopyTo("Clipboard") })
+    table.insert(config.keys, { key = "p", mods = "LEADER", action = wezterm.action.PasteFrom("Clipboard") })
+    table.insert(config.keys, { key = "Copy",  action = wezterm.action.CopyTo("Clipboard") })
+    table.insert(config.keys, { key = "Paste", action = wezterm.action.PasteFrom("Clipboard") })
+    table.insert(config.keys, { key = "Y", mods = "LEADER", action = wezterm.action.CopyTo("PrimarySelection") })
+    table.insert(config.keys, { key = "P", mods = "LEADER", action = wezterm.action.PasteFrom("PrimarySelection") })
+    table.insert(config.keys, { key = "Insert", mods = "CTRL", action = wezterm.action.CopyTo("PrimarySelection") })
+    table.insert(config.keys, { key = "Insert", mods = "SHIFT", action = wezterm.action.PasteFrom("PrimarySelection") })
 
     -- Window Management
-    table.insert(config.keys, { key = "n", mods = mod, action = act.SpawnWindow })
-    table.insert(config.keys, { key = "n", mods = "LEADER", action = act.SpawnWindow })
-    table.insert(config.keys, { key = "m", mods = mod, action = act.Hide })
-    table.insert(config.keys, { key = "h", mods = mod, action = act.HideApplication })
+    table.insert(config.keys, { key = "n", mods = mod, action = wezterm.action.SpawnWindow })
+    table.insert(config.keys, { key = "n", mods = "LEADER", action = wezterm.action.SpawnWindow })
+    table.insert(config.keys, { key = "m", mods = mod, action = wezterm.action.Hide })
+    table.insert(config.keys, { key = "h", mods = mod, action = wezterm.action.HideApplication })
     -- LEADER f reserved for file-manager module key table
-    table.insert(config.keys, { key = "F", mods = "LEADER", action = act.ToggleFullScreen })
-    table.insert(config.keys, { key = "+", mods = mod, action = act.IncreaseFontSize })
-    table.insert(config.keys, { key = "-", mods = mod, action = act.DecreaseFontSize })
-    table.insert(config.keys, { key = "0", mods = mod, action = act.ResetFontSize })
+    table.insert(config.keys, { key = "F", mods = "LEADER", action = wezterm.action.ToggleFullScreen })
+    table.insert(config.keys, { key = "+", mods = mod, action = wezterm.action.IncreaseFontSize })
+    table.insert(config.keys, { key = "-", mods = mod, action = wezterm.action.DecreaseFontSize })
+    table.insert(config.keys, { key = "0", mods = mod, action = wezterm.action.ResetFontSize })
 
     -- Tab Management
-    table.insert(config.keys, { key = "t", mods = mod, action = act.SpawnTab("CurrentPaneDomain") })
+    table.insert(config.keys, { key = "t", mods = mod, action = wezterm.action.SpawnTab("CurrentPaneDomain") })
     -- LEADER t reserved for domains module key table
-    table.insert(config.keys, { key = "T", mods = "LEADER", action = act.SpawnTab("DefaultDomain") })
-    table.insert(config.keys, { key = "w", mods = mod, action = act.CloseCurrentTab({ confirm = false }) })
-    table.insert(config.keys, { key = "Tab", mods = "CTRL", action = act.ActivateTabRelative(1) })
-    table.insert(config.keys, { key = "Tab", mods = "CTRL|SHIFT", action = act.ActivateTabRelative(-1) })
-    table.insert(config.keys, { key = "[", mods = mod, action = act.ActivateTabRelative(-1) })
-    table.insert(config.keys, { key = "]", mods = mod, action = act.ActivateTabRelative(1) })
-    table.insert(config.keys, { key = "{", mods = mod, action = act.MoveTabRelative(-1) })
-    table.insert(config.keys, { key = "}", mods = mod, action = act.MoveTabRelative(1) })
-    table.insert(config.keys, { key = "[", mods = "LEADER", action = act.ActivateTabRelative(-1) })
-    table.insert(config.keys, { key = "]", mods = "LEADER", action = act.ActivateTabRelative(1) })
-    table.insert(config.keys, { key = "{", mods = "LEADER", action = act.MoveTabRelative(-1) })
-    table.insert(config.keys, { key = "}", mods = "LEADER", action = act.MoveTabRelative(1) })
-    table.insert(config.keys, { key = "PageUp", mods = "CTRL", action = act.ActivateTabRelative(-1) })
-    table.insert(config.keys, { key = "PageDown", mods = "CTRL", action = act.ActivateTabRelative(1) })
-    table.insert(config.keys, { key = "PageUp", mods = "CTRL|SHIFT", action = act.MoveTabRelative(-1) })
-    table.insert(config.keys, { key = "PageDown", mods = "CTRL|SHIFT", action = act.MoveTabRelative(1) })
+    table.insert(config.keys, { key = "T", mods = "LEADER", action = wezterm.action.SpawnTab("DefaultDomain") })
+    table.insert(config.keys, { key = "w", mods = mod, action = wezterm.action.CloseCurrentTab({ confirm = false }) })
+    table.insert(config.keys, { key = "Tab", mods = "CTRL", action = wezterm.action.ActivateTabRelative(1) })
+    table.insert(config.keys, { key = "Tab", mods = "CTRL|SHIFT", action = wezterm.action.ActivateTabRelative(-1) })
+    table.insert(config.keys, { key = "[", mods = mod, action = wezterm.action.ActivateTabRelative(-1) })
+    table.insert(config.keys, { key = "]", mods = mod, action = wezterm.action.ActivateTabRelative(1) })
+    table.insert(config.keys, { key = "{", mods = mod, action = wezterm.action.MoveTabRelative(-1) })
+    table.insert(config.keys, { key = "}", mods = mod, action = wezterm.action.MoveTabRelative(1) })
+    table.insert(config.keys, { key = "[", mods = "LEADER", action = wezterm.action.ActivateTabRelative(-1) })
+    table.insert(config.keys, { key = "]", mods = "LEADER", action = wezterm.action.ActivateTabRelative(1) })
+    table.insert(config.keys, { key = "{", mods = "LEADER", action = wezterm.action.MoveTabRelative(-1) })
+    table.insert(config.keys, { key = "}", mods = "LEADER", action = wezterm.action.MoveTabRelative(1) })
+    table.insert(config.keys, { key = "PageUp", mods = "CTRL", action = wezterm.action.ActivateTabRelative(-1) })
+    table.insert(config.keys, { key = "PageDown", mods = "CTRL", action = wezterm.action.ActivateTabRelative(1) })
+    table.insert(config.keys, { key = "PageUp", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(-1) })
+    table.insert(config.keys, { key = "PageDown", mods = "CTRL|SHIFT", action = wezterm.action.MoveTabRelative(1) })
 
     for i = 1, 9 do
-      table.insert(config.keys, { key = tostring(i), mods = mod, action = act.ActivateTab(i) })
-      table.insert(config.keys, { key = tostring(i), mods = "LEADER", action = act.ActivateTab(i) })
+      table.insert(config.keys, { key = tostring(i), mods = mod, action = wezterm.action.ActivateTab(i) })
+      table.insert(config.keys, { key = tostring(i), mods = "LEADER", action = wezterm.action.ActivateTab(i) })
     end
 
     -- Pane Management
-    table.insert(config.keys, { key = "-", mods = "LEADER", action = act.SplitVertical({ domain = "CurrentPaneDomain" }) })
-    table.insert(config.keys, { key = "\\", mods = "LEADER", action = act.SplitHorizontal({ domain = "CurrentPaneDomain" }) })
-    table.insert(config.keys, { key = "z", mods = "LEADER", action = act.TogglePaneZoomState })
-    table.insert(config.keys, { key = "x", mods = "LEADER", action = act.CloseCurrentPane({ confirm = false }) })
-    table.insert(config.keys, { key = "LeftArrow", mods = "CTRL", action = act.ActivatePaneDirection("Left") })
-    table.insert(config.keys, { key = "RightArrow", mods = "CTRL", action = act.ActivatePaneDirection("Right") })
-    table.insert(config.keys, { key = "UpArrow", mods = "CTRL", action = act.ActivatePaneDirection("Up") })
-    table.insert(config.keys, { key = "DownArrow", mods = "CTRL", action = act.ActivatePaneDirection("Down") })
-    table.insert(config.keys, { key = "LeftArrow", mods = "CTRL|SUPER", action = act.AdjustPaneSize({ "Left", 2 }) })
-    table.insert(config.keys, { key = "RightArrow", mods = "CTRL|SUPER", action = act.AdjustPaneSize({ "Right", 2 }) })
-    table.insert(config.keys, { key = "UpArrow", mods = "CTRL|SUPER", action = act.AdjustPaneSize({ "Up", 2 }) })
-    table.insert(config.keys, { key = "DownArrow", mods = "CTRL|SUPER", action = act.AdjustPaneSize({ "Down", 2 }) })
+    table.insert(config.keys, { key = "-", mods = "LEADER", action = wezterm.action.SplitVertical({ domain = "CurrentPaneDomain" }) })
+    table.insert(config.keys, { key = "\\", mods = "LEADER", action = wezterm.action.SplitHorizontal({ domain = "CurrentPaneDomain" }) })
+    table.insert(config.keys, { key = "z", mods = "LEADER", action = wezterm.action.TogglePaneZoomState })
+    table.insert(config.keys, { key = "x", mods = "LEADER", action = wezterm.action.CloseCurrentPane({ confirm = false }) })
+    table.insert(config.keys, { key = "LeftArrow", mods = "CTRL", action = wezterm.action.ActivatePaneDirection("Left") })
+    table.insert(config.keys, { key = "RightArrow", mods = "CTRL", action = wezterm.action.ActivatePaneDirection("Right") })
+    table.insert(config.keys, { key = "UpArrow", mods = "CTRL", action = wezterm.action.ActivatePaneDirection("Up") })
+    table.insert(config.keys, { key = "DownArrow", mods = "CTRL", action = wezterm.action.ActivatePaneDirection("Down") })
+    table.insert(config.keys, { key = "LeftArrow", mods = "CTRL|SUPER", action = wezterm.action.AdjustPaneSize({ "Left", 2 }) })
+    table.insert(config.keys, { key = "RightArrow", mods = "CTRL|SUPER", action = wezterm.action.AdjustPaneSize({ "Right", 2 }) })
+    table.insert(config.keys, { key = "UpArrow", mods = "CTRL|SUPER", action = wezterm.action.AdjustPaneSize({ "Up", 2 }) })
+    table.insert(config.keys, { key = "DownArrow", mods = "CTRL|SUPER", action = wezterm.action.AdjustPaneSize({ "Down", 2 }) })
 
     table.insert(config.keys, {
       key = "N",
