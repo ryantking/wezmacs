@@ -17,8 +17,7 @@ M.term = wezterm_act
 -- Commands should always run in shell to get correct environment (PATH, etc.)
 local function wrap_in_shell(command)
   local wezmacs = require("wezmacs")
-  local shell = wezmacs.config.shell or os.getenv("SHELL") or "/bin/bash"
-  return { shell, "-lc", command }
+  return { wezmacs.config.shell, "-lc", command }
 end
 
 -- Smart split action - auto-orients based on window aspect ratio
