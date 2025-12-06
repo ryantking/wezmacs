@@ -19,16 +19,13 @@ M.lazygit_smart_split = action_lib.smart_split_action(
 M.lazygit_new_tab = action_lib.new_tab_action({ "lazygit" })
 
 -- Git diff with smart split orientation
-M.git_diff_smart_split = action_lib.shell_command_action(
-  "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status",
-  { smart_split = true }
+M.git_diff_smart_split = action_lib.smart_split_action(
+  "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status"
 )
 
 -- Git diff in new window
-M.git_diff_new_window = action_lib.new_window_action({
-  os.getenv("SHELL") or "/bin/bash",
-  "-lc",
-  "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status",
-})
+M.git_diff_new_window = action_lib.new_window_action(
+  "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status"
+)
 
 return M

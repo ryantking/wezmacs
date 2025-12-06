@@ -19,14 +19,12 @@ end
 
 -- Terminal editor in smart split
 function M.terminal_smart_split(window, pane)
-  local shell = os.getenv("SHELL") or "/bin/bash"
-  return action_lib.smart_split_action({ shell, "-lc", _editor })(window, pane)
+  return action_lib.smart_split_action(_editor)(window, pane)
 end
 
 -- Terminal editor in new tab
 function M.terminal_new_tab(window, pane)
-  local shell = os.getenv("SHELL") or "/bin/bash"
-  return action_lib.new_tab_action({ shell, "-lc", _editor })
+  return action_lib.new_tab_action(_editor)
 end
 
 -- IDE launcher

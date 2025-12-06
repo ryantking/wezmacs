@@ -11,8 +11,34 @@ local act = wezterm.action
 
 local M = {}
 
+-- Helper: wrap command in shell if not already wrapped
+-- Commands should always run in shell to get correct environment (PATH, etc.)
+local function wrap_in_shell(cmd_args)
+  local shell = os.getenv("SHELL") or "/bin/bash"
+  
+  -- If string, wrap in shell
+  if type(cmd_args) == "string" then
+    return { shell, "-lc", cmd_args }
+  end
+  
+  -- If table, check if already wrapped in shell
+  if type(cmd_args) == "table" then
+    local first = cmd_args[1]
+    -- Check if first arg is a shell path
+    if first == shell or first == "/bin/bash" or first == "/bin/sh" or first == "/bin/zsh" then
+      return cmd_args  -- Already wrapped
+    end
+    -- Not wrapped, wrap it
+    return { shell, "-lc", table.concat(cmd_args, " ") }
+  end
+  
+  -- Fallback: return as-is
+  return cmd_args
+end
+
 -- Create a smart split action for a command
----@param cmd_args table|function Command arguments or function that returns args
+-- Commands are always run in shell to get correct environment (PATH, etc.)
+---@param cmd_args table|string|function Command arguments (table), command string, or function that returns args
 ---@return function Action callback
 function M.smart_split_action(cmd_args)
   return function(window, pane)
@@ -23,22 +49,29 @@ function M.smart_split_action(cmd_args)
       args = cmd_args(window, pane)
     end
 
+    -- Wrap in shell if needed
+    args = wrap_in_shell(args)
+
     split.smart_split(pane, args)
   end
 end
 
 -- Create a new tab action
----@param cmd_args table Command arguments
+-- Commands are always run in shell to get correct environment (PATH, etc.)
+---@param cmd_args table|string Command arguments (table) or command string
 ---@return table WezTerm action
 function M.new_tab_action(cmd_args)
-  return act.SpawnCommandInNewTab({ args = cmd_args })
+  local args = wrap_in_shell(cmd_args)
+  return act.SpawnCommandInNewTab({ args = args })
 end
 
 -- Create a new window action
----@param cmd_args table Command arguments
+-- Commands are always run in shell to get correct environment (PATH, etc.)
+---@param cmd_args table|string Command arguments (table) or command string
 ---@return table WezTerm action
 function M.new_window_action(cmd_args)
-  return act.SpawnCommandInNewWindow({ args = cmd_args })
+  local args = wrap_in_shell(cmd_args)
+  return act.SpawnCommandInNewWindow({ args = args })
 end
 
 -- Create an overlay action (for floating prompts/info)
@@ -50,30 +83,6 @@ function M.overlay_action(content_fn)
 
     -- Use WezTerm toast notification system
     window:toast_notification("WezMacs", content, nil, 5000)
-  end
-end
-
--- Create a shell command action
----@param command string Shell command to execute
----@param opts table|nil Options with new_tab, new_window, smart_split
----@return function|table Action callback or WezTerm action
-function M.shell_command_action(command, opts)
-  opts = opts or {}
-
-  if opts.new_tab then
-    local shell = os.getenv("SHELL") or "/bin/bash"
-    return M.new_tab_action({ shell, "-lc", command })
-  elseif opts.new_window then
-    local shell = os.getenv("SHELL") or "/bin/bash"
-    return M.new_window_action({ shell, "-lc", command })
-  elseif opts.smart_split then
-    local shell = os.getenv("SHELL") or "/bin/bash"
-    return M.smart_split_action({ shell, "-lc", command })
-  else
-    -- Send command to current pane
-    return function(window, pane)
-      pane:send_text(command .. "\n")
-    end
   end
 end
 

@@ -10,15 +10,9 @@ local theme = require("wezmacs.lib.theme")
 
 local M = {}
 
-M.claude_smart_split = action_lib.shell_command_action(
-  "claude",
-  { smart_split = true }
-)
+M.claude_smart_split = action_lib.smart_split_action("claude")
 
-M.claude_new_tab = action_lib.shell_command_action(
-  "claude",
-  { new_tab = true }
-)
+M.claude_new_tab = action_lib.new_tab_action("claude")
 
 -- Create and open agentctl workspace
 function M.create_agentctl_workspace(window, pane)
