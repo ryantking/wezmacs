@@ -11,7 +11,7 @@ local wezterm = require("wezterm")
 -- Theme helper function
 local function get_accent_color(fallback)
   if wezmacs.config and wezmacs.config.color_scheme then
-    local scheme = wezterm.get_builtin_color_schemes()[wezmacs.config.color_scheme]
+    local scheme = wezwezterm.action.get_builtin_color_schemes()[wezmacs.config.color_scheme]
     if scheme and scheme.ansi and scheme.ansi[3] then
       return scheme.ansi[3]
     end
@@ -42,28 +42,28 @@ return {
           action = function(window, pane)
             local prompt_color = get_accent_color("#56be8d")
             window:perform_action(
-              term.PromptInputLine({
-                description = wezterm.format({
+              wezterm.action.PromptInputLine({
+                description = wezwezterm.action.format({
                   { Foreground = { Color = prompt_color } },
                   { Text = "Enter workspace name: " },
                 }),
-                action = wezterm.action_callback(function(inner_window, inner_pane, line)
+                action = wezwezterm.action.action_callback(function(inner_window, inner_pane, line)
                   if not line or line == "" then
                     return
                   end
                   local cwd_uri = pane:get_current_working_dir()
-                  local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
+                  local cwd = cwd_uri and cwd_uri.file_path or wezwezterm.action.home_dir
                   local cmd = "cd "
-                    .. wezterm.shell_quote_arg(cwd)
+                    .. wezwezterm.action.shell_quote_arg(cwd)
                     .. " && agentctl workspace create "
-                    .. wezterm.shell_quote_arg(line)
+                    .. wezwezterm.action.shell_quote_arg(line)
                     .. ' && cd "$(cd '
-                    .. wezterm.shell_quote_arg(cwd)
+                    .. wezwezterm.action.shell_quote_arg(cwd)
                     .. " && agentctl workspace show "
-                    .. wezterm.shell_quote_arg(line)
+                    .. wezwezterm.action.shell_quote_arg(line)
                     .. ')\" && claude'
                   inner_window:perform_action(
-                    term.SpawnCommandInNewTab({
+                    wezterm.action.SpawnCommandInNewTab({
                       args = { wezmacs.config.shell, "-lc", cmd },
                     }),
                     inner_pane
@@ -78,17 +78,17 @@ return {
         ["Space"] = {
           action = function(window, pane)
             local cwd_uri = pane:get_current_working_dir()
-            local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
-            local success, output, stderr = wezterm.run_child_process({
+            local cwd = cwd_uri and cwd_uri.file_path or wezwezterm.action.home_dir
+            local success, output, stderr = wezwezterm.action.run_child_process({
               wezmacs.config.shell,
               "-lc",
-              "cd " .. wezterm.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
+              "cd " .. wezwezterm.action.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
             })
             if not success or not output or output == "" then
               window:toast_notification("WezTerm", "No workspaces found", nil, 3000)
               return
             end
-            local ok, workspaces = pcall(wezterm.json_parse, output)
+            local ok, workspaces = pcall(wezwezterm.action.json_parse, output)
             if not ok or not workspaces or #workspaces == 0 then
               window:toast_notification("WezTerm", "No workspaces found", nil, 3000)
               return
@@ -104,18 +104,18 @@ return {
               return
             end
             window:perform_action(
-              term.InputSelector({
+              wezterm.action.InputSelector({
                 title = "Select Workspace",
                 choices = choices,
                 fuzzy = true,
                 fuzzy_description = "Filter: ",
-                action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
+                action = wezwezterm.action.action_callback(function(inner_window, inner_pane, id, label)
                   if id then
                     local workspace_path_cmd = "cd "
-                      .. wezterm.shell_quote_arg(cwd)
+                      .. wezwezterm.action.shell_quote_arg(cwd)
                       .. " && agentctl workspace show "
-                      .. wezterm.shell_quote_arg(id)
-                    local cmd_success, workspace_path = wezterm.run_child_process({
+                      .. wezwezterm.action.shell_quote_arg(id)
+                    local cmd_success, workspace_path = wezwezterm.action.run_child_process({
                       wezmacs.config.shell,
                       "-lc",
                       workspace_path_cmd,
@@ -123,11 +123,11 @@ return {
                     if cmd_success and workspace_path then
                       workspace_path = workspace_path:gsub("\n", ""):gsub("\r", "")
                       inner_window:perform_action(
-                        term.SpawnCommandInNewTab({
+                        wezterm.action.SpawnCommandInNewTab({
                           args = {
                             wezmacs.config.shell,
                             "-lc",
-                            "cd " .. wezterm.shell_quote_arg(workspace_path) .. " && claude",
+                            "cd " .. wezwezterm.action.shell_quote_arg(workspace_path) .. " && claude",
                           },
                         }),
                         inner_pane
@@ -146,17 +146,17 @@ return {
         s = {
           action = function(window, pane)
             local cwd_uri = pane:get_current_working_dir()
-            local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
-            local success, output, stderr = wezterm.run_child_process({
+            local cwd = cwd_uri and cwd_uri.file_path or wezwezterm.action.home_dir
+            local success, output, stderr = wezwezterm.action.run_child_process({
               wezmacs.config.shell,
               "-lc",
-              "cd " .. wezterm.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
+              "cd " .. wezwezterm.action.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
             })
             if not success or not output or output == "" then
               window:toast_notification("WezTerm", "No workspaces found", nil, 3000)
               return
             end
-            local ok, workspaces = pcall(wezterm.json_parse, output)
+            local ok, workspaces = pcall(wezwezterm.action.json_parse, output)
             if not ok or not workspaces or #workspaces == 0 then
               window:toast_notification("WezTerm", "No workspaces found", nil, 3000)
               return
@@ -172,18 +172,18 @@ return {
               return
             end
             window:perform_action(
-              term.InputSelector({
+              wezterm.action.InputSelector({
                 title = "Select Workspace",
                 choices = choices,
                 fuzzy = true,
                 fuzzy_description = "Filter: ",
-                action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
+                action = wezwezterm.action.action_callback(function(inner_window, inner_pane, id, label)
                   if id then
                     local workspace_path_cmd = "cd "
-                      .. wezterm.shell_quote_arg(cwd)
+                      .. wezwezterm.action.shell_quote_arg(cwd)
                       .. " && agentctl workspace show "
-                      .. wezterm.shell_quote_arg(id)
-                    local cmd_success, workspace_path = wezterm.run_child_process({
+                      .. wezwezterm.action.shell_quote_arg(id)
+                    local cmd_success, workspace_path = wezwezterm.action.run_child_process({
                       wezmacs.config.shell,
                       "-lc",
                       workspace_path_cmd,
@@ -191,11 +191,11 @@ return {
                     if cmd_success and workspace_path then
                       workspace_path = workspace_path:gsub("\n", ""):gsub("\r", "")
                       inner_window:perform_action(
-                        term.SpawnCommandInNewTab({
+                        wezterm.action.SpawnCommandInNewTab({
                           args = {
                             wezmacs.config.shell,
                             "-lc",
-                            "cd " .. wezterm.shell_quote_arg(workspace_path) .. " && claude",
+                            "cd " .. wezwezterm.action.shell_quote_arg(workspace_path) .. " && claude",
                           },
                         }),
                         inner_pane
@@ -214,17 +214,17 @@ return {
         d = {
           action = function(window, pane)
             local cwd_uri = pane:get_current_working_dir()
-            local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
-            local success, output, stderr = wezterm.run_child_process({
+            local cwd = cwd_uri and cwd_uri.file_path or wezwezterm.action.home_dir
+            local success, output, stderr = wezwezterm.action.run_child_process({
               wezmacs.config.shell,
               "-lc",
-              "cd " .. wezterm.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
+              "cd " .. wezwezterm.action.shell_quote_arg(cwd) .. " && agentctl workspace list --json",
             })
             if not success or not output or output == "" then
               window:toast_notification("WezTerm", "No workspaces found", nil, 3000)
               return
             end
-            local ok, workspaces = pcall(wezterm.json_parse, output)
+            local ok, workspaces = pcall(wezwezterm.action.json_parse, output)
             if not ok or not workspaces or #workspaces == 0 then
               window:toast_notification("WezTerm", "No workspaces found", nil, 3000)
               return
@@ -240,18 +240,18 @@ return {
               return
             end
             window:perform_action(
-              term.InputSelector({
+              wezterm.action.InputSelector({
                 title = "Delete Workspace",
                 choices = choices,
                 fuzzy = true,
                 fuzzy_description = "Filter: ",
-                action = wezterm.action_callback(function(inner_window, inner_pane, id, label)
+                action = wezwezterm.action.action_callback(function(inner_window, inner_pane, id, label)
                   if id then
                     local del_cmd = "cd "
-                      .. wezterm.shell_quote_arg(cwd)
+                      .. wezwezterm.action.shell_quote_arg(cwd)
                       .. " && agentctl workspace delete "
-                      .. wezterm.shell_quote_arg(id)
-                    local del_success, del_stdout, del_stderr = wezterm.run_child_process({
+                      .. wezwezterm.action.shell_quote_arg(id)
+                    local del_success, del_stdout, del_stderr = wezwezterm.action.run_child_process({
                       wezmacs.config.shell,
                       "-lc",
                       del_cmd,
@@ -275,7 +275,7 @@ return {
     SHIFT = {
       Enter = {
         action = function()
-          return term.SendString("\x1b\r")
+          return wezterm.action.SendString("\x1b\r")
         end,
         desc = "claude/send-enter",
       },
