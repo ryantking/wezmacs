@@ -81,6 +81,8 @@ function M.setup(config, opts)
     action = require("wezmacs.action"),
   }
 
+  local keybindings = require("wezmacs.lib.keybindings")
+
   -- Apply CORE module first if present (core settings must be applied before others)
   for i, spec in ipairs(modules) do
     if spec.name == "core" then
@@ -103,6 +105,12 @@ function M.setup(config, opts)
     if spec.setup then
       local opts = states[mod_name]
       spec.setup(config, opts)
+    end
+
+    -- Apply keybindings if module has keys defined
+    if spec.keys then
+      local opts = states[mod_name]
+      keybindings.apply_keys(config, spec, opts)
     end
   end
 

@@ -5,7 +5,6 @@
 ]]
 
 local act = require("wezmacs.action")
-local keybindings = require("wezmacs.lib.keybindings")
 
 return {
   name = "media",
@@ -37,7 +36,6 @@ return {
   priority = 50,
 
   setup = function(config, opts)
-    -- Apply keybindings
-    keybindings.apply_keys(config, require("wezmacs.modules.media"), opts)
+    -- Module-specific setup (if any)
   end,
 }

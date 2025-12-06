@@ -5,7 +5,6 @@
 ]]
 
 local act = require("wezmacs.action")
-local keybindings = require("wezmacs.lib.keybindings")
 local wezterm = require("wezterm")
 
 return {
@@ -52,8 +51,5 @@ return {
 
   setup = function(config, opts)
     config.default_workspace = opts.default_workspace
-
-    -- Apply keybindings
-    keybindings.apply_keys(config, require("wezmacs.modules.workspace"), opts)
   end,
 }
