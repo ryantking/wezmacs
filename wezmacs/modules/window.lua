@@ -29,7 +29,9 @@ return {
 
   priority = 80,
 
-  setup = function(config, opts)
+  setup = function(config, spec)
+    local opts = spec.opts()
+    
     -- Window decorations and behavior
     config.window_decorations = opts.decorations
     config.window_close_confirmation = "NeverPrompt"
@@ -55,9 +57,5 @@ return {
 
     -- Audio feedback
     config.audible_bell = "Disabled"
-
-    -- Apply theme-based UI styling if theme module is enabled
-    -- Note: This requires accessing other modules, which may not be loaded yet
-    -- For now, we'll skip this and let theme module handle it
   end,
 }

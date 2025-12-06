@@ -19,15 +19,15 @@ return {
     }
   end,
 
-  keys = function()
-    return {}
-  end,
+  keys = {},
 
   enabled = true,
 
   priority = 100,  -- High priority, loads early
 
-  setup = function(config, opts)
+  setup = function(config, spec)
+    local opts = spec.opts()
+    
     -- Only apply theme if configured
     if opts.color_scheme then
       local theme = wezterm.get_builtin_color_schemes()[opts.color_scheme]

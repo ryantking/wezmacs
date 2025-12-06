@@ -34,7 +34,9 @@ return {
 
   priority = 70,
 
-  setup = function(config, opts)
+  setup = function(config, spec)
+    local opts = spec.opts()
+    
     config.use_fancy_tab_bar = opts.use_fancy_tab_bar
     config.tab_bar_at_bottom = opts.tab_bar_at_bottom
     config.hide_tab_bar_if_only_one_tab = opts.hide_tab_bar_if_only_one_tab

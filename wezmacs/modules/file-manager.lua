@@ -42,13 +42,12 @@ return {
     }
   end,
 
-  enabled = function(ctx)
-    return ctx.has_command("yazi")
-  end,
+  enabled = true,
 
   priority = 50,
 
-  setup = function(config, opts)
+  setup = function(config, spec)
     -- Module-specific setup (if any)
+    -- Use spec.opts() to get merged options
   end,
 }

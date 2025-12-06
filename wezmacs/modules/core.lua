@@ -21,15 +21,15 @@ return {
     }
   end,
 
-  keys = function()
-    return {}
-  end,
+  keys = {},
 
   enabled = true,
 
   priority = 1000,  -- Highest priority, must load first
 
-  setup = function(config, opts)
+  setup = function(config, spec)
+    local opts = spec.opts()
+    
     -- Terminal protocol support
     config.enable_kitty_keyboard = opts.enable_kitty_keyboard
     config.enable_kitty_graphics = opts.enable_kitty_graphics

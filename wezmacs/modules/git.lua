@@ -49,13 +49,12 @@ return {
     },
   },
 
-  enabled = function(ctx)
-    return ctx.has_command("git")
-  end,
+  enabled = true,
 
   priority = 50,
 
-  setup = function(config, opts)
+  setup = function(config, spec)
     -- Module-specific setup (if any)
+    -- spec contains the full merged spec, use spec.opts() to get merged options
   end,
 }

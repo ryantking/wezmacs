@@ -45,7 +45,9 @@ return {
 
   priority = 90,
 
-  setup = function(config, opts)
+  setup = function(config, spec)
+    local opts = spec.opts()
+    
     -- Only apply font if configured
     if opts.font then
       config.font = wezterm.font_with_fallback({

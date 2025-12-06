@@ -29,13 +29,12 @@ return {
     },
   },
 
-  enabled = function(ctx)
-    return ctx.has_command("lazydocker")
-  end,
+  enabled = true,
 
   priority = 50,
 
-  setup = function(config, opts)
+  setup = function(config, spec)
     -- Module-specific setup (if any)
+    -- Use spec.opts() to get merged options
   end,
 }

@@ -29,7 +29,9 @@ return {
 
   priority = 100,  -- High priority, loads early
 
-  setup = function(config, opts)
+  setup = function(config, spec)
+    local opts = spec.opts()
+    
     config.leader = { key = opts.leader_key, mods = opts.leader_mod, timeout_milliseconds = 5000 }
 
     -- ============================================================================

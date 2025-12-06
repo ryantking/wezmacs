@@ -28,7 +28,8 @@ return {
 
   priority = 50,
 
-  setup = function(config, opts)
+  setup = function(config, spec)
+    local opts = spec.opts()
     config.alternate_buffer_wheel_scroll_speed = 1
     config.bypass_mouse_reporting_modifiers = opts.leader_mod
     config.hide_mouse_cursor_when_typing = false

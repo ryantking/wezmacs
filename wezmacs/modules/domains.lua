@@ -31,7 +31,8 @@ return {
 
   priority = 50,
 
-  setup = function(config, opts)
+  setup = function(config, spec)
+    local opts = spec.opts()
     local domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
     
     -- Configure quick_domains to use the domains key table

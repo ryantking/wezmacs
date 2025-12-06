@@ -10,6 +10,93 @@ local module_loader = require("wezmacs.module")
 
 local M = {}
 
+-- Load user files from ~/.config/wezmacs/
+---@param log function Logging function
+---@return function|nil User setup function
+---@return table|function|nil User keys (table or function)
+local function load_user_files(log)
+  local home = os.getenv("HOME") or ""
+  local wezmacs_config_dir = home .. "/.config/wezmacs"
+  
+  -- Load user setup.lua
+  local user_setup = nil
+  local setup_path = wezmacs_config_dir .. "/setup.lua"
+  local ok, result = pcall(function()
+    local file = io.open(setup_path, "r")
+    if not file then
+      return nil
+    end
+    file:close()
+    
+    local chunk, err = loadfile(setup_path)
+    if not chunk then
+      log("error", "Failed to load user setup: " .. tostring(err))
+      return nil
+    end
+    
+    local old_path = package.path
+    package.path = wezmacs_config_dir .. "/?.lua;" .. package.path
+    
+    local success, setup_module = pcall(chunk)
+    package.path = old_path
+    
+    if success and setup_module and type(setup_module.setup) == "function" then
+      return setup_module.setup
+    end
+    return nil
+  end)
+  if ok and result then
+    user_setup = result
+    log("info", "Loaded user setup from ~/.config/wezmacs/setup.lua")
+  else
+    log("info", "No user setup found at ~/.config/wezmacs/setup.lua (this is optional)")
+  end
+
+  -- Load user keys.lua
+  local user_keys = nil
+  local keys_path = wezmacs_config_dir .. "/keys.lua"
+  ok, result = pcall(function()
+    local file = io.open(keys_path, "r")
+    if not file then
+      return nil
+    end
+    file:close()
+    
+    local chunk, err = loadfile(keys_path)
+    if not chunk then
+      log("error", "Failed to load user keys: " .. tostring(err))
+      return nil
+    end
+    
+    local old_path = package.path
+    package.path = wezmacs_config_dir .. "/?.lua;" .. package.path
+    
+    local success, keys_module = pcall(chunk)
+    package.path = old_path
+    
+    if success and keys_module then
+      if type(keys_module) == "function" then
+        return keys_module
+      elseif type(keys_module.keys) == "function" then
+        return keys_module.keys
+      elseif type(keys_module.keys) == "table" then
+        return function() return keys_module.keys end
+      elseif type(keys_module) == "table" then
+        return function() return keys_module end
+      end
+    end
+    return nil
+  end)
+  if ok and result then
+    user_keys = result
+    log("info", "Loaded user keys from ~/.config/wezmacs/keys.lua")
+  else
+    log("info", "No user keys found at ~/.config/wezmacs/keys.lua (this is optional)")
+  end
+
+  return user_setup, user_keys
+end
+
 -- Main setup function called from wezterm.lua
 ---@param config table WezTerm config object from config_builder()
 ---@param opts table Optional configuration options
@@ -29,40 +116,16 @@ function M.setup(config, opts)
     end
   end
 
-  -- Use unified config (single table where keys are module names)
-  local unified_config = opts.unified_config or {}
+  log("info", "Loading WezMacs framework")
 
-  log("info", "Loading WezMacs framework with unified config")
+  -- Load all modules (discover built-in, merge user config)
+  local modules, all_specs = module_loader.load_all(log)
 
-  -- Load all modules with config merging
-  local modules, states = module_loader.load_all(
-    unified_config,
-    log
-  )
-
-  -- Create global wezmacs API table (captured closure over states)
+  -- Create global wezmacs API table
   _G.wezmacs = {
-    -- Get full merged config for a module (includes features)
-    -- Returns a shallow copy to prevent closures from sharing mutable references
-    get_module = function(module_name)
-      local state = states[module_name]
-      if not state then
-        log("warn", "No config found for module: " .. module_name)
-        return { features = {} }
-      end
-
-      -- Return shallow copy to avoid shared mutable state in closures
-      local copy = {}
-      for k, v in pairs(state) do
-        copy[k] = v
-      end
-      return copy
-    end,
-
-    -- Get module spec (new format)
+    -- Get module spec
     get_spec = function(module_name)
-      local registry = require("wezmacs.lib.registry")
-      return registry.get_spec(module_name)
+      return all_specs[module_name]
     end,
 
     -- Check if module is loaded
@@ -88,8 +151,7 @@ function M.setup(config, opts)
     if spec.name == "core" then
       log("info", "Applying CORE module first")
       if spec.setup then
-        local opts = states[spec.name]
-        spec.setup(config, opts)
+        spec.setup(config, spec)
       end
       table.remove(modules, i)
       break
@@ -101,16 +163,47 @@ function M.setup(config, opts)
     local mod_name = spec.name or "unknown"
     log("info", "Applying module: " .. mod_name)
 
-    -- Call setup with config and opts
+    -- Call setup with config and full spec
     if spec.setup then
-      local opts = states[mod_name]
-      spec.setup(config, opts)
+      spec.setup(config, spec)
     end
+  end
 
-    -- Apply keybindings if module has keys defined
+  -- Load and apply user setup function
+  local user_setup, user_keys = load_user_files(log)
+  if user_setup then
+    log("info", "Applying user setup function")
+    -- Create combined spec for user setup
+    local combined_spec = {}
+    for mod_name, spec in pairs(all_specs) do
+      combined_spec[mod_name] = spec
+    end
+    user_setup(config, combined_spec)
+  end
+
+  -- Apply all module keys
+  for _, spec in ipairs(modules) do
     if spec.keys then
-      local opts = states[mod_name]
+      local opts = spec.opts()
       keybindings.apply_keys(config, spec, opts)
+    end
+  end
+
+  -- Apply user keys
+  if user_keys then
+    log("info", "Applying user keybindings")
+    local user_key_map
+    if type(user_keys) == "function" then
+      user_key_map = user_keys()
+    elseif type(user_keys) == "table" then
+      user_key_map = user_keys
+    end
+    
+    if user_key_map and type(user_key_map) == "table" then
+      keybindings.apply_keys(config, {
+        name = "user",
+        keys = function() return user_key_map end,
+      }, {})
     end
   end
 
