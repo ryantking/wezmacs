@@ -10,13 +10,16 @@ local module_loader = require("wezmacs.module")
 
 local M = {}
 
--- Load user files from ~/.config/wezmacs/
+-- Load user files from ~/.config/wezmacs/ or WEZMACS_CONFIG_DIR
 ---@param log function Logging function
 ---@return function|nil User setup function
 ---@return table|function|nil User keys (table or function)
 local function load_user_files(log)
-  local home = os.getenv("HOME") or ""
-  local wezmacs_config_dir = home .. "/.config/wezmacs"
+  local wezmacs_config_dir = os.getenv("WEZMACS_CONFIG_DIR")
+  if not wezmacs_config_dir then
+    local home = os.getenv("HOME") or ""
+    wezmacs_config_dir = home .. "/.config/wezmacs"
+  end
   
   -- Load user setup.lua
   local user_setup = nil
@@ -99,27 +102,24 @@ end
 
 -- Main setup function called from wezterm.lua
 ---@param config table WezTerm config object from config_builder()
----@param opts table Optional configuration options
-function M.setup(config, opts)
-  opts = opts or {}
-
+---@param user_spec table|nil User module spec overrides (from config.lua)
+function M.setup(config, user_spec)
   -- Setup logging function
-  local log_level = opts.log_level or "info"
   local function log(level, msg)
     local prefix = "[WezMacs] "
     if level == "error" then
       wezterm.log_error(prefix .. msg)
     elseif level == "warn" then
       wezterm.log_info(prefix .. "WARN: " .. msg)
-    elseif level ~= "debug" or log_level == "debug" then
+    else
       wezterm.log_info(prefix .. msg)
     end
   end
 
   log("info", "Loading WezMacs framework")
 
-  -- Load all modules (discover built-in, merge user config)
-  local modules, all_specs = module_loader.load_all(log)
+  -- Load all modules (discover built-in, load user custom, merge user spec)
+  local modules, all_specs = module_loader.load_all(log, user_spec)
 
   -- Create global wezmacs API table
   _G.wezmacs = {
