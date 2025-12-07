@@ -143,7 +143,7 @@ end
 
 ### Recommended Actions
 
-1. **Immediate:** Remove duplicate keybindings from keybindings module
+1. **Immediate:** Remove duplicate keybindings from keys module
 2. **Short-term:** Implement deterministic module loading
 3. **Long-term:** Consider unified leader key table architecture
 
@@ -185,7 +185,7 @@ To verify the bug and fix:
 
 - `wezmacs/init.lua:54-59` - Shallow copy fix
 - `wezmacs/module.lua:54` - Non-deterministic pairs() loop
-- `wezmacs/modules/keybindings/init.lua:98,105` - Conflicting bindings
+- `wezmacs/modules/keys/init.lua:98,105` - Conflicting bindings
 - `wezmacs/modules/file-manager/init.lua:60-68` - file-manager LEADER f
 - `wezmacs/modules/git/init.lua:55-63` - git LEADER g
 - `wezmacs/modules/claude/init.lua:54-62` - claude LEADER c

@@ -39,14 +39,15 @@ Edit `~/.config/wezmacs/modules.lua` to select which modules to enable:
 
 ```lua
 return {
-  "appearance",  -- Load with defaults
-  "tabbar",
+  "term",  -- Core terminal settings
+  "tabs",
   "window",
   "mouse",
-  "keybindings",
-  { name = "git", flags = {} },  -- Load with optional flags
-  "workspace",
-  "domains",
+  "app",  -- Application keybindings
+  "mux",  -- Workspace and pane management
+  "git",
+  "agent",
+  "edit",  -- Editor and file manager
 }
 ```
 
@@ -54,14 +55,13 @@ Edit `~/.config/wezmacs/config.lua` to configure module behavior:
 
 ```lua
 return {
-  appearance = {
-    theme = "Horizon Dark (Gogh)",
+  term = {
+    color_scheme = "Horizon Dark (Gogh)",
     font = "JetBrains Mono",
     font_size = 16,
   },
   git = {
-    leader_key = "g",
-    leader_mod = "LEADER",
+    diff_branches = { "main", "master" },
   },
 }
 ```
@@ -97,30 +97,21 @@ Your user configuration at `~/.config/wezmacs/` is preserved for reference.
 
 WezMacs provides a collection of carefully crafted modules organized by concern:
 
-### 🎨 UI Modules
-- **appearance**: Color schemes, fonts, visual styling
-- **tabbar**: Custom tab bar with app icons
-- **window**: Window padding, scrolling, cursor behavior
+### 🎨 Core Modules
+- **term**: Core terminal settings, fonts, colors, scrollback, clipboard, search
+- **tabs**: Custom tab bar with app icons and tab management
+- **window**: Window management and behavior
+- **mouse**: Mouse bindings and selection behavior
 
-### ⚙️ Behavior Modules
-- **mouse**: Selection, link opening, semantic zone selection
-
-### ⌨️ Editing Modules
-- **keybindings**: Pane/tab management, navigation, utilities (50+ bindings)
+### ⌨️ Keybinding Modules
+- **app**: Application-level keybindings (quit, reload, commands)
 
 ### 🔗 Integration Modules
-- **plugins**: Smart workspace switcher, quick domains
-
-### 🚀 Workflow Modules
+- **mux**: Domain management, workspace switching, and pane management
 - **git**: Lazygit integration with smart-split
-- **workspace**: Workspace switching with fuzzy search
-- **claude**: Claude Code integration
-- **kubernetes**: Kubernetes management (k9s)
-- **docker**: Docker management (lazydocker)
-- **file-manager**: File manager integration (yazi)
-- **media**: Media player integration (spotify_player)
-- **editors**: Editor launchers (helix, cursor)
-- **system-monitor**: System monitoring (btm)
+- **agent**: AI coding agent integration
+- **app**: Application launchers (docker, kubernetes, media, system monitor)
+- **edit**: Editor and file manager integration
 
 ## Module Documentation
 
@@ -144,18 +135,19 @@ Choose which modules to load and enable optional feature flags:
 -- ~/.config/wezmacs/modules.lua
 return {
   -- Simple string: load with defaults
-  "appearance",
-  "tabbar",
+  "term",
+  "tabs",
   "window",
   "mouse",
-  "keybindings",
+  "app",
+  "keys",
 
-  -- Table with flags: enable optional features
-  { name = "git", flags = { "smartsplit" } },
-  { name = "workspace", flags = {} },
+  -- Table with opts: override module options
+  { name = "git", opts = { diff_branches = { "main", "develop" } } },
 
-  "claude",
-  "domains",
+  "agent",
+  "mux",
+  "edit",
 }
 ```
 
@@ -166,25 +158,19 @@ Configure how each module behaves:
 ```lua
 -- ~/.config/wezmacs/config.lua
 return {
-  appearance = {
-    theme = "Horizon Dark (Gogh)",
+  term = {
+    color_scheme = "Horizon Dark (Gogh)",
     font = "JetBrains Mono",
     font_size = 16,
   },
 
-  keybindings = {
+  app = {
     leader_key = "Space",
     leader_mod = "CMD",
   },
 
   git = {
-    leader_key = "g",
-    leader_mod = "LEADER",
-  },
-
-  workspace = {
-    leader_key = "s",
-    leader_mod = "LEADER",
+    diff_branches = { "main", "master" },
   },
 }
 ```
@@ -200,13 +186,12 @@ This separation keeps configuration clean and maintainable.
 
 WezMacs follows a pragmatic hybrid approach inspired by Doom Emacs and LazyVim:
 
-- **Module System**: Each module exports metadata and a single `apply_to_config` function
+- **Module System**: Each module exports `name`, `description`, `deps`, `opts`, `keys`, and `setup` functions
 - **Flat Structure**: No categories in code - just `wezmacs/modules/modulename/`
 - **Dual Configuration**: Separate files for module selection (modules.lua) and configuration (config.lua)
-- **Framework-Managed Config**: The framework handles config merging and provides it via global API
-- **Feature Flags**: Optional per-module flags, either simple flags or complex objects with config_schema and deps
-- **Schema-Driven**: Modules declare _CONFIG_SCHEMA and _FEATURES for validation
-- **Global API**: Modules use `wezmacs.get_config()` and `wezmacs.get_enabled_flags()` to access configuration
+- **Options Pattern**: Modules define `opts` (table or function) with defaults, merged with user config
+- **Keybinding Format**: Mixed list/map format where list items are direct bindings and string keys create nested key tables
+- **Global API**: Modules access `wezmacs.config` for global settings and `wezmacs.action` for custom actions
 - **Custom Modules**: Users can add modules to `~/.config/wezmacs/custom-modules/`
 
 See [FRAMEWORK.md](FRAMEWORK.md) for architectural details.
@@ -218,54 +203,38 @@ Create a new module in `~/.config/wezmacs/custom-modules/`:
 ```lua
 -- ~/.config/wezmacs/custom-modules/my-module/init.lua
 local wezterm = require("wezterm")
-local M = {}
+local act = wezterm.action
+local wezmacs = require("wezmacs")
 
-M._NAME = "my-module"
-M._CATEGORY = "custom"
-M._DESCRIPTION = "My custom module"
-M._EXTERNAL_DEPS = {}
+return {
+  name = "my-module",
+  description = "My custom module",
+  deps = { "tool1", "tool2" },
 
--- Feature flags (optional) - can be simple flags or complex objects
-M._FEATURES = {
-  advanced = {
-    config_schema = {
-      advanced_option = "default",
-    },
-    deps = { "other_feature" },  -- Optional dependencies
+  opts = {
+    some_option = "default_value",
+    another_option = 42,
   },
+
+  keys = function(opts)
+    return {
+      { key = "m", mods = "LEADER", action = act.SomeAction(), desc = "my-action" },
+    }
+  end,
+
+  setup = function(config, opts)
+    -- Modify config based on opts
+    config.some_setting = opts.some_option
+  end,
 }
-
--- Configuration schema with defaults
-M._CONFIG_SCHEMA = {
-  some_option = "default_value",
-}
-
--- Apply phase: modify WezTerm config
-function M.apply_to_config(config)
-  -- Get merged configuration from framework
-  local module_config = wezmacs.get_config("my-module")
-  local enabled_flags = wezmacs.get_enabled_flags("my-module")
-
-  config.keys = config.keys or {}
-  -- Use module_config.some_option for configuration values
-  -- Check enabled_flags for feature flags
-
-  -- Feature-specific config is at config.features.feature_name
-  if enabled_flags.advanced then
-    local advanced_config = config.features.advanced
-    -- Use advanced_config.advanced_option
-  end
-end
-
-return M
 ```
 
 Enable it in `~/.config/wezmacs/modules.lua`:
 
 ```lua
 return {
-  "appearance",
-  { name = "my-module", flags = {} },
+  "term",
+  { name = "my-module", opts = { some_option = "custom" } },
 }
 ```
 
@@ -287,19 +256,19 @@ Core navigation (available with all configurations):
 
 | Binding | Action |
 |---------|--------|
-| LEADER (CMD+Space) | Activate leader mode (5 sec timeout) |
+| LEADER (Space/Ctrl) | Activate leader mode |
 | LEADER+- | Split pane horizontally |
 | LEADER+\| | Split pane vertically |
 | LEADER+t | New tab |
 | LEADER+w | Close tab |
 | LEADER+z | Zoom pane |
-| LEADER+p | Select pane |
 | CTRL+Arrow | Navigate between panes |
 
-Additional keybindings depend on which workflow modules you enable:
+Additional keybindings depend on which modules you enable:
 - Git operations: LEADER+g (git module)
-- Workspace switching: LEADER+s (workspace module)
-- Claude integration: LEADER+c (claude module)
+- Workspace switching: LEADER+s (mux module)
+- Agent integration: LEADER+a (agent module)
+- Application launchers: LEADER+, (app module)
 
 See module READMEs for complete keybinding documentation.
 
@@ -307,10 +276,11 @@ See module READMEs for complete keybinding documentation.
 
 Required tools depend on which modules you enable:
 
-- **git module**: lazygit, git, delta
-- **workspace module**: smart_workspace_switcher (plugin, auto-installed)
-- **claude module**: claude CLI, agentctl (optional)
-- **plugins module**: smart_workspace_switcher, quick_domains (both plugins, auto-installed)
+- **git module**: lazygit, git, delta, broot
+- **mux module**: quick_domains and smart_workspace_switcher (plugins, auto-installed)
+- **agent module**: agent CLI, agentctl (optional)
+- **app module**: lazydocker, k9s, spotify_player, btm
+- **edit module**: br (broot), yazi, editor/IDE
 
 Install recommended tools:
 

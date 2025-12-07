@@ -442,13 +442,13 @@ wezmacs/
 │   ├── module.lua           # Module loading system
 │   ├── generate-config.lua  # Configuration generator
 │   ├── modules/             # Built-in modules (flat structure)
-│   │   ├── core/           # Core WezTerm settings
-│   │   ├── keybindings/    # Pane/tab management (50+ bindings)
+│   │   ├── term/           # Core WezTerm settings
+│   │   ├── keys/    # Pane/tab management (50+ bindings)
 │   │   ├── theme/          # Color schemes and fonts
 │   │   ├── git/            # Lazygit integration
 │   │   ├── workspace/      # Workspace switching
-│   │   ├── claude/         # Claude Code integration
-│   │   └── ... (12 more: docker, k8s, editors, etc.)
+│   │   ├── agent/         # AI coding agent integration
+│   │   └── ... (12 more: docker, k8s, editor, etc.)
 │   ├── utils/              # Helpers (colors, keybindings, split utils)
 │   └── templates/          # Module scaffolding templates
 └── user config at ~/.config/wezmacs/wezmacs.lua  # User module selection

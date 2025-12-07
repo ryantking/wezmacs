@@ -1,59 +1,50 @@
 --[[
   Module: window
-  Category: ui
   Description: Window decorations, padding, scrolling, and cursor behavior
 ]]
 
 local wezterm = require("wezterm")
+local act = wezterm.action
+local wezmacs = require("wezmacs")
 
 return {
-  name = "window",
-  category = "ui",
-  description = "Window behavior, padding, and cursor settings",
+	name = "window",
+	description = "Window behavior, padding, and cursor settings",
 
-  deps = {},
+	opts = function()
+		return {
+			padding = 16,
+			decorations = "RESIZE",
+			close_confirmation = "NeverPrompt",
 
-  opts = function()
-    return {
-      padding = 16,
-      scrollback_lines = 5000,
-      decorations = "RESIZE",
-    }
-  end,
+			-- Keybindings
+			term_mod = wezmacs.config.term_mod,
+			gui_mod = wezmacs.config.gui_mod,
+			alt_mod = wezmacs.config.alt_mod,
+		}
+	end,
 
-  keys = function()
-    return {}
-  end,
+	keys = function(opts)
+		return {
+			{ key = "n", mods = opts.term_mod, action = act.SpawnWindow, desc = "new-window" },
+			{ key = "n", mods = opts.gui_mod, action = act.SpawnWindow, desc = "new-window" },
+			{ key = "Enter", mods = opts.alt_mod, action = act.ToggleFullScreen, desc = "fullscreen" },
+			{ key = "m", mods = opts.gui_mod, action = act.Hide, desc = "minimize" },
+		}
+	end,
 
-  enabled = true,
+	setup = function(config, opts)
+		-- Window decorations and behavior
+		config.window_decorations = opts.decorations
+		config.window_close_confirmation = opts.close_confirmation
 
-  priority = 80,
-
-  setup = function(config, opts)
-    -- Window decorations and behavior
-    config.window_decorations = opts.decorations
-    config.window_close_confirmation = "NeverPrompt"
-
-    -- Window padding (equal on all sides)
-    local p = opts.padding
-    config.window_padding = {
-      left = p,
-      right = p,
-      top = p,
-      bottom = p,
-    }
-
-    -- Scrolling behavior
-    config.scrollback_lines = opts.scrollback_lines
-    config.enable_scroll_bar = true
-
-    -- Cursor configuration
-    config.cursor_blink_rate = 500
-    config.cursor_blink_ease_in = "EaseIn"
-    config.cursor_blink_ease_out = "EaseOut"
-    config.default_cursor_style = "BlinkingBlock"
-
-    -- Audio feedback
-    config.audible_bell = "Disabled"
-  end,
+		-- Window padding (equal on all sides)
+		local p = opts.padding
+		config.window_padding = {
+			left = p,
+			right = p,
+			top = p,
+			bottom = p,
+		}
+	end,
 }

@@ -1,60 +1,41 @@
 --[[
   Module: git
-  Category: integration
   Description: Lazygit integration with smart splitting and git utilities
 ]]
 
--- Use wezmacs.action for actions (available globally)
-local act = require("wezmacs.action")
+local wezterm = require("wezterm")
+local act = wezterm.action
+local wezmacs = require("wezmacs")
 
 return {
-  name = "git",
-  category = "integration",
-  description = "Lazygit integration with smart splitting and git utilities",
+	name = "git",
+	description = "Lazygit integration with smart splitting and git utilities",
 
-  deps = { "lazygit", "delta", "git" },
+	deps = { "lazygit", "delta", "git", "broot" },
 
-  opts = function()
-    return {
-      leader_key = "g",
-      leader_mod = "LEADER",
-      features = {
-        lazygit = {
-          enabled = true,
-          split_mode = "half",
-        },
-        git_diff = { enabled = true },
-        git_log = { enabled = true },
-      },
-    }
-  end,
+	opts = {
+		diff_branches = { "main", "master", "origin/main", "origin/master" },
+	},
 
-  keys = {
-    LEADER = {
-      g = {
-        g = { action = act.SmartSplit("lazygit -sm half"), desc = "git/lazygit-split" },
-        G = { action = act.NewTab("lazygit"), desc = "git/lazygit-tab" },
-        d = {
-          action = act.SmartSplit(
-            "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status"
-          ),
-          desc = "git/diff-split",
-        },
-        D = {
-          action = act.NewWindow(
-            "git diff main 2>/dev/null || git diff master 2>/dev/null || git diff origin/main 2>/dev/null || git diff origin/master 2>/dev/null || git status"
-          ),
-          desc = "git/diff-window",
-        },
-      },
-    },
-  },
+	keys = function(opts)
+		local diff_cmds = {}
+		for i, branch in ipairs(opts.diff_branches) do
+			diff_cmds[i] = ("git diff %s 2>/dev/null"):format(branch)
+		end
+		table.insert(diff_cmds, "git diff")
+		local diff_cmd = table.concat(diff_cmds, " || ")
 
-  enabled = true,
-
-  priority = 50,
-
-  setup = function(config, opts)
-    -- Module-specific setup (if any)
-  end,
+		return {
+			LEADER = {
+				g = {
+					{ key = "g", action = wezmacs.action.SmartSplit("lazygit -sm half"), desc = "lazygit/split" },
+					{ key = "G", action = wezmacs.action.NewTab("lazygit"), desc = "lazygit/tab" },
+					{ key = "s", action = wezmacs.action.SmartSplit("br -ghc :gs"), desc = "status/split" },
+					{ key = "S", action = wezmacs.action.NewTab("br -ghc :gs"), desc = "status/tab" },
+					{ key = "d", action = wezmacs.action.SmartSplit(diff_cmd), desc = "diff/split" },
+					{ key = "D", action = wezmacs.action.NewWindow(diff_cmd), desc = "diff/window" },
+				},
+			},
+		}
+	end,
 }
