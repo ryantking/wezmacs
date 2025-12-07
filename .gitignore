@@ -39,10 +39,8 @@ luac.out
 *.x86_64
 *.hex
 
-# Local test configuration
-/test-wezmacs.lua
-
 # Temporary files
 *.swp
 *.swo
 *~
+

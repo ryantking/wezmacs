@@ -1,89 +1,59 @@
 --[[
-  WezMacs Framework Bootstrap
+  WezMacs Framework API
 
-  Main entry point for the WezMacs modular wezterm configuration framework.
-  Orchestrates module loading, configuration merging, and initialization.
+  Main entry point for modules to access WezMacs functionality.
+
+  Usage:
+    local wezmacs = require('wezmacs')
+    wezmacs.config.font_size      -- Access global config
+    wezmacs.keys.map(...)         -- Map keybindings
+    wezmacs.action.SmartSplit()   -- Use actions
 ]]
-
-local wezterm = require("wezterm")
-local module_loader = require("wezmacs.module")
 
 local M = {}
 
--- Main setup function called from wezterm.lua
----@param config table WezTerm config object from config_builder()
----@param opts table Optional configuration options
-function M.setup(config, opts)
-  opts = opts or {}
+-- Configuration will be set during initialization by wezterm.lua
+-- Modules access via: wezmacs.config.some_setting
+M.config = {}
 
-  -- Setup logging function
-  local log_level = opts.log_level or "info"
-  local function log(level, msg)
-    local prefix = "[WezMacs] "
-    if level == "error" then
-      wezterm.log_error(prefix .. msg)
-    elseif level == "warn" then
-      wezterm.log_info(prefix .. "WARN: " .. msg)
-    elseif level ~= "debug" or log_level == "debug" then
-      wezterm.log_info(prefix .. msg)
-    end
+-- Discover wezmacs user config directory (where modules.lua and config.lua are)
+-- Priority: WEZMACSDIR env var > XDG_CONFIG_HOME/wezmacs > ~/.config/wezmacs
+local function get_wezmacs_config_dir()
+  local wezmacs_dir = os.getenv("WEZMACSDIR")
+  if wezmacs_dir then
+    return wezmacs_dir
   end
 
-  -- Use unified config (single table where keys are module names)
-  local unified_config = opts.unified_config or {}
-
-  log("info", "Loading WezMacs framework with unified config")
-
-  -- Load all modules with config merging
-  local modules, states = module_loader.load_all(
-    unified_config,
-    log
-  )
-
-  -- Create global wezmacs API table (captured closure over states)
-  _G.wezmacs = {
-    -- Get full merged config for a module (includes features)
-    -- Returns a shallow copy to prevent closures from sharing mutable references
-    get_module = function(module_name)
-      local state = states[module_name]
-      if not state then
-        log("warn", "No config found for module: " .. module_name)
-        return { features = {} }
-      end
-
-      -- Return shallow copy to avoid shared mutable state in closures
-      local copy = {}
-      for k, v in pairs(state) do
-        copy[k] = v
-      end
-      return copy
-    end,
-  }
-
-  -- Apply CORE module first if present (core settings must be applied before others)
-  for i, mod in ipairs(modules) do
-    if mod._NAME == "core" then
-      log("info", "Applying CORE module first")
-      if mod.apply_to_config then
-        mod.apply_to_config(config)
-      end
-      table.remove(modules, i)
-      break
-    end
+  local xdg_config = os.getenv("XDG_CONFIG_HOME")
+  if xdg_config then
+    return xdg_config .. "/wezmacs"
   end
 
-  -- Apply remaining modules
-  for _, mod in ipairs(modules) do
-    local mod_name = mod._NAME or "unknown"
-    log("info", "Applying module: " .. mod_name)
-
-    -- Call apply_to_config with only config parameter
-    if mod.apply_to_config then
-      mod.apply_to_config(config)
-    end
-  end
-
-  log("info", "WezMacs framework initialized successfully (" .. #modules .. " modules loaded)")
+  local home = os.getenv("HOME") or ""
+  return home .. "/.config/wezmacs"
 end
+
+M.config_dir = get_wezmacs_config_dir()
+
+-- Keybindings API (lazy load)
+-- Usage: wezmacs.keys.map(config, key_map, module_name)
+M.keys = setmetatable({}, {
+  __index = function(t, k)
+    local keys_module = require("wezmacs.keys")
+    for key, value in pairs(keys_module) do
+      rawset(t, key, value)
+    end
+    return t[k]
+  end,
+})
+
+-- Action API
+-- Usage: wezmacs.action.SmartSplit("lazygit")
+M.action = require("wezmacs.action")
+
+-- Backward compatibility: lib.keybindings points to keys
+M.lib = {
+  keybindings = M.keys,
+}
 
 return M

@@ -2,13 +2,14 @@
 --[[
   WezMacs Config Generator
 
-  Generates a user configuration file by scanning all modules and reading their
-  metadata (_CONFIG_SCHEMA, _FEATURES, _DESCRIPTION).
+  Generates user configuration files in the new format:
+  - modules.lua: List of modules to load (string or table format)
+  - config.lua: Global settings (theme, fonts, mod_key, config_builder, setup)
 
   Usage:
-    lua wezmacs/generate-config.lua [output_path]
+    lua wezmacs/generate-config.lua [output_directory]
 
-  Output path defaults to ~/.config/wezmacs/wezmacs.lua
+  Output directory defaults to ~/.config/wezmacs/
 ]]
 
 local function get_home_dir()
@@ -18,107 +19,67 @@ end
 local function get_config_dir()
   local xdg_config = os.getenv("XDG_CONFIG_HOME")
   if xdg_config then
-    return xdg_config
+    return xdg_config .. "/wezmacs"
   end
-  return get_home_dir() .. "/.config"
+  return get_home_dir() .. "/.config/wezmacs"
 end
 
-local function file_exists(path)
-  local f = io.open(path, "r")
-  if f then
-    f:close()
-    return true
-  end
-  return false
-end
-
-local function read_file(path)
-  local f = io.open(path, "r")
-  if not f then
-    return nil
-  end
-  local content = f:read("*all")
-  f:close()
-  return content
-end
-
-local function get_modules_dir()
-  -- Assume script is in wezmacs/ directory
+local function get_wezmacs_dir()
+  -- Get directory containing this script (wezmacs/generate-config.lua)
   local script_path = arg[0]
-  local script_dir = script_path:match("^(.+)/[^/]+$") or "."
-  return script_dir .. "/modules"
+  local script_dir
+  
+  -- Handle both absolute and relative paths
+  if script_path:match("^/") then
+    -- Absolute path
+    script_dir = script_path:match("^(.+)/[^/]+$")
+  else
+    -- Relative path - resolve from current working directory
+    local cwd = io.popen("pwd"):read("*l")
+    if script_path:match("^wezmacs/") then
+      -- Script path is relative like "wezmacs/generate-config.lua"
+      script_dir = cwd .. "/wezmacs"
+    else
+      -- Script path is just filename, assume wezmacs/ directory
+      script_dir = cwd .. "/wezmacs"
+    end
+  end
+  
+  return script_dir
 end
 
 local function scan_modules()
-  local modules_dir = get_modules_dir()
   local modules = {}
+  local wezmacs_dir = get_wezmacs_dir()
+  local modules_dir = wezmacs_dir .. "/modules"
 
-  -- Use ls to get module directories
-  local handle = io.popen("ls -1 '" .. modules_dir .. "'")
+  -- Use ls to get module directories (each module is now a directory with init.lua)
+  local handle = io.popen("ls -1 '" .. modules_dir .. "' 2>/dev/null")
   if not handle then
     error("Failed to list modules directory: " .. modules_dir)
   end
 
-  for dir in handle:lines() do
-    local init_path = modules_dir .. "/" .. dir .. "/init.lua"
-    if file_exists(init_path) then
-      local content = read_file(init_path)
-      if content then
-        local module_info = {
-          name = dir,
-          path = init_path,
-        }
-
-        -- Extract _DESCRIPTION
-        local desc = content:match('M%._DESCRIPTION%s*=%s*"([^"]+)"')
-        if desc then
-          module_info.description = desc
-        end
-
-        -- Extract _CONFIG (unified structure)
-        local config_start = content:find("M%._CONFIG%s*=%s*{")
-        if config_start then
-          local brace_count = 0
-          local in_config = false
-          local config_text = ""
-          for i = config_start, #content do
-            local char = content:sub(i, i)
-            if char == "{" then
-              brace_count = brace_count + 1
-              in_config = true
-            elseif char == "}" then
-              brace_count = brace_count - 1
-            end
-            if in_config then
-              config_text = config_text .. char
-            end
-            if in_config and brace_count == 0 then
-              break
-            end
-          end
-
-          -- Parse config fields (improved - only top-level, non-nested)
-          module_info.config = {}
-          module_info.features = {}
-
-          -- Look for top-level fields (field = value, where value is not {)
-          -- This captures simple values like strings, numbers, nil, booleans
-          for field, value in config_text:gmatch('\n  ([%w_]+)%s*=%s*([^{\n,]+),?') do
-            local trimmed = value:gsub("^%s+", ""):gsub("%s+$", ""):gsub(",$", "")
-            if trimmed ~= "" then
-              module_info.config[field] = trimmed
-            end
-          end
-
-          -- Look for feature definitions (top-level fields with nested enabled = )
-          -- Match: field_name = { ... enabled = ...
-          for feature_name in config_text:gmatch('\n  ([%w_]+)%s*=%s*{[^}]*enabled%s*=') do
-            table.insert(module_info.features, feature_name)
-          end
-        end
-
-        table.insert(modules, module_info)
-      end
+  for dir_name in handle:lines() do
+    -- Skip if not a directory or if it's a special file
+    local module_init_path = modules_dir .. "/" .. dir_name .. "/init.lua"
+    local f = io.open(module_init_path, "r")
+    if f then
+      local content = f:read("*all")
+      f:close()
+      
+      -- Extract module name, description, and category from the spec table
+      -- Look for patterns like: name = "git", description = "...", category = "..."
+      local name_match = content:match('name%s*=%s*["\']([^"\']+)["\']') or dir_name
+      local desc_match = content:match('description%s*=%s*["\']([^"\']+)["\']') or ""
+      local cat_match = content:match('category%s*=%s*["\']([^"\']+)["\']') or "integration"
+      
+      local module_info = {
+        name = name_match,
+        description = desc_match,
+        category = cat_match,
+      }
+      
+      table.insert(modules, module_info)
     end
   end
 
@@ -132,143 +93,125 @@ local function scan_modules()
   return modules
 end
 
-local function generate_config(modules)
+local function generate_modules_lua(modules)
   local lines = {
     "--[[",
-    "  WezMacs Configuration",
+    "  WezMacs Modules Configuration",
     "",
-    "  This file configures all WezMacs modules. Each module is listed below",
-    "  with its available options and default values.",
+    "  This file lists which modules to load.",
+    "  Each entry can be:",
+    "    - A string: \"module-name\" (enables module with default options)",
+    "    - A table: { \"module-name\", opts = { ... }, keys = { ... } }",
     "",
-    "  Configuration locations (priority order):",
-    "    1. ~/.wezmacs.lua",
-    "    2. ~/.config/wezmacs/wezmacs.lua",
+    "  Examples:",
+    "    \"core\"  -- Enable core module",
+    "    { \"git\", opts = { leader_key = \"G\" } }  -- Enable git with custom options",
+    "    { \"claude\", keys = { LEADER = { c = { action = ..., desc = \"...\" } } } }  -- Override keys",
     "",
     "  Generated by: wezmacs/generate-config.lua",
-    "  Edit this file to customize your configuration.",
     "]]",
     "",
     "return {",
   }
-
-  -- Group modules by category (heuristic: check first word of description)
-  local categories = {
-    core = {},
-    ui = {},
-    behavior = {},
-    editing = {},
-    workflows = {},
-    tools = {},
-    integration = {},
-  }
-
+  
+  -- Add all modules as strings (simple enable)
   for _, mod in ipairs(modules) do
-    local category = "integration" -- default
-    if mod.name == "core" then
-      category = "core"
-    elseif mod.description then
-      local desc_lower = mod.description:lower()
-      if desc_lower:match("color") or desc_lower:match("font") or desc_lower:match("tab") or desc_lower:match("window") or desc_lower:match("visual") then
-        category = "ui"
-      elseif desc_lower:match("mouse") or desc_lower:match("scroll") then
-        category = "behavior"
-      elseif desc_lower:match("key") or desc_lower:match("edit") then
-        category = "editing"
-      elseif desc_lower:match("git") or desc_lower:match("workspace") or desc_lower:match("claude") then
-        category = "workflows"
-      elseif desc_lower:match("docker") or desc_lower:match("kubernetes") or desc_lower:match("file") or desc_lower:match("editor") or desc_lower:match("system") or desc_lower:match("media") then
-        category = "tools"
-      end
-    end
-    table.insert(categories[category], mod)
+    table.insert(lines, '  "' .. mod.name .. '",')
   end
-
-  -- Generate config sections
-  local category_names = {
-    core = "Core Settings",
-    ui = "UI Modules",
-    behavior = "Behavior Modules",
-    editing = "Editing Modules",
-    workflows = "Workflow Modules",
-    tools = "Tool Modules",
-    integration = "Integration Modules",
-  }
-
-  local category_order = {"core", "ui", "behavior", "editing", "workflows", "tools", "integration"}
-
-  for _, cat_key in ipairs(category_order) do
-    local cat_modules = categories[cat_key]
-    if #cat_modules > 0 then
-      table.insert(lines, "  -- " .. category_names[cat_key])
-      for _, mod in ipairs(cat_modules) do
-        if mod.description then
-          table.insert(lines, "  -- " .. mod.description)
-        end
-        -- Quote module name if it contains hyphens
-        local module_key = mod.name
-        if module_key:match("-") then
-          module_key = '["' .. module_key .. '"]'
-        end
-        table.insert(lines, "  " .. module_key .. " = {")
-
-        if mod.config then
-          for field, value in pairs(mod.config) do
-            table.insert(lines, "    -- " .. field .. " = " .. value .. ",")
-          end
-        end
-
-        if mod.features and #mod.features > 0 then
-          table.insert(lines, "")
-          table.insert(lines, "    -- Optional features (set enabled = true to enable):")
-          for _, feature in ipairs(mod.features) do
-            table.insert(lines, "    -- " .. feature .. " = { enabled = false },")
-          end
-        end
-
-        table.insert(lines, "  },")
-        table.insert(lines, "")
-      end
-    end
-  end
-
+  
   table.insert(lines, "}")
   table.insert(lines, "")
+  
+  return table.concat(lines, "\n")
+end
+
+local function generate_config_lua()
+  local lines = {
+    "--[[",
+    "  WezMacs Global Configuration",
+    "",
+    "  This file contains global WezMacs settings.",
+    "  These values override defaults from wezmacs/config.lua",
+    "",
+    "  Available settings:",
+    "    font_size - Font size (number, e.g., 12.0)",
+    "    font_family - Font family name (string, nil for default)",
+    "    color_scheme - Color scheme name (string, nil for default)",
+    "    mod_key - Modifier key (\"CMD\", \"ALT\", \"CTRL\", \"SHIFT\")",
+    "    leader_key - Leader key (string, e.g., \"Space\")",
+    "    leader_mod - Leader modifier (\"CMD\", \"ALT\", \"CTRL\", \"SHIFT\")",
+    "    shell - Shell path (string, defaults to $SHELL or /bin/bash)",
+    "",
+    "  Modules can access these via:",
+    "    local wezmacs = require('wezmacs')",
+    "    print(wezmacs.config.font_size)",
+    "",
+    "  Generated by: wezmacs/generate-config.lua",
+    "]]",
+    "",
+    "return {",
+    "  -- font_size = 12.0,",
+    "  -- font_family = nil,  -- nil = use WezTerm default",
+    "  -- color_scheme = nil,  -- nil = use WezTerm default",
+    "  -- mod_key = \"CMD\",",
+    "  -- leader_key = \"Space\",",
+    "  -- leader_mod = \"CTRL\",",
+    "  -- shell = nil,  -- nil = use $SHELL or /bin/bash",
+    "}",
+    "",
+  }
 
   return table.concat(lines, "\n")
 end
 
 local function main()
-  local output_path = arg[1]
-  if not output_path then
-    output_path = get_config_dir() .. "/wezmacs/wezmacs.lua"
+  local output_dir = arg[1]
+  if not output_dir then
+    output_dir = get_config_dir()
   end
+
+  -- Ensure output_dir ends without trailing slash
+  output_dir = output_dir:gsub("/+$", "")
 
   print("Scanning modules...")
   local modules = scan_modules()
   print("Found " .. #modules .. " modules")
 
-  print("Generating configuration...")
-  local config = generate_config(modules)
-
+  print("Generating configuration files in: " .. output_dir)
+  
   -- Create directory if needed
-  local output_dir = output_path:match("^(.+)/[^/]+$")
-  if output_dir then
-    os.execute("mkdir -p '" .. output_dir .. "'")
-  end
+  os.execute("mkdir -p '" .. output_dir .. "'")
 
-  print("Writing configuration to: " .. output_path)
-  local f = io.open(output_path, "w")
+  -- Generate modules.lua
+  local modules_content = generate_modules_lua(modules)
+  local modules_path = output_dir .. "/modules.lua"
+  local f = io.open(modules_path, "w")
   if not f then
-    error("Failed to open output file: " .. output_path)
+    error("Failed to open output file: " .. modules_path)
   end
-  f:write(config)
+  f:write(modules_content)
   f:close()
+  print("  ✓ Generated " .. modules_path)
 
-  print("✓ Configuration generated successfully")
+  -- Generate config.lua
+  local config_content = generate_config_lua()
+  local config_path = output_dir .. "/config.lua"
+  f = io.open(config_path, "w")
+  if not f then
+    error("Failed to open output file: " .. config_path)
+  end
+  f:write(config_content)
+  f:close()
+  print("  ✓ Generated " .. config_path)
+
+  print("")
+  print("✓ Configuration files generated successfully")
   print("")
   print("Next steps:")
-  print("1. Edit " .. output_path .. " to customize your configuration")
-  print("2. Reload WezTerm (Cmd+Option+R on macOS)")
+  print("1. Edit " .. output_dir .. "/modules.lua to enable/configure modules")
+  print("2. Edit " .. output_dir .. "/config.lua for global settings")
+  print("3. Copy example/wezterm.lua to ~/.config/wezterm/wezterm.lua")
+  print("4. Reload WezTerm (Cmd+Option+R on macOS)")
 end
 
 main()

@@ -2,59 +2,54 @@
   Module: workspace
   Category: workflows
   Description: WezTerm workspace switching and management with fuzzy search
-
-  Provides:
-  - Fuzzy workspace switcher (default: LEADER s)
-  - Previous workspace navigation (default: LEADER S)
-  - Integration with smart_workspace_switcher plugin
-
-  Note: For Claude Code workspace management, see the claude module.
-
-  Configuration:
-    switch_key - Key for workspace switcher (default: "s")
-    switch_mod - Modifier for switch key (default: "LEADER")
-    prev_key - Key for previous workspace (default: "S")
-    prev_mod - Modifier for previous key (default: "LEADER")
 ]]
 
+local act = require("wezmacs.action")
 local wezterm = require("wezterm")
-local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
 
-local M = {}
+return {
+  name = "workspace",
+  category = "workflows",
+  description = "Workspace switching and management",
 
-M._NAME = "workspace"
-M._CATEGORY = "workflows"
-M._DESCRIPTION = "Workspace switching and management"
-M._EXTERNAL_DEPS = {} -- Uses WezTerm plugin: smart_workspace_switcher
-M._CONFIG = {
-  default_workspace = "~",
-  switch_key = "s",
-  switch_mod = "LEADER",
-  prev_key = "S",
-  prev_mod = "LEADER",
+  deps = {},
+
+  opts = function()
+    return {
+      default_workspace = "~",
+      switch_key = "s",
+      switch_mod = "LEADER",
+      prev_key = "S",
+      prev_mod = "LEADER",
+    }
+  end,
+
+  keys = function()
+    local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
+    
+    return {
+      LEADER = {
+        s = {
+          action = function()
+            return workspace_switcher.switch_workspace()
+          end,
+          desc = "workspace/switch",
+        },
+        S = {
+          action = function()
+            return workspace_switcher.switch_to_prev_workspace()
+          end,
+          desc = "workspace/switch-prev",
+        },
+      },
+    }
+  end,
+
+  enabled = true,
+
+  priority = 50,
+
+  setup = function(config, opts)
+    config.default_workspace = opts.default_workspace
+  end,
 }
-
-function M.apply_to_config(config)
-  local mod = wezmacs.get_module(M._NAME)
-  
-  config.default_workspace = mod.default_workspace
-
-  -- Keybindings
-  config.keys = config.keys or {}
-
-  -- Workspace switcher
-  table.insert(config.keys, {
-    key = mod.switch_key,
-    mods = mod.switch_mod,
-    action = workspace_switcher.switch_workspace(),
-  })
-
-  -- Switch to previous workspace
-  table.insert(config.keys, {
-    key = mod.prev_key,
-    mods = mod.prev_mod,
-    action = workspace_switcher.switch_to_prev_workspace(),
-  })
-end
-
-return M

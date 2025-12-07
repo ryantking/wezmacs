@@ -2,40 +2,38 @@
   Module: kubernetes
   Category: devops
   Description: Kubernetes cluster management with k9s
-
-  Provides:
-  - k9s launcher in new tab
-  - Cluster management and monitoring
-
-  Configurable flags:
-    keybinding - Keybinding to launch k9s (default: "k")
-    modifier - Key modifier (default: "LEADER")
 ]]
 
-local wezterm = require("wezterm")
-local act = wezterm.action
+local act = require("wezmacs.action")
 
-local M = {}
+return {
+  name = "kubernetes",
+  category = "devops",
+  description = "Kubernetes cluster management with k9s",
 
-M._NAME = "kubernetes"
-M._CATEGORY = "devops"
-M._DESCRIPTION = "Kubernetes cluster management with k9s"
-M._EXTERNAL_DEPS = { "k9s" }
-M._CONFIG = {
-  keybinding = "k",
-  modifier = "LEADER",
+  deps = { "k9s" },
+
+  opts = function()
+    return {
+      keybinding = "k",
+      modifier = "LEADER",
+    }
+  end,
+
+  keys = {
+    LEADER = {
+      k = {
+        action = act.NewTab("k9s"),
+        desc = "kubernetes/k9s",
+      },
+    },
+  },
+
+  enabled = true,
+
+  priority = 50,
+
+  setup = function(config, opts)
+    -- Module-specific setup (if any)
+  end,
 }
-
-function M.apply_to_config(wezterm_config)
-  local mod = wezmacs.get_module(M._NAME)
-
-  wezterm_config.keys = wezterm_config.keys or {}
-
-  table.insert(wezterm_config.keys, {
-    key = mod.keybinding,
-    mods = mod.modifier,
-    action = act.SpawnCommandInNewTab({ args = { "k9s" } })
-  })
-end
-
-return M

@@ -1,164 +1,93 @@
 --[[
-  WezMacs Module Loader
-
-  Handles module discovery, loading, and config merging phases.
-
-  Unified config format:
-  - Single config.lua contains module configs: {module_name = {key = value, ...}, ...}
-  - Module enabled = key exists in config table
-  - Feature flags = nested objects within module config
-  - Modules use new API: apply_to_config(config) - config accessed via wezmacs.get_config()
+  WezMacs Module Loading
+  
+  Handles loading modules from directories.
 ]]
 
 local wezterm = require("wezterm")
 
 local M = {}
 
--- Default load order (can be overridden by user via _load_order in config)
--- Ensures deterministic module loading to prevent keybinding conflicts
-local DEFAULT_LOAD_ORDER = {
-  "core",        -- Must be first (base settings)
-  "theme",       -- Visual settings early
-  "keybindings", -- Core keybindings before modules that extend them
-  "workspace",   -- Workspace management
-  "git",
-  "claude",
-  "docker",
-  "file-manager",
-  "editors",
-  "domains",
-  "kubernetes",
-  "media",
-  "mouse",
-  "system-monitor",
-  "tabbar",
-  "window",
-}
-
--- Deep merge two tables, with user values taking precedence
----@param schema table Config schema with default values
----@param user_config table User-provided configuration
----@return table Merged configuration
-function M.deep_merge(schema, user_config)
-  local result = {}
-
-  -- Copy all schema keys
-  for k, v in pairs(schema) do
-    if type(v) == "table" and type(user_config[k]) == "table" then
-      -- Recursive merge for nested tables
-      result[k] = M.deep_merge(v, user_config[k])
-    else
-      -- Use user value if present, otherwise use schema default
-      result[k] = user_config[k] ~= nil and user_config[k] or v
-    end
+-- Load modules.lua from wezmacs config directory
+function M.list(wezmacs_config_dir)
+  local modules_path = wezmacs_config_dir .. "/modules.lua"
+  local file = io.open(modules_path, "r")
+  if not file then
+    wezterm.log_error("[WezMacs] modules.lua not found at " .. modules_path)
+    return {}
   end
-
-  -- Add any user keys not in schema
-  for k, v in pairs(user_config) do
-    if result[k] == nil then
-      result[k] = v
-    end
+  file:close()
+  
+  local chunk, err = loadfile(modules_path)
+  if not chunk then
+    wezterm.log_error("[WezMacs] Failed to load modules.lua: " .. tostring(err))
+    return {}
   end
-
-  return result
+  
+  local success, modules = pcall(chunk)
+  if not success then
+    wezterm.log_error("[WezMacs] Error executing modules.lua: " .. tostring(modules))
+    return {}
+  end
+  
+  if type(modules) ~= "table" then
+    wezterm.log_error("[WezMacs] modules.lua must return a table")
+    return {}
+  end
+  
+  return modules
 end
 
-
--- Load all modules based on unified config
----@param unified_config table Unified config table where keys are module names
----@param log function Logging function
----@return table, table Loaded modules (flat array), states with merged configs
-function M.load_all(unified_config, log)
-  local modules = {}
-  local states = {}
-
-  -- Extract user-defined load order if present
-  local user_load_order = unified_config._load_order
-  local load_order = user_load_order or DEFAULT_LOAD_ORDER
-
-  -- Build ordered list: explicit order first, then remaining modules
-  local ordered_modules = {}
-  local seen = {}
-
-  -- Add modules in explicit order
-  for _, mod_name in ipairs(load_order) do
-    if unified_config[mod_name] then
-      table.insert(ordered_modules, mod_name)
-      seen[mod_name] = true
-    end
-  end
-
-  -- Add any remaining modules not in explicit order
-  for mod_name, _ in pairs(unified_config) do
-    if mod_name ~= "_load_order" and not seen[mod_name] then
-      table.insert(ordered_modules, mod_name)
-    end
-  end
-
-  -- Load modules in deterministic order
-  for _, mod_name in ipairs(ordered_modules) do
-    local mod_user_config = unified_config[mod_name]
-
-    if type(mod_user_config) ~= "table" then
-      log("warn", "Invalid config for module '" .. mod_name .. "' (must be a table)")
-      goto continue
-    end
-
-    local mod = M.load_module(mod_name, log)
-    if mod then
-      -- Validate module has _CONFIG
-      if not mod._CONFIG then
-        log("error", "Module '" .. mod_name .. "' missing required '_CONFIG' definition")
-        goto continue
+-- Load a module from wezmacs_framework_dir/modules or wezterm_config_dir/modules
+-- Modules are in directory structure: module-name/init.lua
+function M.load(module_name, wezmacs_framework_dir, wezterm_config_dir)
+  -- Try wezmacs_framework_dir/modules/module-name/init.lua first
+  local wezmacs_module_path = wezmacs_framework_dir .. "/modules/" .. module_name .. "/init.lua"
+  local file = io.open(wezmacs_module_path, "r")
+  if file then
+    file:close()
+    -- Set up package.path to allow local requires within the module
+    local module_dir = wezmacs_framework_dir .. "/modules/" .. module_name
+    local old_path = package.path
+    package.path = module_dir .. "/?.lua;" .. package.path
+    
+    local chunk, err = loadfile(wezmacs_module_path)
+    if chunk then
+      local success, mod = pcall(chunk)
+      package.path = old_path  -- Restore package.path
+      if success and mod then
+        return mod
       end
-
-      -- Deep merge user config with module _CONFIG defaults
-      local merged_config = M.deep_merge(mod._CONFIG, mod_user_config)
-
-      -- Store module and state
-      states[mod_name] = merged_config
-      table.insert(modules, mod)
-
-      log("info", "Loaded module: " .. mod_name)
+    else
+      package.path = old_path  -- Restore package.path on error
     end
-
-    ::continue::
   end
-
-  return modules, states
-end
-
--- Load a single module by name
----@param mod_name string Module name
----@param log function Logging function
----@return table|nil Loaded module or nil if failed
-function M.load_module(mod_name, log)
-  -- Try built-in modules first (flat structure under wezmacs/modules/)
-  local require_path = "wezmacs.modules." .. mod_name
-  local ok, mod = pcall(require, require_path)
-
-  -- If not found in built-in, try custom modules
-  if not ok then
-    require_path = "user.custom-modules." .. mod_name
-    ok, mod = pcall(require, require_path)
+  
+  -- Try wezterm_config_dir/modules/module-name/init.lua
+  if wezterm_config_dir then
+    local user_module_path = wezterm_config_dir .. "/modules/" .. module_name .. "/init.lua"
+    local file = io.open(user_module_path, "r")
+    if file then
+      file:close()
+      -- Set up package.path to allow local requires within the module
+      local module_dir = wezterm_config_dir .. "/modules/" .. module_name
+      local old_path = package.path
+      package.path = module_dir .. "/?.lua;" .. package.path
+      
+      local chunk, err = loadfile(user_module_path)
+      if chunk then
+        local success, mod = pcall(chunk)
+        package.path = old_path  -- Restore package.path
+        if success and mod then
+          return mod
+        end
+      else
+        package.path = old_path  -- Restore package.path on error
+      end
+    end
   end
-
-  if not ok then
-    log("error", "Failed to load module '" .. mod_name .. "': " .. tostring(mod))
-    return nil
-  end
-
-  -- Validate module has required interface
-  if not mod.apply_to_config then
-    log("error", "Module '" .. mod_name .. "' missing required 'apply_to_config' function")
-    return nil
-  end
-
-  if not mod._NAME then
-    log("warn", "Module '" .. mod_name .. "' missing '_NAME' metadata")
-  end
-
-  return mod
+  
+  return nil
 end
 
 return M

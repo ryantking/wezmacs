@@ -2,58 +2,59 @@
   Module: editors
   Category: development
   Description: External code editor launchers (terminal editor and IDE)
-
-  Provides:
-  - Terminal editor in smart split (LEADER e t)
-  - Terminal editor in new tab (LEADER e T)
-  - IDE launcher in CWD (LEADER e i)
-  - Configurable editor/IDE choices
-
-  Configuration:
-    terminal_editor - Terminal editor to use (default: "vim")
-    ide - IDE to launch (default: "code" for VS Code)
-    leader_key - Key to activate editors menu (default: "e")
-    leader_mod - Modifier for leader key (default: "LEADER")
 ]]
 
+local act = require("wezmacs.action")
 local wezterm = require("wezterm")
-local act = wezterm.action
 
-local M = {}
+return {
+  name = "editors",
+  category = "development",
+  description = "External code editor launchers",
 
-M._NAME = "editors"
-M._CATEGORY = "development"
-M._DESCRIPTION = "External code editor launchers"
-M._EXTERNAL_DEPS = {}
-M._CONFIG = {
-  editor = "vim",
-  ide = "code",
-  editor_split_key = "e",
-  editor_tab_key = "E",
-  ide_key = "i",
-}
+  deps = {},
 
-function M.apply_to_config(wezterm_config)
-  local mod = wezmacs.get_module(M._NAME)
-  local actions = require("wezmacs.modules.editors.actions").setup(mod.editor, mod.ide)
-
-  wezterm_config.keys = wezterm_config.keys or {}
-  table.insert(
-    wezterm_config.keys,
-    { key = mod.editor_split_key, mods = "LEADER", action = wezterm.action_callback(actions.terminal_smart_split) }
-  )
-  table.insert(
-    wezterm_config.keys,
-    {
-      key = mod.editor_tab_key,
-      mods = "LEADER",
-      action = act.SpawnCommandInNewTab({args = { os.getenv("SHELL") or "/bin/bash", "-lc", mod.editor }})
+  opts = function()
+    return {
+      editor = "vim",
+      ide = "code",
+      editor_split_key = "e",
+      editor_tab_key = "E",
+      ide_key = "i",
     }
-  )
-  table.insert(
-    wezterm_config.keys,
-    { key = mod.ide_key, mods = "LEADER", action = wezterm.action_callback(actions.launch_ide) }
-  )
-end
+  end,
 
-return M
+  keys = function(opts)
+    local editor = opts.editor or "vim"
+    local ide = opts.ide or "code"
+    
+    return {
+      LEADER = {
+        e = {
+          action = act.SmartSplit(editor),
+          desc = "editors/editor-split",
+        },
+        E = {
+          action = act.NewTab(editor),
+          desc = "editors/editor-tab",
+        },
+        i = {
+          action = function(window, pane)
+            local cwd_uri = pane:get_current_working_dir()
+            local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
+            wezterm.background_child_process({ ide, cwd })
+          end,
+          desc = "editors/launch-ide",
+        },
+      },
+    }
+  end,
+
+  enabled = true,
+
+  priority = 50,
+
+  setup = function(config, opts)
+    -- Module-specific setup (if any)
+  end,
+}
