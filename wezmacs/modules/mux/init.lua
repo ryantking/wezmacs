@@ -85,8 +85,9 @@ return {
 			{
 				key = "N",
 				mods = "LEADER",
-				action = wezterm.action_callback(function(_, pane)
-					pane:move_to_new_tab()
+				action = wezterm.action_callback(function(window, pane)
+					local tab, _ = pane:move_to_new_tab()
+					tab:activate()
 				end),
 				desc = "wezterm/move-pane-to-tab",
 			},
@@ -94,7 +95,8 @@ return {
 				key = "W",
 				mods = "LEADER",
 				action = wezterm.action_callback(function(_, pane)
-					pane:move_to_new_window()
+					local _, window = pane:move_to_new_window()
+					window:activate()
 				end),
 				desc = "wezterm/move-pane-to-window",
 			},

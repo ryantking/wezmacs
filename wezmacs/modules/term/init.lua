@@ -139,12 +139,6 @@ return {
 			end)
 		end
 
-		-- Color scheme configuration
-		local color_scheme = wezmacs.color_scheme()
-		if color_scheme then
-			config.colors = color_scheme
-		end
-
 		-- Font configuration
 		if opts.font then
 			config.font = wezterm.font_with_fallback({

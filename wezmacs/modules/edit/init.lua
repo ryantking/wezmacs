@@ -22,9 +22,24 @@ return {
 
 	keys = function(opts)
 		return {
-			{ key = "Space", mods = "LEADER", action = wezmacs.action.NewTab(opts.file_searcher), desc = "find-file" },
-			{ key = "Enter", mods = "LEADER", action = wezmacs.action.NewTab(opts.editor), desc = "open-editor" },
-			{ key = ".", mods = "LEADER", action = wezmacs.action.NewTab(opts.file_manager), desc = "browse-files" },
+			{
+				key = "Space",
+				mods = "LEADER",
+				action = wezmacs.action.SmartSplit(opts.file_searcher),
+				desc = "find-file",
+			},
+			{
+				key = "Enter",
+				mods = "LEADER",
+				action = wezmacs.action.SmartSplit(opts.editor),
+				desc = "open-editor",
+			},
+			{
+				key = ".",
+				mods = "LEADER",
+				action = wezmacs.action.SmartSplit(opts.file_manager),
+				desc = "browse-files",
+			},
 			{
 				key = "i",
 				mods = "LEADER",

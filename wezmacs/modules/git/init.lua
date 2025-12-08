@@ -34,6 +34,8 @@ return {
 					{ key = "S", action = wezmacs.action.NewTab("br -ghc :gs"), desc = "status/tab" },
 					{ key = "d", action = wezmacs.action.SmartSplit(diff_cmd), desc = "diff/split" },
 					{ key = "D", action = wezmacs.action.NewWindow(diff_cmd), desc = "diff/window" },
+					{ key = "h", action = wezmacs.action.SmartSplit("gh dash"), desc = "github/split" },
+					{ key = "H", action = wezmacs.action.NewTab("gh dash"), desc = "github/split" },
 				},
 			},
 		}

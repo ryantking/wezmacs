@@ -18,7 +18,7 @@ return {
 			audible_bell = "Disabled",
 			disable_default_key_bindings = true,
 			leader_key = "Space",
-			leader_mod = wezmacs.config.platform == "macos" and wezmacs.config.gui_mod or wezmacs.config.ctrl_mod,
+			leader_mod = wezmacs.config.platform == "darwin" and wezmacs.config.gui_mod or wezmacs.config.ctrl_mod,
 
 			-- Keybindings
 			term_mod = wezmacs.config.term_mod,
@@ -41,9 +41,12 @@ return {
 				[","] = {
 					{ key = "d", action = wezmacs.action.SmartSplit("lazydocker"), desc = "lazydocker/split" },
 					{ key = "D", action = wezmacs.action.NewTab("lazydocker"), desc = "lazydocker/tab" },
-					{ key = "k", action = wezmacs.action.NewTab("k9s"), desc = "kubernetes" },
-					{ key = "s", action = wezmacs.action.NewTab("spotify_player"), desc = "spotify" },
-					{ key = "m", action = wezmacs.action.NewTab("btm"), desc = "monitor" },
+					{ key = "k", action = wezmacs.action.SmartSplit("k9s"), desc = "kubernetes" },
+					{ key = "K", action = wezmacs.action.NewTab("k9s"), desc = "kubernetes" },
+					{ key = "s", action = wezmacs.action.SmartSplit("spotify_player"), desc = "spotify" },
+					{ key = "S", action = wezmacs.action.NewTab("spotify_player"), desc = "spotify" },
+					{ key = "m", action = wezmacs.action.SmartSplit("btm"), desc = "monitor" },
+					{ key = "M", action = wezmacs.action.NewTab("btm"), desc = "monitor" },
 				},
 			},
 		}

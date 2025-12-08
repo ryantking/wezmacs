@@ -66,6 +66,35 @@ local function resolve_action(action)
 	return action
 end
 
+-- Wrap an action to exit key table after execution
+-- This ensures that after executing an action from within a key table,
+-- WezTerm exits the key table context
+local function wrap_with_pop_key_table(action)
+	local resolved = resolve_action(action)
+	
+	-- If it's already PopKeyTable, don't wrap
+	if resolved == "PopKeyTable" then
+		return resolved
+	end
+	
+	-- Wrap in a callback that executes the action and then pops the key table
+	return wezterm.action_callback(function(window, pane)
+		-- Execute the original action
+		-- All resolved actions should be executable via perform_action
+		-- Functions returned by resolve_action are already wrapped in action_callback
+		if type(resolved) == "function" then
+			-- It's already an action_callback function, call it directly
+			resolved(window, pane)
+		else
+			-- It's a WezTerm action (table or string), execute it
+			window:perform_action(resolved, pane)
+		end
+		
+		-- Pop the key table after the action completes
+		window:perform_action("PopKeyTable", pane)
+	end)
+end
+
 -- Check if a value is a keybinding spec (has key field)
 local function is_keybinding_spec(value)
 	return type(value) == "table" and value.key ~= nil
@@ -199,9 +228,14 @@ local function convert_key_map(key_map, module_name, table_prefix)
 						-- Process nested table recursively
 						local nested_keys, nested_tables = convert_key_map(sub_value, module_name, "LEADER." .. sub_key)
 						
-						-- Add keys to the key table
+						-- Add keys to the key table, wrapping actions to exit the table
 						for _, k in ipairs(nested_keys) do
-							table.insert(key_tables[table_name], k)
+							local wrapped_key = {
+								key = k.key,
+								mods = k.mods,
+								action = wrap_with_pop_key_table(k.action),
+							}
+							table.insert(key_tables[table_name], wrapped_key)
 						end
 						
 						-- Merge nested key tables
@@ -250,9 +284,14 @@ local function convert_key_map(key_map, module_name, table_prefix)
 						-- Process list items recursively
 						local nested_keys, nested_tables = convert_key_map(sub_value, module_name, "LEADER." .. sub_key)
 						
-						-- Add keys to the key table
+						-- Add keys to the key table, wrapping actions to exit the table
 						for _, k in ipairs(nested_keys) do
-							table.insert(key_tables[table_name], k)
+							local wrapped_key = {
+								key = k.key,
+								mods = k.mods,
+								action = wrap_with_pop_key_table(k.action),
+							}
+							table.insert(key_tables[table_name], wrapped_key)
 						end
 						
 						-- Merge nested key tables
@@ -301,9 +340,14 @@ local function convert_key_map(key_map, module_name, table_prefix)
 				-- Process nested table recursively
 				local nested_keys, nested_tables = convert_key_map(value, module_name, table_prefix == "" and key_name or table_prefix .. "." .. key_name)
 				
-				-- Add keys to the key table
+				-- Add keys to the key table, wrapping actions to exit the table
 				for _, k in ipairs(nested_keys) do
-					table.insert(key_tables[table_name], k)
+					local wrapped_key = {
+						key = k.key,
+						mods = k.mods,
+						action = wrap_with_pop_key_table(k.action),
+					}
+					table.insert(key_tables[table_name], wrapped_key)
 				end
 				
 				-- Merge nested key tables

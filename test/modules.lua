@@ -15,7 +15,8 @@
 ]]
 
 return {
-	"agent",
+	"app",
+	"mouse",
 	{
 		"term",
 		opts = {
@@ -23,7 +24,21 @@ return {
 			font_size = 24,
 		},
 	},
-	"mux",
+	{
+		"window",
+		opts = {
+			font = "Iosevka",
+			font_size = 18,
+		},
+	},
+	{ "tabs" },
+	{
+		"mux",
+		opts = {
+			term_mod = "CTRL|SHIFT",
+			term_alt_mod = "CTRL|SHIFT|ALT",
+		},
+	},
 	{
 		"edit",
 		opts = {
@@ -31,16 +46,6 @@ return {
 			ide = "cursor",
 		},
 	},
-	"app",
 	"git",
-	"mouse",
-
-	{
-		"tabs",
-		opts = {
-			font = "Iosevka",
-			font_size = 18,
-		},
-	},
-	"window",
+	"agent",
 }

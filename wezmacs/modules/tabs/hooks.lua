@@ -7,7 +7,7 @@ local wezterm = require("wezterm")
 local M = {}
 
 -- Icons to prepend to titles
-M.icons = {
+local icons = {
 	["bash"] = wezterm.nerdfonts.cod_terminal_bash,
 	["fish"] = wezterm.nerdfonts.md_fish,
 	["zsh"] = wezterm.nerdfonts.dev_terminal,
@@ -40,7 +40,7 @@ M.icons = {
 }
 
 -- Full titles to replace applications
-M.titles = {
+local titles = {
 	["k9s"] = wezterm.nerdfonts.dev_kubernetes .. " Kubernetes",
 	["lazydocker"] = wezterm.nerdfonts.md_docker .. " Docker",
 	["spotify_player"] = wezterm.nerdfonts.md_spotify .. " Spotify",
@@ -49,68 +49,55 @@ M.titles = {
 	["btop"] = wezterm.nerdfonts.md_chart_areaspline .. " Btop",
 }
 
+-- Add zoom annotation if pane zoomed
+local function wrap_title(tab, title)
+	for _, pane in ipairs(tab.panes) do
+		if pane.is_zoomed then
+			return { { Text = " 🔍 " .. title .. " " } }
+		end
+	end
+
+	return { { Text = " " .. title .. " " } }
+end
+
 -- Extract and format tab title with icon and context
-function M.format(tab, max_width)
+function M.format_tab_title(tab, _, _, _, _, _)
 	local title = (tab.tab_title and #tab.tab_title > 0) and tab.tab_title or tab.active_pane.title
 	local bin, other = title:match("^(%S+)%s*%-?%s*%s*(.*)$")
 
 	-- Full title replacement (icon + custom text, ignore application title)
-	if M.titles[bin] then
-		title = M.titles[bin]
+	if titles[title] then
+		return wrap_title(tab, titles[title])
 	-- Icon prepending (icon + application's title, or working directory if no title)
-	elseif M.icons[bin] then
-		local use_content = false
+	elseif icons[bin] then
+		local icon = icons[bin]
+		if other and #other > 0 then
+			return wrap_title(tab, icon .. " " .. other)
+		end
 
-		-- If application provided context/title, prepend icon to it
-		if other and other ~= "" then
-			-- Strip directory path from end (shell adds this, we don't want it for commands)
-			local content = other:gsub("%s+[~/][^%s]*$", ""):gsub("%s+~$", "")
+		local pane = tab.active_pane
+		if pane.current_working_dir then
+			local cwd = pane.current_working_dir.file_path or ""
+			-- Normalize path by removing trailing slash
+			local cwd_normalized = cwd:gsub("/$", "")
+			local home_normalized = wezterm.home_dir:gsub("/$", "")
 
-			-- If we still have content after stripping the path, use it
-			if content ~= "" then
-				title = M.icons[bin] .. " " .. content
-				use_content = true
+			-- Show ~ for home directory
+			if cwd_normalized == home_normalized or cwd_normalized == "" then
+				return wrap_title(tab, icon .. "  ~")
 			end
-		end
 
-		-- Fallback to working directory if no content
-		if not use_content then
-			local pane = tab.active_pane
-			local cwd_context = "~" -- default
-			if pane.current_working_dir then
-				local cwd = pane.current_working_dir.file_path or ""
-				-- Normalize path by removing trailing slash
-				local cwd_normalized = cwd:gsub("/$", "")
-				local home_normalized = wezterm.home_dir:gsub("/$", "")
-
-				-- Show ~ for home directory, otherwise show directory name
-				if cwd_normalized == home_normalized or cwd_normalized == "" then
-					cwd_context = "~"
-				else
-					local dir_name = cwd_normalized:match("([^/]+)$") or ""
-					if dir_name ~= "" then
-						cwd_context = dir_name
-					end
-				end
+			-- Show directory name otherwise
+			local dir_name = cwd_normalized:match("([^/]+)$") or ""
+			if dir_name ~= "" then
+				return wrap_title(tab, icon .. " " .. dir_name)
 			end
-			title = M.icons[bin] .. " " .. cwd_context
+
+			return wrap_title(tab, icon .. " ???")
 		end
 	end
 
-	-- Show zoom indicator if pane is zoomed
-	local is_zoomed = false
-	for _, pane in ipairs(tab.panes) do
-		if pane.is_zoomed then
-			is_zoomed = true
-			break
-		end
-	end
-	if is_zoomed then
-		title = "🔍 " .. title
-	end
-
-	-- Don't truncate here - tab_max_width config handles it
-	return " " .. title .. " "
+	return wrap_title(tab, title)
 end
 
 return M

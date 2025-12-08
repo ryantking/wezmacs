@@ -18,8 +18,5 @@
 ]]
 
 return {
-	color_scheme = "Horizon Dark (Gogh)",
-	mod_key = "SUPER",
-	-- leader_key = "Space",
-	leader_mod = "SUPER",
+	term_mod = "LEADER",
 }
