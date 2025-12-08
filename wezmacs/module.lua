@@ -17,24 +17,24 @@ function M.list(wezmacs_config_dir)
     return {}
   end
   file:close()
-  
+
   local chunk, err = loadfile(modules_path)
   if not chunk then
     wezterm.log_error("[WezMacs] Failed to load modules.lua: " .. tostring(err))
     return {}
   end
-  
+
   local success, modules = pcall(chunk)
   if not success then
     wezterm.log_error("[WezMacs] Error executing modules.lua: " .. tostring(modules))
     return {}
   end
-  
+
   if type(modules) ~= "table" then
     wezterm.log_error("[WezMacs] modules.lua must return a table")
     return {}
   end
-  
+
   return modules
 end
 
@@ -50,19 +50,19 @@ function M.load(module_name, wezmacs_framework_dir, wezterm_config_dir)
     local module_dir = wezmacs_framework_dir .. "/modules/" .. module_name
     local old_path = package.path
     package.path = module_dir .. "/?.lua;" .. package.path
-    
+
     local chunk, err = loadfile(wezmacs_module_path)
     if chunk then
       local success, mod = pcall(chunk)
-      package.path = old_path  -- Restore package.path
+      package.path = old_path -- Restore package.path
       if success and mod then
         return mod
       end
     else
-      package.path = old_path  -- Restore package.path on error
+      package.path = old_path -- Restore package.path on error
     end
   end
-  
+
   -- Try wezterm_config_dir/modules/module-name/init.lua
   if wezterm_config_dir then
     local user_module_path = wezterm_config_dir .. "/modules/" .. module_name .. "/init.lua"
@@ -73,20 +73,20 @@ function M.load(module_name, wezmacs_framework_dir, wezterm_config_dir)
       local module_dir = wezterm_config_dir .. "/modules/" .. module_name
       local old_path = package.path
       package.path = module_dir .. "/?.lua;" .. package.path
-      
+
       local chunk, err = loadfile(user_module_path)
       if chunk then
         local success, mod = pcall(chunk)
-        package.path = old_path  -- Restore package.path
+        package.path = old_path -- Restore package.path
         if success and mod then
           return mod
         end
       else
-        package.path = old_path  -- Restore package.path on error
+        package.path = old_path -- Restore package.path on error
       end
     end
   end
-  
+
   return nil
 end
 

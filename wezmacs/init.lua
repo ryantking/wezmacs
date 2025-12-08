@@ -21,12 +21,12 @@ M.config = {}
 -- This is computed lazily when accessed
 local color_scheme_cache = nil
 function M.color_scheme()
-	if color_scheme_cache == nil and M.config and M.config.color_scheme then
-		local wezterm = require("wezterm")
-		local schemes = wezterm.get_builtin_color_schemes()
-		color_scheme_cache = schemes[M.config.color_scheme]
-	end
-	return color_scheme_cache
+  if color_scheme_cache == nil and M.config and M.config.color_scheme then
+    local wezterm = require("wezterm")
+    local schemes = wezterm.get_builtin_color_schemes()
+    color_scheme_cache = schemes[M.config.color_scheme]
+  end
+  return color_scheme_cache
 end
 
 -- Discover wezmacs user config directory (where modules.lua and config.lua are)

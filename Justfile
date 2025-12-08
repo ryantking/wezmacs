@@ -39,7 +39,7 @@ init:
         exit 1; \
     fi
     @echo "Generating WezMacs configuration..."
-    @lua wezmacs/generate-config.lua
+    @lua scripts/generate-config.lua
     @mkdir -p ~/.config/wezterm/modules
     @echo ""
     @echo "Next steps:"
@@ -49,14 +49,14 @@ init:
 
 # Install WezMacs to ~/.config/wezterm/wezmacs
 install:
-    @if [ -d ~/.config/wezterm/wezmacs ]; then \
-        echo "WezMacs already installed at ~/.config/wezterm/wezmacs"; \
+    @if [ -d ~/.config/wezterm ]; then \
+        echo "WezMacs already installed at ~/.config/wezterm"; \
         echo "Run 'just update' to update, or 'just uninstall' to remove"; \
         exit 1; \
     fi
-    @echo "Installing WezMacs framework to ~/.config/wezterm/wezmacs..."
+    @echo "Installing WezMacs framework to ~/.config/wezterm..."
     @mkdir -p ~/.config/wezterm
-    @git clone "https://github.com/ryantking/wezmacs" ~/.config/wezterm/wezmacs
+    @git clone "https://github.com/ryantking/wezmacs" ~/.config/wezterm
     @echo "✓ WezMacs framework installed"
     @echo ""
     @echo "Next steps:"
@@ -67,13 +67,13 @@ install:
 
 # Update existing WezMacs installation
 update:
-    @if [ ! -d ~/.config/wezterm/wezmacs/.git ]; then \
+    @if [ ! -d ~/.config/wezterm/.git ]; then \
         echo "WezMacs not installed via git at ~/.config/wezterm/wezmacs"; \
         echo "Cannot auto-update. Please reinstall with 'just install'"; \
         exit 1; \
     fi
     @echo "Updating WezMacs framework..."
-    @cd ~/.config/wezterm/wezmacs && git pull
+    @cd ~/.config/wezterm && git pull
     @echo "✓ Framework updated"
     @echo ""
     @echo "Your configuration at ~/.config/wezmacs/modules.lua is unchanged"
@@ -84,20 +84,18 @@ uninstall:
     @echo "⚠️  This will remove WezMacs from ~/.config/wezterm/wezmacs"
     @echo "Your configuration at ~/.config/wezmacs/modules.lua will NOT be deleted"
     @echo ""
-    @if [ -d ~/.config/wezterm/wezmacs ]; then \
-        rm -rf ~/.config/wezterm/wezmacs; \
-        echo "✓ WezMacs removed from ~/.config/wezterm/wezmacs"; \
+    @if [ -d ~/.config/wezterm ]; then \
+        rm -rf ~/.config/wezterm; \
+        echo "✓ WezMacs removed from ~/.config/wezterm"; \
     fi
-    @echo ""
-    @echo "Note: Your ~/.config/wezterm/wezterm.lua is unchanged"
 
 # Show installation status
 status:
     @echo "WezMacs Installation Status"
     @echo "==========================="
     @echo ""
-    @if [ -d ~/.config/wezterm/wezmacs ]; then \
-        echo "✓ Framework installed at ~/.config/wezterm/wezmacs"; \
+    @if [ -d ~/.config/wezterm ]; then \
+        echo "✓ Framework installed at ~/.config/wezterm"; \
     else \
         echo "✗ Framework NOT installed"; \
     fi
@@ -111,7 +109,7 @@ status:
         echo "  - Custom modules: ~/.config/wezterm/modules/"; \
     fi
     @echo ""
-    @if [ -d ~/.config/wezterm/wezmacs ] && [ -f ~/.config/wezmacs/modules.lua ]; then \
+    @if [ -d ~/.config/wezterm ] && [ -f ~/.config/wezmacs/modules.lua ]; then \
         echo "Status: ✓ Ready to use!"; \
     else \
         echo "Status: Run 'just install' and 'just init' to set up"; \

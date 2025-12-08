@@ -7,14 +7,12 @@
   - config.lua: Global settings (theme, fonts, mod_key, config_builder, setup)
 
   Usage:
-    lua wezmacs/generate-config.lua [output_directory]
+    lua scripts/generate-config.lua [output_directory]
 
   Output directory defaults to ~/.config/wezmacs/
 ]]
 
-local function get_home_dir()
-  return os.getenv("HOME") or os.getenv("USERPROFILE")
-end
+local function get_home_dir() return os.getenv("HOME") or os.getenv("USERPROFILE") end
 
 local function get_config_dir()
   local xdg_config = os.getenv("XDG_CONFIG_HOME")
@@ -25,26 +23,54 @@ local function get_config_dir()
 end
 
 local function get_wezmacs_dir()
-  -- Get directory containing this script (wezmacs/generate-config.lua)
+  -- Get directory containing this script (scripts/generate-config.lua)
+  -- Script is located in scripts/ directory, wezmacs/ is sibling at repo root
   local script_path = arg[0]
   local script_dir
-  
-  -- Handle both absolute and relative paths
-  if script_path:match("^/") then
-    -- Absolute path
-    script_dir = script_path:match("^(.+)/[^/]+$")
-  else
-    -- Relative path - resolve from current working directory
-    local cwd = io.popen("pwd"):read("*l")
-    if script_path:match("^wezmacs/") then
-      -- Script path is relative like "wezmacs/generate-config.lua"
-      script_dir = cwd .. "/wezmacs"
-    else
-      -- Script path is just filename, assume wezmacs/ directory
-      script_dir = cwd .. "/wezmacs"
+  local cwd = io.popen("pwd"):read("*l")
+
+  -- Try to get script path from debug info first (more reliable)
+  if debug and debug.getinfo then
+    local source = debug.getinfo(1, "S").source
+    if source:match("^@") then
+      -- Remove @ prefix and get absolute path
+      source = source:sub(2)
+      if source:match("^/") then
+        script_dir = source:match("^(.+)/[^/]+$")
+      end
     end
   end
-  
+
+  -- Fallback to arg[0] if debug method didn't work
+  if not script_dir then
+    if script_path:match("^/") then
+      -- Absolute path
+      script_dir = script_path:match("^(.+)/[^/]+$")
+    elseif script_path:match("^scripts/") then
+      -- Relative path like "scripts/generate-config.lua"
+      script_dir = cwd .. "/scripts"
+    elseif script_path:match("^wezmacs/") then
+      -- Legacy: relative path like "wezmacs/generate-config.lua"
+      script_dir = cwd .. "/wezmacs"
+    else
+      -- Script path is just filename or unknown - check if scripts/ exists
+      local test_path = cwd .. "/scripts/generate-config.lua"
+      local f = io.open(test_path, "r")
+      if f then
+        f:close()
+        script_dir = cwd .. "/scripts"
+      else
+        -- Fallback: assume wezmacs/ directory (legacy)
+        script_dir = cwd .. "/wezmacs"
+      end
+    end
+  end
+
+  -- If script is in scripts/, go up one level to repo root, then into wezmacs/
+  if script_dir:match("/scripts$") then
+    script_dir = script_dir:match("^(.+)/scripts$") .. "/wezmacs"
+  end
+
   return script_dir
 end
 
@@ -66,19 +92,19 @@ local function scan_modules()
     if f then
       local content = f:read("*all")
       f:close()
-      
+
       -- Extract module name, description, and category from the spec table
       -- Look for patterns like: name = "git", description = "...", category = "..."
-      local name_match = content:match('name%s*=%s*["\']([^"\']+)["\']') or dir_name
-      local desc_match = content:match('description%s*=%s*["\']([^"\']+)["\']') or ""
-      local cat_match = content:match('category%s*=%s*["\']([^"\']+)["\']') or "integration"
-      
+      local name_match = content:match("name%s*=%s*[\"']([^\"']+)[\"']") or dir_name
+      local desc_match = content:match("description%s*=%s*[\"']([^\"']+)[\"']") or ""
+      local cat_match = content:match("category%s*=%s*[\"']([^\"']+)[\"']") or "integration"
+
       local module_info = {
         name = name_match,
         description = desc_match,
         category = cat_match,
       }
-      
+
       table.insert(modules, module_info)
     end
   end
@@ -86,9 +112,7 @@ local function scan_modules()
   handle:close()
 
   -- Sort modules by name
-  table.sort(modules, function(a, b)
-    return a.name < b.name
-  end)
+  table.sort(modules, function(a, b) return a.name < b.name end)
 
   return modules
 end
@@ -100,28 +124,28 @@ local function generate_modules_lua(modules)
     "",
     "  This file lists which modules to load.",
     "  Each entry can be:",
-    "    - A string: \"module-name\" (enables module with default options)",
-    "    - A table: { \"module-name\", opts = { ... }, keys = { ... } }",
+    '    - A string: "module-name" (enables module with default options)',
+    '    - A table: { "module-name", opts = { ... }, keys = { ... } }',
     "",
     "  Examples:",
-    "    \"term\"  -- Enable term module",
-    "    { \"git\", opts = { leader_key = \"G\" } }  -- Enable git with custom options",
-    "    { \"agent\", keys = { LEADER = { a = { action = ..., desc = \"...\" } } } }  -- Override keys",
+    '    "term"  -- Enable term module',
+    '    { "git", opts = { leader_key = "G" } }  -- Enable git with custom options',
+    '    { "agent", keys = { LEADER = { a = { action = ..., desc = "..." } } } }  -- Override keys',
     "",
-    "  Generated by: wezmacs/generate-config.lua",
+    "  Generated by: scripts/generate-config.lua",
     "]]",
     "",
     "return {",
   }
-  
+
   -- Add all modules as strings (simple enable)
   for _, mod in ipairs(modules) do
     table.insert(lines, '  "' .. mod.name .. '",')
   end
-  
+
   table.insert(lines, "}")
   table.insert(lines, "")
-  
+
   return table.concat(lines, "\n")
 end
 
@@ -135,23 +159,23 @@ local function generate_config_lua()
     "",
     "  Available settings:",
     "    color_scheme - Color scheme name (string, nil for default)",
-    "    mod_key - Modifier key (\"CMD\", \"ALT\", \"CTRL\", \"SHIFT\")",
-    "    leader_key - Leader key (string, e.g., \"Space\")",
-    "    leader_mod - Leader modifier (\"CMD\", \"ALT\", \"CTRL\", \"SHIFT\")",
+    '    mod_key - Modifier key ("CMD", "ALT", "CTRL", "SHIFT")',
+    '    leader_key - Leader key (string, e.g., "Space")',
+    '    leader_mod - Leader modifier ("CMD", "ALT", "CTRL", "SHIFT")',
     "    shell - Shell path (string, defaults to $SHELL or /bin/bash)",
     "",
     "  Modules can access these via:",
     "    local wezmacs = require('wezmacs')",
     "    print(wezmacs.config.color_scheme)",
     "",
-    "  Generated by: wezmacs/generate-config.lua",
+    "  Generated by: scripts/generate-config.lua",
     "]]",
     "",
     "return {",
     "  -- color_scheme = nil,  -- nil = use WezTerm default",
-    "  -- mod_key = \"CMD\",",
-    "  -- leader_key = \"Space\",",
-    "  -- leader_mod = \"CTRL\",",
+    '  -- mod_key = "CMD",',
+    '  -- leader_key = "Space",',
+    '  -- leader_mod = "CTRL",',
     "  -- shell = nil,  -- nil = use $SHELL or /bin/bash",
     "}",
     "",
@@ -174,7 +198,7 @@ local function main()
   print("Found " .. #modules .. " modules")
 
   print("Generating configuration files in: " .. output_dir)
-  
+
   -- Create directory if needed
   os.execute("mkdir -p '" .. output_dir .. "'")
 
