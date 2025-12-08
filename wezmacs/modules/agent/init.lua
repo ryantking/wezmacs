@@ -26,6 +26,12 @@ return {
         action = wezterm.action.SendString("\x1b\r"),
         desc = "newline",
       },
+      {
+        key = "Backspace",
+        mods = "ALT",
+        -- Send the legacy "ESC + DEL" sequence: 0x1b 0x7f
+        action = wezterm.action.SendString("\x1b\x7f"),
+      },
       LEADER = {
         a = {
           { key = "a", action = wezmacs.action.SmartSplit(opts.agent), desc = "split" },

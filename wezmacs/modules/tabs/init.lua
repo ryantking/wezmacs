@@ -79,24 +79,18 @@ return {
 
     -- Add numbered tab keys (1-9) with term modifier and gui modifier
     for i = 1, 9 do
-      table.insert(
-        keys_list,
-        {
-          key = tostring(i),
-          mods = opts.term_mod,
-          action = act.ActivateTab(i - 1),
-          desc = "activate-" .. i,
-        }
-      )
-      table.insert(
-        keys_list,
-        {
-          key = tostring(i),
-          mods = opts.gui_mod,
-          action = act.ActivateTab(i - 1),
-          desc = "activate-" .. i,
-        }
-      )
+      table.insert(keys_list, {
+        key = tostring(i),
+        mods = opts.term_mod,
+        action = act.ActivateTab(i - 1),
+        desc = "activate-" .. i,
+      })
+      table.insert(keys_list, {
+        key = tostring(i),
+        mods = opts.gui_mod,
+        action = act.ActivateTab(i - 1),
+        desc = "activate-" .. i,
+      })
     end
 
     return keys_list
