@@ -62,14 +62,20 @@ end
 
 -- Extract and format tab title with icon and context
 function M.format_tab_title(tab, _, _, _, _, _)
-	local title = (tab.tab_title and #tab.tab_title > 0) and tab.tab_title or tab.active_pane.title
-	local bin, other = title:match("^(%S+)%s*%-?%s*%s*(.*)$")
-
 	-- Full title replacement (icon + custom text, ignore application title)
+	local title = (tab.tab_title and #tab.tab_title > 0) and tab.tab_title or tab.active_pane.title
 	if titles[title] then
 		return wrap_title(tab, titles[title])
+	end
+
 	-- Icon prepending (icon + application's title, or working directory if no title)
-	elseif icons[bin] then
+	local bin, other = title:match("^(%S+)%s*%-?%s*%s*(.*)$")
+	if not bin or #bin == 0 then
+		local info = tab.active_pane.foreground_process_name
+		bin = string.gsub(info, "(.*[/\\])(.*)", "%2")
+	end
+
+	if icons[bin] then
 		local icon = icons[bin]
 		if other and #other > 0 then
 			return wrap_title(tab, icon .. " " .. other)
