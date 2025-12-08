@@ -18,7 +18,6 @@
 
 local wezterm = require("wezterm")
 local act = wezterm.action
-
 local M = {}
 
 -- Helper: wrap command string in shell
@@ -35,7 +34,7 @@ end
 function M.SmartSplit(command)
 	return function(window, pane)
 		local args = wrap_in_shell(command)
-		local dims = pane:get_dimensions()
+		local dims = window:get_dimensions()
 		local direction = dims.pixel_height > dims.pixel_width and "Bottom" or "Right"
 		pane:split({
 			direction = direction,

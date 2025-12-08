@@ -53,7 +53,7 @@ local titles = {
 local function wrap_title(tab, title)
 	for _, pane in ipairs(tab.panes or {}) do
 		if pane.is_zoomed then
-			return { { Text = " 🔍 " .. title .. " " } }
+			return { { Text = " [" .. title .. "] " } }
 		end
 	end
 

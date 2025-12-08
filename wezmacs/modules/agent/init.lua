@@ -4,8 +4,9 @@
 ]]
 
 local wezterm = require("wezterm")
-local act = require("actions")
 local wezmacs = require("wezmacs")
+
+local act = require("wezmacs.modules.agent.actions")
 
 return {
 	name = "agent",

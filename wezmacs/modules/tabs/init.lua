@@ -7,7 +7,7 @@ local wezterm = require("wezterm")
 local act = wezterm.action
 local wezmacs = require("wezmacs")
 
-local hooks = require("hooks")
+local hooks = require("wezmacs.modules.tabs.hooks")
 
 return {
 	name = "tabs",

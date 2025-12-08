@@ -12,26 +12,13 @@
 
 local M = {}
 
--- Configuration will be set during initialization by wezterm.lua
--- Modules access via: wezmacs.config.some_setting
-M.config = {}
-
--- Color scheme (computed from config.color_scheme)
--- Access via: wezmacs.color_scheme (returns the theme object or nil)
--- This is computed lazily when accessed
-local color_scheme_cache = nil
-function M.color_scheme()
-	if color_scheme_cache == nil and M.config and M.config.color_scheme then
-		local wezterm = require("wezterm")
-		local schemes = wezterm.get_builtin_color_schemes()
-		color_scheme_cache = schemes[M.config.color_scheme]
-	end
-	return color_scheme_cache
-end
+-- Action API
+-- Usage: wezmacs.action.SmartSplit("lazygit")
+M.action = require("wezmacs.action")
 
 -- Discover wezmacs user config directory (where modules.lua and config.lua are)
 -- Priority: WEZMACSDIR env var > XDG_CONFIG_HOME/wezmacs > ~/.config/wezmacs
-local function get_wezmacs_config_dir()
+local function get_wezmacs_dir()
 	local wezmacs_dir = os.getenv("WEZMACSDIR")
 	if wezmacs_dir then
 		return wezmacs_dir
@@ -46,7 +33,32 @@ local function get_wezmacs_config_dir()
 	return home .. "/.config/wezmacs"
 end
 
-M.config_dir = get_wezmacs_config_dir()
+M.config_dir = get_wezmacs_dir()
+
+local function load_config()
+	local config_path = M.config_dir .. "/config.lua"
+	return require("wezmacs.config").load(config_path)
+end
+
+-- Global configuration
+M.config = load_config()
+
+-- Module API
+-- Usage: wezmacs.module.list()
+M.module = require("wezmacs.module")(M.config_dir)
+
+-- Color scheme (computed from config.color_scheme)
+-- Access via: wezmacs.color_scheme (returns the theme object or nil)
+-- This is computed lazily when accessed
+local color_scheme_cache = nil
+function M.color_scheme()
+	if color_scheme_cache == nil and M.config and M.config.color_scheme then
+		local wezterm = require("wezterm")
+		local schemes = wezterm.get_builtin_color_schemes()
+		color_scheme_cache = schemes[M.config.color_scheme]
+	end
+	return color_scheme_cache
+end
 
 -- Keybindings API (lazy load)
 -- Usage: wezmacs.keys.map(config, key_map, module_name)
@@ -59,14 +71,5 @@ M.keys = setmetatable({}, {
 		return t[k]
 	end,
 })
-
--- Action API
--- Usage: wezmacs.action.SmartSplit("lazygit")
-M.action = require("wezmacs.action")
-
--- Backward compatibility: lib.keybindings points to keys
-M.lib = {
-	keybindings = M.keys,
-}
 
 return M
