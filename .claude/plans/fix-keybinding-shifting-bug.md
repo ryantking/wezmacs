@@ -13,17 +13,17 @@ Keybindings randomly shift after using WezTerm for a while. For example, `LEADER
 
 ## Root Causes Identified
 
-1. **Duplicate LEADER keybindings** between `keybindings` module and other modules
+1. **Duplicate LEADER keybindings** between `keys` module and other modules
 2. **Non-deterministic module load order** via Lua's `pairs()` iteration
 
 ## Implementation Plan
 
 ### Phase 1: Remove Conflicting Keybindings (Option A)
 
-**Goal:** Eliminate duplicate LEADER keybindings from the `keybindings` module
+**Goal:** Eliminate duplicate LEADER keybindings from the `keys` module
 
 **Files to modify:**
-- `wezmacs/modules/keybindings/init.lua`
+- `wezmacs/modules/keys/init.lua`
 
 **Changes:**
 
@@ -92,7 +92,7 @@ Keybindings randomly shift after using WezTerm for a while. For example, `LEADER
    local DEFAULT_LOAD_ORDER = {
      "core",        -- Must be first (base settings)
      "theme",       -- Visual settings early
-     "keybindings", -- Core keybindings before modules that extend them
+     "keys", -- Core keybindings before modules that extend them
      "workspace",   -- Workspace management
      "git",
      "claude",
@@ -187,7 +187,7 @@ Keybindings randomly shift after using WezTerm for a while. For example, `LEADER
 Instead of each module adding its own `LEADER + x` binding to `config.keys`, use a single unified "leader" key table:
 
 ```lua
--- In keybindings module or new leader module
+-- In keys module or new leader module
 config.key_tables.leader = {
   -- Direct actions
   { key = "r", action = act.ReloadConfiguration },

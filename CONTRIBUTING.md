@@ -28,59 +28,37 @@ Start with the template from `wezmacs/templates/module.lua`:
 ```lua
 -- wezmacs/modules/your-module-name/init.lua
 local wezterm = require("wezterm")
-local M = {}
+local act = wezterm.action
+local wezmacs = require("wezmacs")
 
--- Metadata
-M._NAME = "your-module-name"
-M._CATEGORY = "workflows"  -- or ui, behavior, editing, integration
-M._DESCRIPTION = "What this module does"
-M._EXTERNAL_DEPS = { "tool1", "tool2" }  -- External tool dependencies
+return {
+  name = "your-module-name",
+  description = "What this module does",
+  deps = { "tool1", "tool2" },
 
--- Feature flags (optional features users can enable)
--- Can be simple flags or complex objects with config_schema and deps
-M._FEATURES = {
-  smartsplit = true,  -- Simple flag
-  advanced = {
-    config_schema = {
-      advanced_option = "default",
-    },
-    deps = { "smartsplit" },  -- Requires smartsplit to be enabled
+  opts = {
+    some_option = "default_value",
+    another_option = 42,
   },
+
+  keys = function(opts)
+    return {
+      -- List items are direct keybindings
+      { key = "y", mods = "LEADER", action = act.SomeAction(), desc = "action" },
+      -- String keys create nested key tables
+      LEADER = {
+        y = {
+          { key = "a", action = act.OtherAction(), desc = "nested-action" },
+        },
+      },
+    }
+  end,
+
+  setup = function(config, opts)
+    -- Modify config based on opts
+    config.some_setting = opts.some_option
+  end,
 }
-
--- Configuration schema with defaults
-M._CONFIG_SCHEMA = {
-  leader_key = "y",
-  leader_mod = "LEADER",
-}
-
--- Apply phase (required) - modify WezTerm config
-function M.apply_to_config(config)
-  -- Get merged configuration from framework
-  local module_config = wezmacs.get_config("your-module-name")
-  local enabled_flags = wezmacs.get_enabled_flags("your-module-name")
-
-  -- Check for enabled feature flags
-  if enabled_flags.smartsplit then
-    -- Enable smart-split functionality
-  end
-
-  -- Use configuration values from module_config
-  config.keys = config.keys or {}
-  table.insert(config.keys, {
-    key = module_config.leader_key,
-    mods = module_config.leader_mod,
-    action = wezterm.action.ActivateKeyTable({ name = "your-module" }),
-  })
-
-  -- Feature-specific config is at config.features.feature_name
-  if enabled_flags.advanced then
-    local advanced_config = config.features.advanced
-    -- Use advanced_config.advanced_option
-  end
-end
-
-return M
 ```
 
 ### Step 3: Create README.md
@@ -103,17 +81,16 @@ Brief description of what this module does.
 Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
 return {
-  "appearance",
-  { name = "your-module-name", flags = { "smartsplit" } },
+  "term",
+  { name = "your-module-name", opts = { some_option = "custom" } },
 }
 ```
 
-Configure in `~/.config/wezmacs/config.lua`:
+Or configure in `~/.config/wezmacs/config.lua`:
 ```lua
 return {
   ["your-module-name"] = {
-    leader_key = "y",
-    leader_mod = "LEADER",
+    some_option = "custom",
   },
 }
 ```
@@ -170,20 +147,14 @@ See [Submitting a Pull Request](#submitting-a-pull-request).
 ### Required Elements
 
 1. **Metadata Fields**
-   - `_NAME`: Must match directory name
-   - `_CATEGORY`: One of ui, behavior, editing, integration, workflows
-   - `_DESCRIPTION`: One-line description
-   - `_EXTERNAL_DEPS`: List of external tools
-   - `_FEATURES`: Map of feature_name = true or { config_schema = {}, deps = {} }
-   - `_CONFIG_SCHEMA`: Map of config_key = default_value
+   - `name`: Must match directory name
+   - `description`: One-line description
+   - `deps`: List of external tool dependencies
 
-2. **apply_to_config Function**
-   - Always required
-   - Receives: config (WezTerm config)
-   - Uses `wezmacs.get_config(module_name)` to access merged configuration
-   - Uses `wezmacs.get_enabled_flags(module_name)` to check enabled features
-   - Modifies config object
-   - No return value
+2. **Module Functions** (all optional but at least one needed)
+   - `opts`: Table or function returning table with default configuration
+   - `keys`: Table or function(opts) returning keybindings
+   - `setup`: Function(config, opts) that modifies WezTerm config
 
 ### Optional Elements
 
@@ -215,19 +186,21 @@ M._EXTERNAL_DEPS = { "lazygit", "git", "delta" }
 
 ### 3. Sensible Defaults
 
-Define good defaults in _CONFIG_SCHEMA (framework handles merging):
+Define good defaults in `opts` (framework handles merging):
 
 ```lua
-M._CONFIG_SCHEMA = {
+opts = {
   leader_key = "g",
   leader_mod = "LEADER",
 }
 
--- Framework merges user config from config.lua with these defaults
--- Access merged config via wezmacs.get_config(module_name)
-function M.apply_to_config(config)
-  local cfg = wezmacs.get_config("your-module")
-  -- cfg.leader_key will be user's value or "g" if not specified
+-- Framework merges user opts from modules.lua or config.lua with these defaults
+-- Access merged opts via function parameters
+keys = function(opts)
+  -- opts.leader_key will be user's value or "g" if not specified
+  return {
+    { key = opts.leader_key, mods = opts.leader_mod, action = act.SomeAction(), desc = "action" },
+  }
 end
 ```
 
@@ -248,39 +221,32 @@ config.key_tables.my_table = { ... }
 Gracefully degrade if tools aren't available:
 
 ```lua
-function M.apply_to_config(config)
+keys = function(opts)
   local has_lazygit = wezterm.run_child_process({ "which", "lazygit" })
   if not has_lazygit then
     wezterm.log_warn("lazygit not found, skipping git shortcuts")
-    return
+    return {}
   end
 
-  -- Get merged configuration from framework
-  local cfg = wezmacs.get_config("git")
-
-  -- Add git keybindings using cfg
-  config.keys = config.keys or {}
-  table.insert(config.keys, {
-    key = cfg.leader_key,
-    mods = cfg.leader_mod,
-    action = wezterm.action.ActivateKeyTable({ name = "git" }),
-  })
+  return {
+    { key = opts.leader_key, mods = opts.leader_mod, action = act.SomeAction(), desc = "action" },
+  }
 end
 ```
 
 ### 6. Use Helper Functions
 
-Use utilities from `wezmacs/utils/`:
+Use `wezmacs.action` for custom actions:
 
 ```lua
-local keys_util = require("wezmacs.utils.keys")
-local colors_util = require("wezmacs.utils.colors")
+local wezmacs = require("wezmacs")
 
--- Create keybindings using helpers
-table.insert(config.keys, keys_util.chord("g", "LEADER", action))
-
--- Manipulate colors
-local dark_bg = colors_util.darken(theme.background, 0.2)
+keys = function(opts)
+  return {
+    { key = "g", mods = "LEADER", action = wezmacs.action.SmartSplit("lazygit"), desc = "git" },
+    { key = "t", mods = "LEADER", action = wezmacs.action.NewTab("htop"), desc = "htop" },
+  }
+end
 ```
 
 ### 7. Logging for Debugging
@@ -288,12 +254,11 @@ local dark_bg = colors_util.darken(theme.background, 0.2)
 Use wezterm logging functions:
 
 ```lua
-function M.apply_to_config(config)
+setup = function(config, opts)
   wezterm.log_info("Applying module configuration")
 
-  local cfg = wezmacs.get_config("modulename")
-  if not cfg.option then
-    wezterm.log_warn("option not specified, using default")
+  if not opts.some_option then
+    wezterm.log_warn("some_option not specified, using default")
   end
 
   -- Apply configuration...
@@ -335,20 +300,19 @@ Every module README should include (in order):
 
 ### Local Testing
 
-1. Create `user/modules.lua`:
+1. Create `~/.config/wezmacs/modules.lua`:
    ```lua
    return {
-     "appearance",
-     { name = "your-module-name", flags = { "feature1" } },
+     "term",
+     { name = "your-module-name", opts = { some_option = "test" } },
    }
    ```
 
-2. Create `user/config.lua`:
+2. Optionally create `~/.config/wezmacs/config.lua`:
    ```lua
    return {
      ["your-module-name"] = {
-       leader_key = "y",
-       leader_mod = "LEADER",
+       some_option = "test",
      },
    }
    ```
@@ -359,8 +323,7 @@ Every module README should include (in order):
    - Try keybindings
    - Check logs for errors
    - Verify colors/styling applied
-   - Test with/without flags
-   - Test with default config vs custom config
+   - Test with default opts vs custom opts
 
 ### Syntax Validation
 
@@ -372,9 +335,10 @@ luacheck wezmacs/modules/your-module-name/init.lua
 
 ### Manual Review Checklist
 
-- [ ] Metadata fields complete
-- [ ] Dependencies declared
-- [ ] Defaults provided
+- [ ] name, description, deps fields complete
+- [ ] opts defined with sensible defaults
+- [ ] keys function returns proper format (list items + nested tables)
+- [ ] setup function modifies config correctly
 - [ ] Safe table operations
 - [ ] Error handling for missing deps
 - [ ] Comments for complex logic
@@ -421,12 +385,12 @@ Brief description of what this module does.
 Enable in `~/.config/wezmacs/modules.lua`:
 ```lua
 return {
-  "appearance",
-  { name = "module-name", flags = { "feature1" } },
+  "term",
+  { name = "module-name", opts = { option = "value" } },
 }
 ```
 
-Configure in `~/.config/wezmacs/config.lua`:
+Or configure in `~/.config/wezmacs/config.lua`:
 ```lua
 return {
   ["module-name"] = {
@@ -497,52 +461,34 @@ Follow the style of existing modules:
 
 ```lua
 local wezterm = require("wezterm")
-local M = {}
+local act = wezterm.action
+local wezmacs = require("wezmacs")
 
-M._NAME = "example"
-M._CATEGORY = "workflows"
-M._DESCRIPTION = "Example module"
-M._EXTERNAL_DEPS = {}
+return {
+  name = "example",
+  description = "Example module",
+  deps = { "tool1" },
 
-M._FEATURES = {
-  feature1 = true,
-  advanced = {
-    config_schema = {
-      advanced_option = "default",
-    },
+  opts = {
+    some_option = "default_value",
+    another_option = 42,
   },
+
+  keys = function(opts)
+    return {
+      { key = "a", mods = "CMD", action = act.SomeAction(), desc = "action" },
+      LEADER = {
+        e = {
+          { key = "e", action = act.OtherAction(), desc = "nested-action" },
+        },
+      },
+    }
+  end,
+
+  setup = function(config, opts)
+    config.some_setting = opts.some_option
+  end,
 }
-
-M._CONFIG_SCHEMA = {
-  some_option = "default_value",
-}
-
-function M.apply_to_config(config)
-  -- Get merged configuration from framework
-  local cfg = wezmacs.get_config("example")
-  local flags = wezmacs.get_enabled_flags("example")
-
-  -- Check feature flags
-  if flags.feature1 then
-    -- Enable feature1
-  end
-
-  -- Use configuration values
-  config.keys = config.keys or {}
-  table.insert(config.keys, {
-    key = "a",
-    mods = "CMD",
-    action = wezterm.action.SomeAction(),
-  })
-
-  -- Feature-specific config
-  if flags.advanced then
-    local advanced_cfg = config.features.advanced
-    -- Use advanced_cfg.advanced_option
-  end
-end
-
-return M
 ```
 
 ## Questions?

@@ -132,10 +132,12 @@ for _, module_entry in ipairs(modules_list) do
 
   -- Get default opts and merge with user opts
   local default_opts = {}
-  if type(mod.opts) == "function" then
-    default_opts = mod.opts()
-  elseif type(mod.opts) == "table" then
-    default_opts = mod.opts
+  if mod.opts then
+    if type(mod.opts) == "function" then
+      default_opts = mod.opts()
+    elseif type(mod.opts) == "table" then
+      default_opts = mod.opts
+    end
   end
 
   -- Deep merge user opts into default opts
@@ -151,14 +153,17 @@ for _, module_entry in ipairs(modules_list) do
     end
   end
 
-  -- Run module setup (pass config and opts)
-  if type(mod.setup) == "function" then
+  -- Handle deps (optional, table or function(opts) -> table)
+  -- Note: deps are currently metadata only, not validated
+
+  -- Run module setup (optional, function(config, opts))
+  if mod.setup and type(mod.setup) == "function" then
     mod.setup(config, opts)
   end
 
   -- Apply keybindings using wezmacs.keys.map with rendered table structure
   local keys = user_keys
-  if not keys then
+  if not keys and mod.keys then
     if type(mod.keys) == "function" then
       keys = mod.keys(opts)
     elseif type(mod.keys) == "table" then

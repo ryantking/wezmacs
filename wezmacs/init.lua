@@ -5,7 +5,7 @@
 
   Usage:
     local wezmacs = require('wezmacs')
-    wezmacs.config.font_size      -- Access global config
+    wezmacs.config.color_scheme    -- Access global config
     wezmacs.keys.map(...)         -- Map keybindings
     wezmacs.action.SmartSplit()   -- Use actions
 ]]
@@ -15,6 +15,19 @@ local M = {}
 -- Configuration will be set during initialization by wezterm.lua
 -- Modules access via: wezmacs.config.some_setting
 M.config = {}
+
+-- Color scheme (computed from config.color_scheme)
+-- Access via: wezmacs.color_scheme (returns the theme object or nil)
+-- This is computed lazily when accessed
+local color_scheme_cache = nil
+function M.color_scheme()
+	if color_scheme_cache == nil and M.config and M.config.color_scheme then
+		local wezterm = require("wezterm")
+		local schemes = wezterm.get_builtin_color_schemes()
+		color_scheme_cache = schemes[M.config.color_scheme]
+	end
+	return color_scheme_cache
+end
 
 -- Discover wezmacs user config directory (where modules.lua and config.lua are)
 -- Priority: WEZMACSDIR env var > XDG_CONFIG_HOME/wezmacs > ~/.config/wezmacs
