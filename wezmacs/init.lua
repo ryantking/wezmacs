@@ -21,29 +21,29 @@ M.config = {}
 -- This is computed lazily when accessed
 local color_scheme_cache = nil
 function M.color_scheme()
-  if color_scheme_cache == nil and M.config and M.config.color_scheme then
-    local wezterm = require("wezterm")
-    local schemes = wezterm.get_builtin_color_schemes()
-    color_scheme_cache = schemes[M.config.color_scheme]
-  end
-  return color_scheme_cache
+	if color_scheme_cache == nil and M.config and M.config.color_scheme then
+		local wezterm = require("wezterm")
+		local schemes = wezterm.get_builtin_color_schemes()
+		color_scheme_cache = schemes[M.config.color_scheme]
+	end
+	return color_scheme_cache
 end
 
 -- Discover wezmacs user config directory (where modules.lua and config.lua are)
 -- Priority: WEZMACSDIR env var > XDG_CONFIG_HOME/wezmacs > ~/.config/wezmacs
 local function get_wezmacs_config_dir()
-  local wezmacs_dir = os.getenv("WEZMACSDIR")
-  if wezmacs_dir then
-    return wezmacs_dir
-  end
+	local wezmacs_dir = os.getenv("WEZMACSDIR")
+	if wezmacs_dir then
+		return wezmacs_dir
+	end
 
-  local xdg_config = os.getenv("XDG_CONFIG_HOME")
-  if xdg_config then
-    return xdg_config .. "/wezmacs"
-  end
+	local xdg_config = os.getenv("XDG_CONFIG_HOME")
+	if xdg_config then
+		return xdg_config .. "/wezmacs"
+	end
 
-  local home = os.getenv("HOME") or ""
-  return home .. "/.config/wezmacs"
+	local home = os.getenv("HOME") or ""
+	return home .. "/.config/wezmacs"
 end
 
 M.config_dir = get_wezmacs_config_dir()
@@ -51,13 +51,13 @@ M.config_dir = get_wezmacs_config_dir()
 -- Keybindings API (lazy load)
 -- Usage: wezmacs.keys.map(config, key_map, module_name)
 M.keys = setmetatable({}, {
-  __index = function(t, k)
-    local keys_module = require("wezmacs.keys")
-    for key, value in pairs(keys_module) do
-      rawset(t, key, value)
-    end
-    return t[k]
-  end,
+	__index = function(t, k)
+		local keys_module = require("wezmacs.keys")
+		for key, value in pairs(keys_module) do
+			rawset(t, key, value)
+		end
+		return t[k]
+	end,
 })
 
 -- Action API
@@ -66,7 +66,7 @@ M.action = require("wezmacs.action")
 
 -- Backward compatibility: lib.keybindings points to keys
 M.lib = {
-  keybindings = M.keys,
+	keybindings = M.keys,
 }
 
 return M
