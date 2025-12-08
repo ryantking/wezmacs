@@ -51,13 +51,50 @@ local titles = {
 
 -- Add zoom annotation if pane zoomed
 local function wrap_title(tab, title)
-	for _, pane in ipairs(tab.panes) do
+	for _, pane in ipairs(tab.panes or {}) do
 		if pane.is_zoomed then
 			return { { Text = " 🔍 " .. title .. " " } }
 		end
 	end
 
 	return { { Text = " " .. title .. " " } }
+end
+
+local function get_tab_cwd(tab)
+	local pane = tab.active_pane
+	if not pane.current_working_dir then
+		return "???"
+	end
+
+	local cwd = pane.current_working_dir.file_path or ""
+
+	-- Normalize path by removing trailing slash
+	local cwd_normalized = cwd:gsub("/$", "")
+	local home_normalized = wezterm.home_dir:gsub("/$", "")
+
+	-- Show ~ for home directory
+	if cwd_normalized == home_normalized or cwd_normalized == "" then
+		return "~"
+	end
+
+	-- Show directory name otherwise
+	return cwd_normalized:match("([^/]+)$") or "???"
+end
+
+local function parse_tab_title(tab)
+	local title = (tab.tab_title and #tab.tab_title > 0) and tab.tab_title or tab.active_pane.title
+	local bin, other = title:match("^(%S+)%s*%-?%s*%s*(.*)$")
+
+	if not bin or #bin == 0 then
+		local info = tab.active_pane.foreground_process_name
+		bin = string.gsub(info, "(.*[/\\])(.*)", "%2")
+	end
+
+	if not other or #other == 0 then
+		other = get_tab_cwd(tab)
+	end
+
+	return bin, other
 end
 
 -- Extract and format tab title with icon and context
@@ -68,42 +105,16 @@ function M.format_tab_title(tab, _, _, _, _, _)
 		return wrap_title(tab, titles[title])
 	end
 
-	-- Icon prepending (icon + application's title, or working directory if no title)
-	local bin, other = title:match("^(%S+)%s*%-?%s*%s*(.*)$")
-	if not bin or #bin == 0 then
-		local info = tab.active_pane.foreground_process_name
-		bin = string.gsub(info, "(.*[/\\])(.*)", "%2")
-	end
-
+	local bin, other = parse_tab_title(tab)
 	if icons[bin] then
-		local icon = icons[bin]
-		if other and #other > 0 then
-			return wrap_title(tab, icon .. " " .. other)
-		end
-
-		local pane = tab.active_pane
-		if pane.current_working_dir then
-			local cwd = pane.current_working_dir.file_path or ""
-			-- Normalize path by removing trailing slash
-			local cwd_normalized = cwd:gsub("/$", "")
-			local home_normalized = wezterm.home_dir:gsub("/$", "")
-
-			-- Show ~ for home directory
-			if cwd_normalized == home_normalized or cwd_normalized == "" then
-				return wrap_title(tab, icon .. "  ~")
-			end
-
-			-- Show directory name otherwise
-			local dir_name = cwd_normalized:match("([^/]+)$") or ""
-			if dir_name ~= "" then
-				return wrap_title(tab, icon .. " " .. dir_name)
-			end
-
-			return wrap_title(tab, icon .. " ???")
-		end
+		return wrap_title(tab, icons[bin] .. "  " .. other)
 	end
 
-	return wrap_title(tab, title)
+	if title then
+		return wrap_title(tab, title)
+	end
+
+	return wrap_title(tab, bin .. " " .. other)
 end
 
 return M
