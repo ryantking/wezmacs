@@ -106,7 +106,9 @@ function M.format_tab_title(tab, _, _, _, _, _)
 	end
 
 	local bin, other = parse_tab_title(tab)
-	if icons[bin] then
+	if titles[bin] then
+		return wrap_title(tab, titles[bin])
+	elseif icons[bin] then
 		return wrap_title(tab, icons[bin] .. "  " .. other)
 	end
 
