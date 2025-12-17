@@ -28,6 +28,12 @@ return {
 				desc = "newline",
 			},
 			{
+				key = "Tab",
+				mods = "SHIFT",
+				action = wezterm.action.SendString("\x1b[Z"),
+				desc = "newline",
+			},
+			{
 				key = "Backspace",
 				mods = "ALT",
 				-- Send the legacy "ESC + DEL" sequence: 0x1b 0x7f
