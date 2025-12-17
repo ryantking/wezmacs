@@ -10,7 +10,7 @@ local M = {}
 
 -- Default global configuration
 M.defaults = {
-	color_scheme = nil, -- nil = use WezTerm default
+	color_scheme = "Rose Pine", -- Default theme
 	term_mod = "CTRL|SHIFT", -- Default modifier for bindings
 	gui_mod = "SUPER", -- Modifier for gui commands
 	ctrl_mod = "CTRL", -- Modifier for control commands

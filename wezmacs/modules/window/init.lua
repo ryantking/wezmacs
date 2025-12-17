@@ -7,8 +7,6 @@ local wezterm = require("wezterm")
 local act = wezterm.action
 local wezmacs = require("wezmacs")
 
-local theme = wezterm.plugin.require("https://github.com/neapsix/wezterm").main
-
 return {
 	name = "window",
 	description = "Window behavior, padding, and cursor settings",
@@ -18,7 +16,7 @@ return {
 			font = nil,
 			font_size = nil,
 			padding = 16,
-			decorations = "RESIZE",
+			decorations = "INTEGRATED_BUTTONS|RESIZE",
 			close_confirmation = "NeverPrompt",
 
 			-- Keybindings
@@ -39,17 +37,15 @@ return {
 
 	setup = function(config, opts)
 		-- Window decorations and behavior
+		config.colors = wezmacs.color_scheme()
 		config.window_decorations = opts.decorations
 		config.window_close_confirmation = opts.close_confirmation
 
-		local color_scheme = wezmacs.color_scheme()
-		if color_scheme then
-			config.colors = color_scheme
-			config.window_frame = config.window_frame or {}
-		else
-			config.colors = theme.colors()
-			config.window_frame = theme.window_frame()
-		end
+		local window_frame = config.window_frame or {}
+		window_frame = window_frame or {}
+		window_frame.inactive_titlebar_bg = window_frame.inactive_titlebar_bg or config.colors.background
+		window_frame.active_titlebar_bg = window_frame.active_titlebar_bg or config.colors.background
+		config.window_frame = window_frame
 
 		-- Window padding (equal on all sides)
 		local p = opts.padding

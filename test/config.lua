@@ -18,5 +18,6 @@
 ]]
 
 return {
+	-- color_scheme = "Tokyo Night",
 	term_mod = "LEADER",
 }
