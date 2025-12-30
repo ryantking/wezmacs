@@ -35,7 +35,7 @@ function M.SmartSplit(command)
 	return function(window, pane)
 		local args = wrap_in_shell(command)
 		local dims = window:get_dimensions()
-		local direction = dims.pixel_height > dims.pixel_width and "Bottom" or "Right"
+		local direction = dims.pixel_height * 1.2 > dims.pixel_width and "Bottom" or "Right"
 		pane:split({
 			direction = direction,
 			size = 0.5,
