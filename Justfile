@@ -118,7 +118,7 @@ status:
 # Test WezMacs with test/ directory
 test:
     @echo "Starting WezTerm with config from this repository..."
-    @WEZTERM_CONFIG_FILE="$PWD/wezterm.lua" WEZMACSDIR=$PWD/test wezterm start
+    @WEZTERM_CONFIG_FILE="$PWD/wezterm.lua" WEZMACSDIR=$PWD/test wezterm start --always-new-process
 
 # Clean temporary files
 clean:
