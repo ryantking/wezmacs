@@ -31,7 +31,7 @@ local icons = {
 	["ruby"] = wezterm.nerdfonts.cod_ruby,
 	["docker"] = wezterm.nerdfonts.md_docker,
 	["brew"] = wezterm.nerdfonts.md_beer,
-	["kubectl"] = wezterm.nerdfonts.dev_kubernetes,
+	-- ["kubectl"] = wezterm.nerdfonts.dev_kubernetes,
 	["curl"] = wezterm.nerdfonts.mdi_flattr,
 	["wget"] = wezterm.nerdfonts.mdi_arrow_down_box,
 	["gh"] = wezterm.nerdfonts.dev_github_badge,
@@ -41,7 +41,7 @@ local icons = {
 
 -- Full titles to replace applications
 local titles = {
-	["k9s"] = wezterm.nerdfonts.dev_kubernetes .. " Kubernetes",
+	-- ["k9s"] = wezterm.nerdfonts.dev_kubernetes .. " Kubernetes",
 	["lazydocker"] = wezterm.nerdfonts.md_docker .. " Docker",
 	["spotify_player"] = wezterm.nerdfonts.md_spotify .. " Spotify",
 	["btm"] = wezterm.nerdfonts.md_chart_donut_variant .. " Bottom",
