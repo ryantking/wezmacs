@@ -168,5 +168,24 @@ return {
 	setup = function(config, opts)
 		config.default_workspace = opts.default_workspace
 		quick_domains.apply_to_config(config, opts.quick_domains)
+		workspace_switcher.zoxide_path = "/opt/homebrew/bin/zoxide"
+
+		wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
+			local gui_win = window:gui_window()
+			local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
+			gui_win:set_right_status(wezterm.format({
+				{ Foreground = { Color = config.colors.ansi[5] } },
+				{ Text = base_path .. "  " },
+			}))
+		end)
+
+		wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, workspace)
+			local gui_win = window:gui_window()
+			local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
+			gui_win:set_right_status(wezterm.format({
+				{ Foreground = { Color = config.colors.ansi[5] } },
+				{ Text = base_path .. "  " },
+			}))
+		end)
 	end,
 }
