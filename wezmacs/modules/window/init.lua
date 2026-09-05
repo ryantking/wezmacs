@@ -16,7 +16,7 @@ return {
 			font = nil,
 			font_size = nil,
 			padding = 16,
-			decorations = "INTEGRATED_BUTTONS|RESIZE",
+			decorations = "RESIZE",
 			close_confirmation = "NeverPrompt",
 
 			-- Keybindings
@@ -59,8 +59,8 @@ return {
 		-- UI fonts (for UI elements) - only if configured
 		if opts.font then
 			local ui_font = wezterm.font({ family = opts.font })
-			config.char_select_font = ui_font
-			config.command_palette_font = ui_font
+			-- config.char_select_font = ui_font
+			-- config.command_palette_font = ui_font
 			config.window_frame.font = ui_font
 		end
 
