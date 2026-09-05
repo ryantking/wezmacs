@@ -16,7 +16,7 @@ return {
 
 	opts = {
 		agent = "claude",
-		alt_agent = "agent",
+		alt_agent = "opencode",
 	},
 
 	keys = function(opts)
