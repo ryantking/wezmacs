@@ -13,13 +13,15 @@ wezterm.log_info("[WezMacs] Config Directory: " .. wezmacs.config_dir)
 
 -- Load and apply each module
 local config = wezterm.config_builder()
+---@cast config WezmacsConfigBuilder
+config:set_strict_mode(true)
 local modules_list = wezmacs.module.list()
 for _, module_entry in ipairs(modules_list) do
 	local mod, err = wezmacs.module.load(module_entry)
 	if err then
-		wezterm.log_error("[WezMacs] Module Error: " .. tostring(err))
+		error("[WezMacs] Module Error: " .. tostring(err))
 	elseif not mod then
-		wezterm.log_error("[WezMacs] Unable to load module: " .. tostring(module_entry))
+		error("[WezMacs] Unable to load module: " .. tostring(module_entry))
 	else
 		mod.setup(config, mod.opts)
 		if mod.keys and type(mod.keys) == "table" then
