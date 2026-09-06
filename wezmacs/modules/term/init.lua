@@ -69,8 +69,8 @@ return {
 			{ key = "-", mods = opts.ctrl_mod, action = act.DecreaseFontSize, desc = "zoom-out" },
 			{ key = "0", mods = opts.ctrl_mod, action = act.ResetFontSize, desc = "zoom-reset" },
 
-			{key="LeftArrow",  mods="ALT", action=act.SendString("\x1bb")},
-    	{key="RightArrow", mods="ALT", action=act.SendString("\x1bf")},
+			{ key = "LeftArrow", mods = "ALT", action = act.SendString("\x1bb") },
+			{ key = "RightArrow", mods = "ALT", action = act.SendString("\x1bf") },
 
 			-- Clipboard
 			{ key = "c", mods = opts.term_mod, action = act.CopyTo("Clipboard"), desc = "copy" },
@@ -188,7 +188,7 @@ return {
 		-- Font configuration
 		if opts.font then
 			config.font = wezterm.font_with_fallback({
-				{ family = opts.font, weight = "Regular", },
+				{ family = opts.font, weight = "Regular" },
 			})
 			config.warn_about_missing_glyphs = false
 		end

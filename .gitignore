@@ -1,3 +1,7 @@
+# Development-only dependencies and generated reports
+.lua-libs/
+.cache/
+
 # Compiled Lua sources
 luac.out
 
