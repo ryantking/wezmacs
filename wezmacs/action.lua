@@ -24,7 +24,9 @@ local M = {}
 -- Commands should always run in shell to get correct environment (PATH, etc.)
 local function wrap_in_shell(command)
 	local wezmacs = require("wezmacs")
-	return { wezmacs.config.shell, "-lc", "exec " .. command }
+	-- A login shell supplies PATH and exits when the whole command finishes.
+	-- Prefixing `exec` breaks compound commands such as `git diff a || git diff b`.
+	return { wezmacs.config.shell, "-lc", command }
 end
 
 -- Smart split action - auto-orients based on window aspect ratio
