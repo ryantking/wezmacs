@@ -1,237 +1,103 @@
 #!/usr/bin/env lua
---[[
-  WezMacs Config Generator
+-- Generate modules.lua and config.lua without loading WezTerm or module specs.
+-- Usage: lua scripts/generate-config.lua [output_directory]
+-- Default: WEZMACSDIR > XDG_CONFIG_HOME/wezmacs > HOME/.config/wezmacs.
+-- Run the script in its checkout; discovery uses ../wezmacs/modules/ relative
+-- to the script, not the working directory. Requires Lua and a POSIX shell.
 
-  Generates user configuration files in the new format:
-  - modules.lua: List of modules to load (string or table format)
-  - config.lua: Global settings (theme, fonts, mod_key, config_builder, setup)
+local function quote(value) return "'" .. value:gsub("'", "'\\''") .. "'" end
 
-  Usage:
-    lua scripts/generate-config.lua [output_directory]
-
-  Output directory defaults to ~/.config/wezmacs/
-]]
-
-local function get_home_dir() return os.getenv("HOME") or os.getenv("USERPROFILE") end
-
-local function get_config_dir()
-  local xdg_config = os.getenv("XDG_CONFIG_HOME")
-  if xdg_config then
-    return xdg_config .. "/wezmacs"
-  end
-  return get_home_dir() .. "/.config/wezmacs"
+local function getenv(name)
+	local value = os.getenv(name)
+	return value ~= "" and value or nil
 end
 
-local function get_wezmacs_dir()
-  -- Get directory containing this script (scripts/generate-config.lua)
-  -- Script is located in scripts/ directory, wezmacs/ is sibling at repo root
-  local script_path = arg[0]
-  local script_dir
-  local cwd = io.popen("pwd"):read("*l")
-
-  -- Try to get script path from debug info first (more reliable)
-  if debug and debug.getinfo then
-    local source = debug.getinfo(1, "S").source
-    if source:match("^@") then
-      -- Remove @ prefix and get absolute path
-      source = source:sub(2)
-      if source:match("^/") then
-        script_dir = source:match("^(.+)/[^/]+$")
-      end
-    end
-  end
-
-  -- Fallback to arg[0] if debug method didn't work
-  if not script_dir then
-    if script_path:match("^/") then
-      -- Absolute path
-      script_dir = script_path:match("^(.+)/[^/]+$")
-    elseif script_path:match("^scripts/") then
-      -- Relative path like "scripts/generate-config.lua"
-      script_dir = cwd .. "/scripts"
-    elseif script_path:match("^wezmacs/") then
-      -- Legacy: relative path like "wezmacs/generate-config.lua"
-      script_dir = cwd .. "/wezmacs"
-    else
-      -- Script path is just filename or unknown - check if scripts/ exists
-      local test_path = cwd .. "/scripts/generate-config.lua"
-      local f = io.open(test_path, "r")
-      if f then
-        f:close()
-        script_dir = cwd .. "/scripts"
-      else
-        -- Fallback: assume wezmacs/ directory (legacy)
-        script_dir = cwd .. "/wezmacs"
-      end
-    end
-  end
-
-  -- If script is in scripts/, go up one level to repo root, then into wezmacs/
-  if script_dir:match("/scripts$") then
-    script_dir = script_dir:match("^(.+)/scripts$") .. "/wezmacs"
-  end
-
-  return script_dir
+local function get_config_dir()
+	local wezmacs_dir = getenv("WEZMACSDIR")
+	if wezmacs_dir then
+		return wezmacs_dir
+	end
+	local xdg_config = getenv("XDG_CONFIG_HOME")
+	if xdg_config then
+		return xdg_config .. "/wezmacs"
+	end
+	return assert(getenv("HOME"), "Set HOME, XDG_CONFIG_HOME, WEZMACSDIR, or an output directory") .. "/.config/wezmacs"
 end
 
 local function scan_modules()
-  local modules = {}
-  local wezmacs_dir = get_wezmacs_dir()
-  local modules_dir = wezmacs_dir .. "/modules"
+	local script_dir = arg[0]:match("^(.*)/[^/]+$") or "."
+	local modules_dir = script_dir .. "/../wezmacs/modules"
+	local command = "for path in "
+		.. quote(modules_dir)
+		.. "/*/init.lua; do "
+		.. 'if [ -f "$path" ]; then printf \'%s\\0\' "$path"; fi; done'
+	local handle = assert(io.popen(command))
+	local paths = assert(handle:read("*a"))
+	assert(handle:close(), "Failed to list modules: " .. modules_dir)
 
-  -- Use ls to get module directories (each module is now a directory with init.lua)
-  local handle = io.popen("ls -1 '" .. modules_dir .. "' 2>/dev/null")
-  if not handle then
-    error("Failed to list modules directory: " .. modules_dir)
-  end
-
-  for dir_name in handle:lines() do
-    -- Skip if not a directory or if it's a special file
-    local module_init_path = modules_dir .. "/" .. dir_name .. "/init.lua"
-    local f = io.open(module_init_path, "r")
-    if f then
-      local content = f:read("*all")
-      f:close()
-
-      -- Extract module name, description, and category from the spec table
-      -- Look for patterns like: name = "git", description = "...", category = "..."
-      local name_match = content:match("name%s*=%s*[\"']([^\"']+)[\"']") or dir_name
-      local desc_match = content:match("description%s*=%s*[\"']([^\"']+)[\"']") or ""
-      local cat_match = content:match("category%s*=%s*[\"']([^\"']+)[\"']") or "integration"
-
-      local module_info = {
-        name = name_match,
-        description = desc_match,
-        category = cat_match,
-      }
-
-      table.insert(modules, module_info)
-    end
-  end
-
-  handle:close()
-
-  -- Sort modules by name
-  table.sort(modules, function(a, b) return a.name < b.name end)
-
-  return modules
+	local modules = {}
+	for path in paths:gmatch("([^%z]+)%z") do
+		table.insert(modules, assert(path:match("([^/]+)/init%.lua$")))
+	end
+	assert(#modules > 0, "No modules found in: " .. modules_dir)
+	table.sort(modules)
+	return modules
 end
 
-local function generate_modules_lua(modules)
-  local lines = {
-    "--[[",
-    "  WezMacs Modules Configuration",
-    "",
-    "  This file lists which modules to load.",
-    "  Each entry can be:",
-    '    - A string: "module-name" (enables module with default options)',
-    '    - A table: { "module-name", opts = { ... }, keys = { ... } }',
-    "",
-    "  Examples:",
-    '    "term"  -- Enable term module',
-    '    { "git", opts = { leader_key = "G" } }  -- Enable git with custom options',
-    '    { "agent", keys = { LEADER = { a = { action = ..., desc = "..." } } } }  -- Override keys',
-    "",
-    "  Generated by: scripts/generate-config.lua",
-    "]]",
-    "",
-    "return {",
-  }
-
-  -- Add all modules as strings (simple enable)
-  for _, mod in ipairs(modules) do
-    table.insert(lines, '  "' .. mod.name .. '",')
-  end
-
-  table.insert(lines, "}")
-  table.insert(lines, "")
-
-  return table.concat(lines, "\n")
+local function generate_modules(modules)
+	local lines = {
+		"-- Modules found in this checkout's wezmacs/modules/*/init.lua.",
+		"-- Remove entries to disable modules. A string uses the module's defaults.",
+		'-- Customize options with { "term", opts = { scrollback_lines = 10000 } }.',
+		"-- See each module's init.lua for its supported options.",
+		"return {",
+	}
+	for _, name in ipairs(modules) do
+		table.insert(lines, string.format("\t%q,", name))
+	end
+	table.insert(lines, "}\n")
+	return table.concat(lines, "\n")
 end
 
-local function generate_config_lua()
-  local lines = {
-    "--[[",
-    "  WezMacs Global Configuration",
-    "",
-    "  This file contains global WezMacs settings.",
-    "  These values override defaults from wezmacs/config.lua",
-    "",
-    "  Available settings:",
-    "    color_scheme - Color scheme name (string, nil for default)",
-    '    mod_key - Modifier key ("CMD", "ALT", "CTRL", "SHIFT")',
-    '    leader_key - Leader key (string, e.g., "Space")',
-    '    leader_mod - Leader modifier ("CMD", "ALT", "CTRL", "SHIFT")',
-    "    shell - Shell path (string, defaults to $SHELL or /bin/bash)",
-    "",
-    "  Modules can access these via:",
-    "    local wezmacs = require('wezmacs')",
-    "    print(wezmacs.config.color_scheme)",
-    "",
-    "  Generated by: scripts/generate-config.lua",
-    "]]",
-    "",
-    "return {",
-    "  -- color_scheme = nil,  -- nil = use WezTerm default",
-    '  -- mod_key = "CMD",',
-    '  -- leader_key = "Space",',
-    '  -- leader_mod = "CTRL",',
-    "  -- shell = nil,  -- nil = use $SHELL or /bin/bash",
-    "}",
-    "",
-  }
-
-  return table.concat(lines, "\n")
-end
+local config_template = [[-- Global overrides; omitted settings retain wezmacs/config.lua defaults.
+-- Module-specific options belong in modules.lua.
+return {
+	-- color_scheme = "Rose Pine",
+	-- term_mod = "CTRL|SHIFT",
+	-- gui_mod = "SUPER",
+	-- ctrl_mod = "CTRL",
+	-- alt_mod = "ALT",
+	-- shell = "/bin/bash",
+}
+]]
 
 local function main()
-  local output_dir = arg[1]
-  if not output_dir then
-    output_dir = get_config_dir()
-  end
+	local output_dir = arg[1] or get_config_dir()
+	assert(output_dir ~= "", "The output directory must not be empty")
+	if output_dir:sub(1, 1) ~= "/" then
+		output_dir = "./" .. output_dir
+	end
 
-  -- Ensure output_dir ends without trailing slash
-  output_dir = output_dir:gsub("/+$", "")
+	-- Refuse the whole pair if either path exists, including a dangling link.
+	for _, name in ipairs({ "config.lua", "modules.lua" }) do
+		local path = output_dir .. "/" .. name
+		if os.execute("test -e " .. quote(path) .. " || test -L " .. quote(path)) then
+			error("Refusing to overwrite existing path: " .. path)
+		end
+	end
 
-  print("Scanning modules...")
-  local modules = scan_modules()
-  print("Found " .. #modules .. " modules")
-
-  print("Generating configuration files in: " .. output_dir)
-
-  -- Create directory if needed
-  os.execute("mkdir -p '" .. output_dir .. "'")
-
-  -- Generate modules.lua
-  local modules_content = generate_modules_lua(modules)
-  local modules_path = output_dir .. "/modules.lua"
-  local f = io.open(modules_path, "w")
-  if not f then
-    error("Failed to open output file: " .. modules_path)
-  end
-  f:write(modules_content)
-  f:close()
-  print("  ✓ Generated " .. modules_path)
-
-  -- Generate config.lua
-  local config_content = generate_config_lua()
-  local config_path = output_dir .. "/config.lua"
-  f = io.open(config_path, "w")
-  if not f then
-    error("Failed to open output file: " .. config_path)
-  end
-  f:write(config_content)
-  f:close()
-  print("  ✓ Generated " .. config_path)
-
-  print("")
-  print("✓ Configuration files generated successfully")
-  print("")
-  print("Next steps:")
-  print("1. Edit " .. output_dir .. "/modules.lua to enable/configure modules")
-  print("2. Edit " .. output_dir .. "/config.lua for global settings")
-  print("3. Copy example/wezterm.lua to ~/.config/wezterm/wezterm.lua")
-  print("4. Reload WezTerm (Cmd+Option+R on macOS)")
+	local modules = scan_modules()
+	assert(os.execute("mkdir -p " .. quote(output_dir)), "Failed to create output directory: " .. output_dir)
+	for _, entry in ipairs({ { "modules.lua", generate_modules(modules) }, { "config.lua", config_template } }) do
+		local path = output_dir .. "/" .. entry[1]
+		-- POSIX noclobber also protects files created after the preflight check.
+		local file = assert(io.popen("set -C; cat > " .. quote(path), "w"))
+		local written, write_err = file:write(entry[2])
+		local closed = file:close()
+		assert(written and closed, "Failed to write " .. path .. (write_err and ": " .. write_err or ""))
+		print("Generated " .. path)
+	end
+	print("Edit modules.lua to select modules and config.lua to override global settings.")
 end
 
 main()
