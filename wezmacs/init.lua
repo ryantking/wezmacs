@@ -88,7 +88,7 @@ function M.color_scheme()
 			color_scheme_name = "Rose Pine"
 			color_tab_bar()
 		else
-			local color_schemes = wezterm.get_builtin_color_schemes()
+			local color_schemes = wezterm.color.get_builtin_schemes()
 			color_scheme = color_schemes[M.config.color_scheme]
 			color_scheme_name = M.config.color_scheme
 			color_tab_bar()

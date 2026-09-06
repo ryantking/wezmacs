@@ -96,7 +96,10 @@ return {
 				mods = "LEADER",
 				action = wezterm.action_callback(function(_, pane)
 					local _, window = pane:move_to_new_window()
-					window:activate()
+					local gui_window = window:gui_window()
+					if gui_window then
+						gui_window:focus()
+					end
 				end),
 				desc = "wezterm/move-pane-to-window",
 			},
