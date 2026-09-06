@@ -1,496 +1,166 @@
-# WezMacs Framework Architecture
+# Framework architecture
 
-This document describes the internal architecture of WezMacs for developers and advanced users.
+## Composition
 
-## Design Philosophy
-
-WezMacs uses a **pragmatic hybrid** approach:
-
-- **From Doom Emacs**: Declarative module selection, modular architecture
-- **From LazyVim**: Plain Lua simplicity, straightforward module discovery, no complexity
-- **From WezTerm**: Direct config modification pattern
-
-This balances power with simplicity: enough structure to keep configs organized, but simple enough that anyone can understand it.
-
-## Core Concepts
-
-### Modules
-
-Each module is a self-contained unit providing one feature or cohesive set of features.
-
-**Module Anatomy:**
-```
-wezmacs/modules/modulename/
-├── init.lua        # Module implementation
-└── README.md       # User documentation
+```text
+wezterm.lua                     native config builder + ordered application
+  └─ wezmacs/init.lua           public API and global configuration discovery
+       ├─ config.lua           defaults + optional personal config.lua
+       ├─ module.lua           modules.lua parsing, contracts and merging
+       ├─ keys.lua             key-map compiler and description ownership
+       └─ action.lua           terminal launch helpers
+            └─ modules/*       feature-specific opts, keys and setup
 ```
 
-**Module Structure:**
+`~/.config/wezterm` is the framework checkout. Personal files normally live in
+`~/.config/wezmacs`; `WEZMACSDIR` and `XDG_CONFIG_HOME` take precedence as described
+in the README. These two directories have different roles and must not be merged.
+
+### Load sequence
+
+1. Extend the Lua search path for the framework checkout, not editor annotations.
+2. Load global settings through `wezmacs.config.load`.
+3. Create a native WezTerm builder with strict validation enabled.
+4. Read the ordered module list.
+5. For each module, validate the contract, resolve defaults/overrides and key maps,
+   run setup, then append compiled bindings.
+6. Return the native config. Errors must not be reported as successful loading.
+
+Configuration evaluation is not a place to start agents, perform expensive
+process discovery or silently update global settings.
+
+## Global configuration
+
+`config.lua` returns a flat table of framework settings. Defaults are in
+`wezmacs/config.lua`: `color_scheme`, `term_mod`, `gui_mod`, `ctrl_mod`, `alt_mod`,
+`shell`, and a detected `platform`. Module-specific settings belong in the
+corresponding `modules.lua` entry, not nested global sections.
+
+A missing optional `config.lua` uses defaults. A present but malformed file,
+execution failure, invalid return value or non-missing read failure is an error.
+Do not make these cases indistinguishable by returning an empty table.
+
+## Module contract
+
+Built-ins live at `wezmacs/modules/<name>/init.lua`. The loader uses
+`require("wezmacs.modules." .. name)`. There is no automatic custom-directory
+search, module dependency scheduler, lazy-loader, installation phase or external
+binary availability checker.
+
+`modules.lua` is an ordered sequence:
+
+```lua
+return {
+  "app",
+  { "term", opts = { scrollback_lines = 10000 } },
+  { "git", opts = { diff_branches = { "main" } } },
+}
+```
+
+A module specification is a table:
+
 ```lua
 local wezterm = require("wezterm")
-local act = wezterm.action
-local wezmacs = require("wezmacs")
 
 return {
-  name = "modulename",
-  description = "What this does",
-  deps = { "tool1", "tool2" },
-
-  opts = {
-    some_option = "default_value",
-    another_option = 42,
-  },
-
+  name = "example",
+  description = "One cohesive feature",
+  deps = {}, -- informational list of external executables
+  opts = { scrollback_lines = 10000 },
   keys = function(opts)
     return {
-      { key = "g", mods = "LEADER", action = act.SomeAction(), desc = "action" },
-      LEADER = {
-        g = {
-          { key = "g", action = act.OtherAction(), desc = "nested-action" },
-        },
-      },
+      { key = "r", mods = "LEADER", action = wezterm.action.ReloadConfiguration, desc = "reload" },
     }
   end,
-
   setup = function(config, opts)
-    -- Modify config based on opts
-    config.some_setting = opts.some_option
+    config.scrollback_lines = opts.scrollback_lines
   end,
 }
 ```
 
-### Module Loading
+- `opts`: table or zero-argument function returning a table.
+- `keys`: table or function receiving resolved options and returning a table.
+- `deps`: table or function receiving resolved options and returning a table.
+- `setup`: optional function `(config, opts)`; absent means no-op.
+- A user entry may override all of these fields. Built-in setup runs before user
+  setup, with the same config and resolved options.
+- `name` in an entry is its first positional value, not `{ name = "git" }`.
+- Module load/evaluation failures include the module and phase where available.
+  No partially resolved module is returned as a valid result.
 
-Modules are loaded in phases:
+### Merge semantics
 
-**Options Phase:**
-- Module defines `opts` (table or function returning table) with defaults
-- User can override via `modules.lua` table entry: `{ name = "module", opts = { ... } }`
-- Framework merges user opts with module defaults
-- Merged opts passed to `keys` function and `setup` function
+Keep data shapes distinct:
 
-**Keys Phase:**
-- Module defines `keys` function (or table) that receives merged `opts`
-- Returns mixed list/map format: list items are direct bindings, string keys create nested key tables
-- Framework processes via `wezmacs.keys.map()` to convert to WezTerm format
+- Option maps recursively merge. Scalar values replace defaults.
+- Sequence/numeric option tables replace as a whole: a shorter `diff_branches`
+  list does not retain the old tail. An explicit empty table clears a default
+  sequence, while an empty map override leaves named defaults intact.
+- Inputs are copied rather than shared with cached module defaults.
+- Key maps merge named groups. A supplied numeric binding list replaces that
+  group's numeric defaults, not its unrelated named groups.
+- Binding/action specifications replace atomically. Never deep-merge native
+  action variants such as `SendString` and `CopyTo` into the same table.
 
-**Setup Phase:**
-- Module defines `setup` function that receives `config` and merged `opts`
-- Modifies WezTerm config object directly
-- Used for non-keybinding configuration (colors, fonts, events, etc)
+This is not a key-by-key reconciliation engine. To replace a numeric menu list,
+supply the desired complete list. An explicit `keys = {}` clears all keys for a
+module; an empty named group clears that group. There is no separate
+deletion/tombstone DSL.
 
-**Why This Pattern?**
-- Clear separation: opts for configuration, keys for keybindings, setup for config modification
-- Options are merged automatically by framework
-- Keybindings use consistent format across all modules
-- Modules are simple and focused
-
-### Categories (Documentation Only)
-
-Categories organize modules by concern. They exist **only for documentation** - the code is completely flat:
-
-- **Core**: Terminal settings (term, tabs, window, mouse)
-- **Keybindings**: Keybinding modules (app)
-- **Integration**: External integrations (mux, git, agent, app, edit)
-
-The flat `wezmacs/modules/` directory contains ALL modules regardless of category.
-
-## Configuration Flow
-
-```
-wezterm.lua
-  ↓
-Load wezmacs framework
-  ↓
-Load user config (~/.config/wezmacs/config.lua)
-  ↓
-Load user modules (~/.config/wezmacs/modules.lua)
-  ↓
-For each module entry:
-  ├─ Load module file
-  ├─ Get default opts (from module.opts)
-  ├─ Merge user opts (from modules.lua entry) with defaults
-  ├─ Call module.setup(config, merged_opts)
-  ├─ Call module.keys(merged_opts) to get keybindings
-  └─ Apply keybindings via wezmacs.keys.map()
-  ↓
-Return configured wezterm.config object
-```
-
-## API Contract
-
-### Module Fields
-
-Every module should export these fields:
+## Key-map grammar
 
 ```lua
-name          -- string: module name (must match directory name)
-description   -- string: one-line description
-deps          -- table: list of external tool dependencies
-opts          -- table or function: configuration defaults
-keys          -- table or function(opts): keybindings
-setup         -- function(config, opts): modify WezTerm config
-```
-
-### Module Functions
-
-**opts** (optional):
-```lua
-opts = {
-  some_option = "default",
-  another_option = 42,
-}
-
--- Or function that returns table:
-opts = function()
-  return {
-    dynamic_option = os.getenv("VAR") or "default",
-  }
-end
-```
-
-**keys** (optional):
-```lua
-keys = function(opts)
-  return {
-    -- List items are direct keybindings
-    { key = "r", mods = "CTRL", action = act.Reload, desc = "reload" },
-    -- String keys create nested key tables
-    LEADER = {
-      g = {
-        { key = "g", action = act.SomeAction(), desc = "action" },
-      },
+{
+  { key = "r", mods = "CTRL", action = act.ReloadConfiguration, desc = "reload" },
+  LEADER = {
+    r = { action = act.ReloadConfiguration, desc = "reload" },
+    g = {
+      { key = "g", action = act.ActivateCopyMode, desc = "copy" },
+      x = { action = act.ActivateCopyMode, desc = "copy" },
+      m = { x = { action = act.ActivateCopyMode, desc = "nested-copy" } },
     },
-  }
-end
-```
-
-**setup** (optional):
-```lua
-setup = function(config, opts)
-  -- Modify config based on opts
-  config.color_scheme = opts.color_scheme
-  config.font = wezterm.font(opts.font)
-end
-```
-
-### Global WezMacs API
-
-The framework provides a global `wezmacs` table:
-
-```lua
-wezmacs.config          -- Global configuration (from config.lua)
-wezmacs.color_scheme()  -- Lazy-loaded color scheme
-wezmacs.keys.map()      -- Keybinding mapper
-wezmacs.action          -- Custom action helpers (SmartSplit, NewTab, etc)
-```
-
-## Module Loading
-
-The module loader (`wezmacs/module.lua`) handles:
-
-1. **Discovery**: Finding modules by name
-2. **Loading**: Using `require()` to load module code
-3. **Configuration Merging**: Merging user opts with module defaults
-4. **Application**: Running setup() and processing keys() for each module
-
-**Module Search Order:**
-1. `wezmacs.modules.modulename` (built-in modules)
-2. `user.custom-modules.modulename` (user custom modules)
-3. Error if not found
-
-## User Configuration
-
-WezMacs uses two configuration files:
-
-### modules.lua - Module Selection
-
-Located at `user/modules.lua` or `~/.config/wezmacs/modules.lua`:
-
-```lua
-return {
-  -- Simple string: load with defaults
-  "term",
-  "tabs",
-  "window",
-  "mouse",
-  "app",
-  "keys",
-
-  -- Table with opts: override module options
-  { name = "git", opts = { diff_branches = { "main", "develop" } } },
-
-  "agent",
-  "mux",
-  "edit",
-}
-```
-
-### config.lua - Module Configuration
-
-Located at `user/config.lua` or `~/.config/wezmacs/config.lua`:
-
-```lua
-return {
-  -- Per-module configuration values (optional, can also use opts in modules.lua)
-  term = {
-    color_scheme = "Horizon Dark (Gogh)",
-    font = "Iosevka Mono",
-    font_size = 16,
-  },
-
-  app = {
-    leader_key = "Space",
-    leader_mod = "CMD",
-  },
-
-  git = {
-    diff_branches = { "main", "master" },
   },
 }
 ```
 
-**Configuration Pattern:**
-- **modules.lua**: WHAT to load (module names + feature flags)
-- **config.lua**: HOW to configure (settings for each module)
-
-## Custom Modules
-
-Users can create custom modules in `~/.config/wezmacs/custom-modules/`:
-
-```
-~/.config/wezmacs/custom-modules/
-└── my-feature/
-    ├── init.lua          # Module implementation
-    └── README.md         # Documentation (optional)
-```
-
-Enable in modules.lua:
-```lua
-return {
-  "term",
-  { name = "my-feature", opts = { some_option = "value" } },
-}
-```
-
-Or configure in config.lua:
-```lua
-return {
-  ["my-feature"] = {
-    some_option = "value",
-  },
-}
-```
-
-## Framework Code
-
-### wezmacs/init.lua
-
-Main entry point. Exports `M.setup(config, opts)` function.
-
-Responsibilities:
-- Load user configuration
-- Orchestrate module loading via `module.lua`
-- Merge user opts with module defaults
-- Call setup() for each module
-- Process keys() for each module
-
-### wezmacs/module.lua
-
-Module discovery and loading system.
-
-Key function: `M.load_all(config, module_spec, flags, log)`
-
-Responsibilities:
-- Discover and load modules by name
-- Run init() phases and store state
-- Handle errors gracefully
-
-### wezmacs/keys.lua
-
-Keybinding conversion system:
-- `map(config, key_map, module_name)` - Convert mixed list/map format to WezTerm keybindings
-- Handles LEADER keybindings and nested key tables
-- Processes list items as direct bindings, string keys as nested tables
-
-### wezmacs/action.lua
-
-Custom action helpers:
-- `SmartSplit(command)` - Auto-orient split based on window aspect ratio
-- `NewTab(command)` - Spawn command in new tab
-- `NewWindow(command)` - Spawn command in new window
-- `invert()` / `complement()` - Advanced color ops
-
-## Design Patterns
-
-### Safe Table Appending
-
-Always check table exists before appending:
-
-```lua
-config.keys = config.keys or {}
-table.insert(config.keys, binding)
-
-config.key_tables = config.key_tables or {}
-config.key_tables.my_table = { ... }
-```
-
-### Action Callbacks
-
-For complex actions, use wezterm.action_callback:
-
-```lua
-config.keys = config.keys or {}
-table.insert(config.keys, {
-  key = "a",
-  mods = "CMD",
-  action = wezterm.action_callback(function(window, pane)
-    local dims = pane:get_dimensions()
-    -- Complex logic here
-  end),
-})
-```
-
-### Event Handlers
-
-Register events (can be called multiple times - handlers stack):
-
-```lua
-wezterm.on("event-name", function(window, pane, ...)
-  -- Handle event
-end)
-```
-
-### Conditional Logic
-
-Only add features if dependencies available:
-
-```lua
-local has_feature = wezterm.run_child_process({ "which", "tool" })
-if has_feature then
-  -- Add keybindings for tool
-end
-```
-
-## Performance Considerations
-
-- **No lazy-loading**: Modules load instantly (WezTerm startup is already fast)
-- **Stateless loading**: Each module load is independent
-- **Simple require**: No caching issues or side effects
-- **No external dependencies**: Framework uses only Lua stdlib + wezterm
-
-## Testing Modules
-
-You can test a module independently:
-
-```lua
-local wezterm = require("wezterm")
-local config = wezterm.config_builder()
-local module = require("wezmacs.modules.modulename")
-
--- Set up global wezmacs API for testing
-_G.wezmacs = {
-  config = { term_mod = "CTRL|SHIFT", gui_mod = "SUPER" },
-  keys = { map = function() end },
-  action = require("wezmacs.action"),
-}
-
-local opts = module.opts or (type(module.opts) == "function" and module.opts() or {})
-if module.setup then
-  module.setup(config, opts)
-end
-if module.keys then
-  local keys = type(module.keys) == "function" and module.keys(opts) or module.keys
-  -- Process keys...
-end
-
--- config now has module's settings applied
-```
-
-## Common Patterns
-
-### Leader Key Submenus
-
-Using the new keybinding format:
-
-```lua
-keys = function(opts)
-  return {
-    LEADER = {
-      m = {
-        { key = "a", action = act.SomeAction(), desc = "action-a" },
-        { key = "b", action = act.OtherAction(), desc = "action-b" },
-      },
-    },
-  }
-end
-```
-
-The framework automatically creates the key table and activation binding.
-
-### Smart Orientation
-
-Split panes based on window aspect ratio:
-
-```lua
-local function my_action(window, pane)
-  local dims = pane:get_dimensions()
-  local direction = dims.pixel_height > dims.pixel_width and "Bottom" or "Right"
-  pane:split({
-    direction = direction,
-    size = 0.5,
-    args = { "command" },
-  })
-end
-```
-
-### Toast Notifications
-
-Provide user feedback:
-
-```lua
-window:toast_notification("WezMacs", "Operation completed", nil, 3000)
-```
-
-### Working Directory Detection
-
-Get current working directory:
-
-```lua
-local cwd_uri = pane:get_current_working_dir()
-local cwd = cwd_uri and cwd_uri.file_path or wezterm.home_dir
-```
-
-## Extending WezMacs
-
-To add a new built-in module:
-
-1. Create `wezmacs/modules/modulename/`
-2. Write `init.lua` with metadata and phases
-3. Write `README.md` with features and dependencies
-4. Document in main README.md
-5. Update examples/
-
-To use as a user:
-
-1. Create `user/custom-modules/modulename/`
-2. Write `init.lua` with metadata and phases
-3. Write optional README.md
-4. Enable in `user/config.lua`
-
-## FAQ
-
-**Q: Can modules depend on other modules?**
-A: Not directly. Modules are independent units. Share state via flags or communicate through wezterm events.
-
-**Q: Can I override a built-in module?**
-A: Yes! Create a module with the same name in `user/custom-modules/` and it will be found first.
-
-**Q: What if I don't want to use modules?**
-A: You can still use WezTerm directly - just avoid loading wezmacs and write your own config.
-
-**Q: How do I debug module loading?**
-A: Use `log_level = "debug"` in wezmacs.setup() call in wezterm.lua. Check WezTerm logs.
-
-**Q: Can I use external Lua libraries?**
-A: Yes, but you'll need to bundle them or ensure they're in Lua's package.path.
+- Numeric entries are direct `{ key, mods?, action, desc? }` bindings.
+- Mapped action specs are leaves; mapped tables without an action spec are menus.
+- Only the root `LEADER` group adds the LEADER modifier. Keys inside an activated
+  table do not require the leader again.
+- A leaf executes its action and pops the current table. A generated submenu
+  activation stays active; Escape pops one table level. Deeper menus return to
+  their parent rather than clearing an unrelated external key-table stack.
+- Numeric keys are sorted by index, then mapped entries by key, making output
+  deterministic. This preserves list-before-map precedence, not collision detection.
+- Existing one-level names such as `git_LEADER_g` remain stable.
+- `get_descriptions()` returns path-to-description metadata;
+  `get_module_descriptions(name)` uses explicit module ownership. Latest
+  registration of a path owns its description.
+
+No conflict UI or platform/editor routing is implied. In particular, seamless
+Neovim/terminal movement requires the later smart-splits bridge, not just this
+compiler.
+
+## Actions and runtime boundaries
+
+`SmartSplit(command)` returns a callback that chooses Bottom/Right by window
+aspect ratio. `NewTab(command)` and `NewWindow(command)` return native actions.
+Each command is a **trusted shell program**, executed through the configured
+shell with `-lc` for its login environment. The shell exits after the complete
+program; compound fallback expressions must not be prefixed with `exec`.
+These helpers do not sanitize untrusted strings or turn a command into an argv list.
+
+`wezmacs.color_scheme()` lazily resolves the selected theme. The current built-in
+lookup is `wezterm.color.get_builtin_schemes()`. The default Rose Pine theme and
+mux adapters have separate plugin dependencies; see the README.
+
+Native WezTerm objects are not interchangeable: a Pane, MuxTab, MuxWindow and GUI
+Window expose different methods. Keep mocks narrow and retain real native
+smoke validation alongside unit tests.
+
+## Testing and remaining design debt
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for commands/test boundaries and
+[docs/core-audit.md](docs/core-audit.md) for deferred module-level issues. The
+framework does not require Neovim, a test framework package, agent credentials
+or an additional multiplexer to develop or validate its core.
