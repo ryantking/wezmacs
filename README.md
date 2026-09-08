@@ -58,7 +58,7 @@ search directory or dependency installer hidden behind this interface.
 | `window` | Decorations, padding, UI fonts and theme application |
 | `tabs` | Tab navigation and title rendering |
 | `mouse` | Selection and mouse behavior |
-| `mux` | Native panes/workspaces and domain/workspace plugin adapters |
+| `mux` | Native panes and workspace/SSH host pickers |
 | `edit` | Editor, IDE, Yazi and file-search launchers |
 | `git` | Lazygit and related Git tool launchers |
 
@@ -67,13 +67,38 @@ run as ordinary terminal programs; their global settings and notifications are
 outside this repository. No agent binaries, credentials, hooks or MCP servers
 are installed by WezMacs.
 
-`mux` uses [smart_workspace_switcher](https://github.com/MLFlexer/smart_workspace_switcher.wezterm)
-and [quick_domains](https://github.com/DavidRR-F/quick_domains.wezterm). The default
+`mux` owns workspace and SSH-host helpers and has no plugin dependency. The default
 Rose Pine theme uses [neapsix/wezterm](https://github.com/neapsix/wezterm).
 WezTerm fetches these plugins on first use. A built-in theme plus the offline
 smoke fixture avoids network-dependent plugin loading during core validation.
 External TUI executables are installed separately; `deps` module fields are
 informational, not an availability check.
+
+## Switchers
+
+With the default macOS leader, press **Cmd-Space**, release, then the final key:
+
+| Key after Leader | Action |
+|---|---|
+| `s` | Workspaces: active sessions, ranked zoxide paths, then two levels below `~/Workspaces` |
+| `S` (Shift-s) | Toggle to the previous workspace |
+| `d` | SSH hosts: SSH aliases, readable known hosts and current-tailnet peers; native SSH in a new window |
+
+Both main pickers refresh when opened. Type to fuzzy-filter, Enter to select,
+Escape to cancel. Leader-Space remains the file-search launcher. The former
+advanced-domain shortcuts (`D`, `|`, `_`) are unbound; native domain configuration
+and `wezterm connect` remain available without a plugin. See
+[switcher behavior, configuration and manual tests](docs/switchers.md).
+
+## Raycast launcher
+
+The optional [Wezterm Raycast extension](raycast/README.md) lives in `raycast/`
+and exposes **Open Workspace** and **SSH to Host**. It uses the same Lua discovery
+and SSH planning helpers as the terminal pickers, with explicit typed directory
+and SSH-target fallbacks. **Open Workspace always opens a fresh local shell in a
+new independent window**, leaving existing windows unchanged. It does not clone
+workspace layouts. It is a local extension: install it separately on each
+Mac; Raycast Cloud Sync is not a source-code deployment mechanism.
 
 ## Development
 

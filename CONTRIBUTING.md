@@ -41,13 +41,31 @@ cannot exist in ordinary Lua. Each runs in its own process. Prefer simple
 assertions to a large mock framework. Temporary test output must be cleaned up
 and may never overwrite user configuration.
 
-`tests/fixtures/smoke/` uses only built-in colors and non-plugin modules. The
-smoke wrapper calls `wezterm show-keys --lua`; it requires both a completion marker
+`tests/fixtures/smoke/` uses built-in colors and every built-in module, including
+mux, without external plugins. The smoke wrapper calls `wezterm show-keys --lua`; it requires both a completion marker
 and a test-only sentinel binding in the rendered output. The latter proves native
 conversion did not silently fall back to defaults despite exit status 0.
 The `test/` directory remains the full, plugin-backed **interactive demo**.
 Neither fixture proves actual keystroke routing, window focus, remote domains
 or TUI process behavior. Those need explicit GUI tests when those features change.
+
+## Portability and public contributions
+
+- Keep personal hostnames, usernames, absolute home paths and private SSH settings
+  out of runtime defaults and test fixtures. Use reserved example hosts and
+  temporary test directories; retain legitimate project and license attribution.
+- Project roots and executable paths are options/preferences, not maintainer
+  constants. Conventional executable search locations are fallbacks only;
+  explicit overrides remain authoritative.
+- The workspace discovery helper currently assumes POSIX paths. The optional
+  Raycast extension is macOS-only. Do not describe either as Windows-validated;
+  keep platform-specific launch/focus behavior isolated and document limitations.
+- Preserve shell-free argv for discovered paths and SSH selections. Never remove
+  input validation or freshness checks solely to shorten code.
+- For Raycast changes, run `npm test`, `npm run typecheck`,
+  `npm run format:check`, and `npm run build` from `raycast/`. The build must remain
+  confined to `dist/`; importing or updating a user's installed extension is a
+  separate, explicit step.
 
 ## Style and safety
 

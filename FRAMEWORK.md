@@ -151,8 +151,20 @@ program; compound fallback expressions must not be prefixed with `exec`.
 These helpers do not sanitize untrusted strings or turn a command into an argv list.
 
 `wezmacs.color_scheme()` lazily resolves the selected theme. The current built-in
-lookup is `wezterm.color.get_builtin_schemes()`. The default Rose Pine theme and
-mux adapters have separate plugin dependencies; see the README.
+lookup is `wezterm.color.get_builtin_schemes()`. The default Rose Pine theme has
+an optional plugin dependency; the mux module does not. See the README.
+
+`mux/workspaces.lua` and `mux/hosts.lua` own their respective source collection
+and native selection actions. They perform discovery when the picker opens,
+not when the module is required. They use argument lists rather than the shell
+command helpers above. `mux/init.lua` remains the binding/options composition
+point and owns workspace status. The optional `raycast/` extension calls
+`scripts/raycast.lua` inside native headless WezTerm for shared discovery and
+validated SSH argument planning. It does not load personal configuration or
+plugins in that subprocess. Raycast workspace acceptance launches a verified app
+bundle as a new independent local GUI process; it never switches an existing GUI.
+There is no workspace mailbox, background polling, host daemon, tailnet manager,
+or remote mux provisioning. See [switchers](docs/switchers.md) and the [Raycast guide](raycast/README.md).
 
 Native WezTerm objects are not interchangeable: a Pane, MuxTab, MuxWindow and GUI
 Window expose different methods. Keep mocks narrow and retain real native
