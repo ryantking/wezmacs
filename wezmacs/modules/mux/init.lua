@@ -7,8 +7,23 @@ local wezterm = require("wezterm")
 local act = wezterm.action
 local wezmacs = require("wezmacs")
 
-local workspace_switcher = wezterm.plugin.require("https://github.com/MLFlexer/smart_workspace_switcher.wezterm")
-local quick_domains = wezterm.plugin.require("https://github.com/DavidRR-F/quick_domains.wezterm")
+local workspaces = require("wezmacs.modules.mux.workspaces")
+local hosts = require("wezmacs.modules.mux.hosts")
+
+local function focus_gui(gui)
+	gui:focus()
+	if wezterm.target_triple:find("apple-darwin", 1, true) then
+		-- Activate this helper's parent GUI, never another WezTerm instance.
+		wezterm.run_child_process({
+			"/usr/bin/osascript",
+			"-l",
+			"JavaScript",
+			"-e",
+			'ObjC.import("AppKit"); ObjC.bindFunction("getppid", ["int", []]); '
+				.. "$.NSRunningApplication.runningApplicationWithProcessIdentifier($.getppid()).activateWithOptions(2);",
+		})
+	end
+end
 
 return {
 	name = "mux",
@@ -18,29 +33,14 @@ return {
 
 	opts = {
 		default_workspace = "~",
+		workspaces = {}, -- Active workspaces, zoxide and ~/Workspaces (two levels).
+		hosts = {}, -- SSH config, readable known_hosts and the current tailnet.
 
 		-- Keybindings
 		term_mod = wezmacs.config.term_mod,
 		term_alt_mod = wezmacs.config.term_mod .. "|ALT",
 		gui_mod = wezmacs.config.gui_mod,
 		ctrl_mod = wezmacs.config.ctrl_mod,
-
-		-- Quick Domains Plugin
-		quick_domains = {
-			keys = {
-				attach = { key = "d", mods = "LEADER", tbl = "" },
-				vsplit = { key = "|", mods = "LEADER", tbl = "" },
-				hsplit = { key = "_", mods = "LEADER", tbl = "" },
-			},
-			auto = {
-				ssh_ignore = true,
-				exec_ignore = {
-					ssh = true,
-					docker = true,
-					kubernetes = true,
-				},
-			},
-		},
 	},
 
 	keys = function(opts)
@@ -156,39 +156,60 @@ return {
 			{
 				key = "s",
 				mods = "LEADER",
-				action = workspace_switcher.switch_workspace(),
+				action = workspaces.switch_workspace(opts.workspaces),
 				desc = "workspace-switch",
 			},
 			{
 				key = "S",
 				mods = "LEADER",
-				action = workspace_switcher.switch_to_prev_workspace(),
+				action = workspaces.switch_to_prev_workspace(),
 				desc = "workspace-switch-prev",
+			},
+			{
+				key = "d",
+				mods = "LEADER",
+				action = hosts.switch_host(opts.hosts),
+				desc = "ssh-host-switch",
 			},
 		}
 	end,
 
 	setup = function(config, opts)
 		config.default_workspace = opts.default_workspace
-		quick_domains.apply_to_config(config, opts.quick_domains)
-		workspace_switcher.zoxide_path = "/opt/homebrew/bin/zoxide"
 
-		wezterm.on("smart_workspace_switcher.workspace_switcher.chosen", function(window, workspace)
-			local gui_win = window:gui_window()
-			local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
-			gui_win:set_right_status(wezterm.format({
-				{ Foreground = { Color = config.colors.ansi[5] } },
-				{ Text = base_path .. "  " },
-			}))
+		-- Focus only explicit launcher windows, never ordinary local startup.
+		wezterm.on("gui-attached", function(domain)
+			local name = domain:name()
+			if name == "local" and os.getenv("WEZMACS_RAYCAST_NEW_WINDOW") == "1" then
+				-- Native local startup can hold a mux window lock here. Defer
+				-- until rendering; do not enumerate windows in this callback.
+				wezterm.GLOBAL.wezmacs_raycast_focus_pending = true
+				return
+			end
+			if not name:match("^SSH to ") then
+				return
+			end
+			local workspace = wezterm.mux.get_active_workspace()
+			for _, window in ipairs(wezterm.mux.all_windows()) do
+				if window:get_workspace() == workspace then
+					local gui = window:gui_window()
+					if gui then
+						focus_gui(gui)
+						return
+					end
+				end
+			end
 		end)
 
-		wezterm.on("smart_workspace_switcher.workspace_switcher.created", function(window, workspace)
-			local gui_win = window:gui_window()
-			local base_path = string.gsub(workspace, "(.*[/\\])(.*)", "%2")
-			gui_win:set_right_status(wezterm.format({
-				{ Foreground = { Color = config.colors.ansi[5] } },
-				{ Text = base_path .. "  " },
-			}))
+		-- One source of status truth: this also follows previous-workspace toggles.
+		wezterm.on("update-status", function(window)
+			if wezterm.GLOBAL.wezmacs_raycast_focus_pending then
+				wezterm.GLOBAL.wezmacs_raycast_focus_pending = nil
+				focus_gui(window)
+			end
+			local workspace = window:active_workspace()
+			local name = workspace:match("([^/\\]+)$") or workspace
+			window:set_right_status(wezterm.format({ { Text = name .. "  " } }))
 		end)
 	end,
 }
