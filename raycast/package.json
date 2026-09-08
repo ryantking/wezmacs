@@ -1,0 +1,80 @@
+{
+  "$schema": "https://www.raycast.com/schemas/extension.json",
+  "name": "wezterm",
+  "title": "Wezterm",
+  "description": "Open WezMacs workspaces and connect to SSH hosts in WezTerm.",
+  "icon": "wezterm.png",
+  "author": "ryan",
+  "license": "MIT",
+  "platforms": [
+    "macOS"
+  ],
+  "categories": [
+    "Developer Tools"
+  ],
+  "commands": [
+    {
+      "name": "open-workspace",
+      "title": "Open Workspace",
+      "description": "Open a workspace directory in a new independent WezTerm window",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "path",
+          "type": "text",
+          "placeholder": "Folder or workspace",
+          "required": false
+        }
+      ]
+    },
+    {
+      "name": "ssh-to-host",
+      "title": "SSH to Host",
+      "description": "Choose an SSH alias or discovered host in WezTerm",
+      "mode": "view",
+      "arguments": [
+        {
+          "name": "target",
+          "type": "text",
+          "placeholder": "[user@]host[:port]",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "preferences": [
+    {
+      "name": "repoPath",
+      "title": "WezMacs Repository",
+      "description": "Framework checkout containing scripts/raycast.lua. Absolute path or ~/ path.",
+      "type": "textfield",
+      "required": false,
+      "default": "~/.config/wezterm"
+    },
+    {
+      "name": "weztermPath",
+      "title": "WezTerm Executable",
+      "description": "Optional absolute CLI path. Open Workspace requires WezTerm.app/Contents/MacOS/wezterm or a symlink to it. Otherwise searches the app bundle and standard Homebrew paths.",
+      "type": "textfield",
+      "required": false
+    }
+  ],
+  "scripts": {
+    "test": "tsx --test tests/*.test.ts",
+    "typecheck": "tsc --noEmit",
+    "build": "ray build -e dist -o dist",
+    "dev": "ray develop",
+    "format": "prettier --write src tests package.json tsconfig.json",
+    "format:check": "prettier --check src tests package.json tsconfig.json"
+  },
+  "dependencies": {
+    "@raycast/api": "1.104.25"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/react": "^19.0.0",
+    "typescript": "^5.9.0",
+    "tsx": "^4.20.0",
+    "prettier": "^3.6.0"
+  }
+}
