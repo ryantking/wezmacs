@@ -1,122 +1,108 @@
---[[
-  Tabs title formatting
-  Handles extracting and formatting tab titles with icons and context
-]]
-
+-- Snapshot-only tab labels. OSC and explicit titles are content, not commands.
 local wezterm = require("wezterm")
 local M = {}
 
--- Icons to prepend to titles
-local icons = {
-	["bash"] = wezterm.nerdfonts.cod_terminal_bash,
-	["fish"] = wezterm.nerdfonts.md_fish,
-	["zsh"] = wezterm.nerdfonts.dev_terminal,
-	["hx"] = wezterm.nerdfonts.md_dna,
-	["nvim"] = wezterm.nerdfonts.custom_vim,
-	["vim"] = wezterm.nerdfonts.dev_vim,
-	["lazygit"] = wezterm.nerdfonts.md_git,
-	["git"] = wezterm.nerdfonts.dev_git,
-	["broot"] = wezterm.nerdfonts.md_folder,
-	["yazi"] = wezterm.nerdfonts.md_folder,
-	["cargo"] = wezterm.nerdfonts.dev_rust,
-	["go"] = wezterm.nerdfonts.seti_go,
-	["lua"] = wezterm.nerdfonts.seti_lua,
-	["make"] = wezterm.nerdfonts.seti_makefile,
-	["just"] = wezterm.nerdfonts.md_lightning_bolt,
-	["python"] = wezterm.nerdfonts.dev_python,
-	["python3"] = wezterm.nerdfonts.dev_python,
-	["pip"] = wezterm.nerdfonts.dev_python,
-	["uv"] = wezterm.nerdfonts.dev_python,
-	["node"] = wezterm.nerdfonts.md_hexagon,
-	["ruby"] = wezterm.nerdfonts.cod_ruby,
-	["docker"] = wezterm.nerdfonts.md_docker,
-	["brew"] = wezterm.nerdfonts.md_beer,
-	-- ["kubectl"] = wezterm.nerdfonts.dev_kubernetes,
-	["curl"] = wezterm.nerdfonts.cod_globe,
-	["wget"] = wezterm.nerdfonts.md_arrow_down_box,
-	["gh"] = wezterm.nerdfonts.dev_github_badge,
-	["psql"] = wezterm.nerdfonts.dev_postgresql,
-	["sudo"] = wezterm.nerdfonts.fa_hashtag,
+local fonts = wezterm.nerdfonts or {}
+local app_labels = {
+	curl = (fonts.cod_globe and fonts.cod_globe .. " " or "") .. "curl",
+	wget = (fonts.md_arrow_down_box and fonts.md_arrow_down_box .. " " or "") .. "wget",
+	nvim = "Neovim",
+	claude = "Claude",
+	codex = "Codex",
+	opencode = "OpenCode",
+	hermes = "Hermes",
 }
 
--- Full titles to replace applications
-local titles = {
-	-- ["k9s"] = wezterm.nerdfonts.dev_kubernetes .. " Kubernetes",
-	["lazydocker"] = wezterm.nerdfonts.md_docker .. " Docker",
-	["spotify_player"] = wezterm.nerdfonts.md_spotify .. " Spotify",
-	["btm"] = wezterm.nerdfonts.md_chart_donut_variant .. " Bottom",
-	["htop"] = wezterm.nerdfonts.md_chart_areaspline .. " Top",
-	["btop"] = wezterm.nerdfonts.md_chart_areaspline .. " Btop",
+local shells = {
+	bash = true,
+	zsh = true,
+	fish = true,
+	sh = true,
+	dash = true,
+	nu = true,
+	pwsh = true,
+	powershell = true,
+	cmd = true,
 }
 
--- Add zoom annotation if pane zoomed
-local function wrap_title(tab, title)
-	for _, pane in ipairs(tab.panes or {}) do
-		if pane.is_zoomed then
-			return { { Text = " [" .. title .. "] " } }
-		end
+local function nonempty(value) return type(value) == "string" and value ~= "" end
+
+local function cwd_label(cwd)
+	local path = cwd and cwd.file_path
+	if not nonempty(path) then
+		return nil
 	end
-
-	return { { Text = " " .. title .. " " } }
-end
-
-local function get_tab_cwd(tab)
-	local pane = tab.active_pane
-	if not pane.current_working_dir then
-		return "???"
-	end
-
-	local cwd = pane.current_working_dir.file_path or ""
-
-	-- Normalize path by removing trailing slash
-	local cwd_normalized = cwd:gsub("/$", "")
-	local home_normalized = wezterm.home_dir:gsub("/$", "")
-
-	-- Show ~ for home directory
-	if cwd_normalized == home_normalized or cwd_normalized == "" then
+	path = path:gsub("\\", "/")
+	local normalized = path:gsub("/+$", "")
+	local home = (wezterm.home_dir or ""):gsub("\\", "/"):gsub("/+$", "")
+	if normalized == "" then
+		return "/"
+	elseif normalized == home then
 		return "~"
+	elseif normalized:match("^%a:$") then
+		return normalized .. "/"
 	end
-
-	-- Show directory name otherwise
-	return cwd_normalized:match("([^/]+)$") or "???"
+	return normalized:match("([^/]+)$") or "Shell"
 end
 
-local function parse_tab_title(tab)
-	local title = (tab.tab_title and #tab.tab_title > 0) and tab.tab_title or tab.active_pane.title
-	local bin, other = title:match("^(%S+)%s*%-?%s*%s*(.*)$")
-
-	if not bin or #bin == 0 then
-		local info = tab.active_pane.foreground_process_name
-		bin = string.gsub(info, "(.*[/\\])(.*)", "%2")
+local function executable_label(executable, pane)
+	local name = executable:lower():gsub("%.exe$", "")
+	if shells[name] then
+		return cwd_label(pane.current_working_dir) or executable
+	elseif app_labels[name] then
+		local cwd = cwd_label(pane.current_working_dir)
+		return app_labels[name] .. (cwd and " · " .. cwd or "")
 	end
-
-	if not other or #other == 0 then
-		other = get_tab_cwd(tab)
-	end
-
-	return bin, other
+	return executable
 end
 
--- Extract and format tab title with icon and context
-function M.format_tab_title(tab, _, _, _, _, _)
-	-- Full title replacement (icon + custom text, ignore application title)
-	local title = (tab.tab_title and #tab.tab_title > 0) and tab.tab_title or tab.active_pane.title
-	if titles[title] then
-		return wrap_title(tab, titles[title])
+local function title_for(tab)
+	if nonempty(tab.tab_title) then
+		return tab.tab_title
 	end
-
-	local bin, other = parse_tab_title(tab)
-	if titles[bin] then
-		return wrap_title(tab, titles[bin])
-	elseif icons[bin] then
-		return wrap_title(tab, icons[bin] .. "  " .. other)
+	local pane = tab.active_pane or {}
+	if nonempty(pane.title) then
+		-- Only exact known executable names are defaults; never parse task/buffer titles.
+		return executable_label(pane.title, pane)
 	end
-
-	if title then
-		return wrap_title(tab, title)
+	local process = pane.foreground_process_name
+	local executable = nonempty(process) and process:match("([^/\\]+)$")
+	if executable then
+		return executable_label(executable, pane)
 	end
+	return cwd_label(pane.current_working_dir) or "Shell"
+end
 
-	return wrap_title(tab, bin .. " " .. other)
+function M.format_tab_title(tab, _, _, config, _, max_width)
+	local pane = tab.active_pane or {}
+	local zoomed, unseen = pane.is_zoomed, pane.has_unseen_output
+	for _, item in ipairs(tab.panes or {}) do
+		zoomed = zoomed or item.is_zoomed
+		unseen = unseen or item.has_unseen_output
+	end
+	local prefix = " " .. tostring((tab.tab_index or 0) + 1) .. " "
+	local suffix = (zoomed and " [Z]" or "") .. " "
+	local marker = unseen and not tab.is_active and "· " or ""
+	local title = title_for(tab)
+	local main = prefix .. title .. suffix
+	-- max_width is a cell budget only for the retro bar. Fancy clips natively.
+	if config and config.use_fancy_tab_bar == false then
+		local width = math.max(0, max_width or config.tab_max_width or 32)
+		local available = math.max(0, width - wezterm.column_width(prefix .. suffix .. marker))
+		title = wezterm.truncate_right(title, available)
+		main = wezterm.truncate_right(prefix .. title .. suffix, math.max(0, width - wezterm.column_width(marker)))
+		marker = wezterm.truncate_right(marker, math.max(0, width - wezterm.column_width(main)))
+	end
+	local result = { { Text = main } }
+	if marker ~= "" then
+		local colors = config and config.colors
+		local color = colors and colors.ansi and colors.ansi[5]
+		if color then
+			result[#result + 1] = { Foreground = { Color = color } }
+		end
+		result[#result + 1] = { Text = marker }
+	end
+	return result
 end
 
 return M

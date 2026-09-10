@@ -1,6 +1,6 @@
 --[[
   Module: tabs
-  Description: Custom tab bar with process icons, zoom indicator, and decorative separators
+  Description: Native tab bar with application context, zoom and unseen-output indicators
 ]]
 
 local wezterm = require("wezterm")
@@ -11,14 +11,17 @@ local hooks = require("wezmacs.modules.tabs.hooks")
 
 return {
 	name = "tabs",
-	description = "Custom tab bar with process icons and decorative separators",
+	description = "Native tab bar with application context and pane indicators",
 
 	opts = function()
 		return {
+			enable_tab_bar = true,
 			use_fancy_tab_bar = true,
 			tab_bar_at_bottom = false,
-			hide_tab_bar_if_only_one_tab = true,
-			tab_max_width = 120,
+			hide_tab_bar_if_only_one_tab = false,
+			show_new_tab_button_in_tab_bar = true,
+			show_close_tab_button_in_tabs = false,
+			tab_max_width = 32,
 			unzoom_on_switch_pane = false,
 
 			-- Keybindings
@@ -54,26 +57,26 @@ return {
 				action = act.ActivateTabRelative(-1),
 				desc = "prev",
 			},
-			{ key = "[", mods = opts.gui_mod, action = act.ActivateTabRelative(-1), desc = "next" },
-			{ key = "]", mods = opts.gui_mod, action = act.ActivateTabRelative(1), desc = "prev" },
-			{ key = "PageUp", mods = opts.ctrl_mod, action = act.ActivateTabRelative(-1), desc = "next" },
+			{ key = "[", mods = opts.gui_mod, action = act.ActivateTabRelative(-1), desc = "prev" },
+			{ key = "]", mods = opts.gui_mod, action = act.ActivateTabRelative(1), desc = "next" },
+			{ key = "PageUp", mods = opts.ctrl_mod, action = act.ActivateTabRelative(-1), desc = "prev" },
 			{
 				key = "PageDown",
 				mods = opts.ctrl_mod,
 				action = act.ActivateTabRelative(1),
-				desc = "prev",
+				desc = "next",
 			},
 			{
 				key = "PageUp",
 				mods = opts.ctrl_shift_mod,
 				action = act.MoveTabRelative(-1),
-				desc = "swap-next",
+				desc = "swap-prev",
 			},
 			{
 				key = "PageDown",
 				mods = opts.ctrl_shift_mod,
 				action = act.MoveTabRelative(1),
-				desc = "swap-prev",
+				desc = "swap-next",
 			},
 		}
 
@@ -97,6 +100,9 @@ return {
 	end,
 
 	setup = function(config, opts)
+		config.enable_tab_bar = opts.enable_tab_bar
+		config.show_new_tab_button_in_tab_bar = opts.show_new_tab_button_in_tab_bar
+		config.show_close_tab_button_in_tabs = opts.show_close_tab_button_in_tabs
 		config.use_fancy_tab_bar = opts.use_fancy_tab_bar
 		config.tab_bar_at_bottom = opts.tab_bar_at_bottom
 		config.hide_tab_bar_if_only_one_tab = opts.hide_tab_bar_if_only_one_tab

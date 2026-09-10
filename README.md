@@ -25,7 +25,7 @@ either existing file**. User configuration is separate from the framework:
 
 ```lua
 return {
-  color_scheme = "Tokyo Night",
+  color_scheme = "tokyonight-storm",
   term_mod = "LEADER",
 }
 ```
@@ -68,11 +68,18 @@ outside this repository. No agent binaries, credentials, hooks or MCP servers
 are installed by WezMacs.
 
 `mux` owns workspace and SSH-host helpers and has no plugin dependency. The default
-Rose Pine theme uses [neapsix/wezterm](https://github.com/neapsix/wezterm).
-WezTerm fetches these plugins on first use. A built-in theme plus the offline
-smoke fixture avoids network-dependent plugin loading during core validation.
+Tokyo Night Storm theme (`tokyonight-storm`) is bundled with WezTerm and needs no
+network access. The optional `Rose Pine` selection still uses
+[neapsix/wezterm](https://github.com/neapsix/wezterm), fetched on first use.
 External TUI executables are installed separately; `deps` module fields are
 informational, not an availability check.
+
+## Appearance
+
+The default is bundled **Tokyo Night Storm**, with coordinated window/tab colors,
+readable inactive panes, numbered contextual titles, zoom markers and inactive-tab
+output indicators. Fonts remain configurable rather than tied to a maintainer's
+machine. See [appearance and Neovim/agent title behavior](docs/appearance.md).
 
 ## Switchers
 
