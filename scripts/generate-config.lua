@@ -62,7 +62,7 @@ end
 local config_template = [[-- Global overrides; omitted settings retain wezmacs/config.lua defaults.
 -- Module-specific options belong in modules.lua.
 return {
-	-- color_scheme = "Rose Pine",
+	-- color_scheme = "tokyonight-storm",
 	-- term_mod = "CTRL|SHIFT",
 	-- gui_mod = "SUPER",
 	-- ctrl_mod = "CTRL",

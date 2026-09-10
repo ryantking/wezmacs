@@ -151,8 +151,11 @@ program; compound fallback expressions must not be prefixed with `exec`.
 These helpers do not sanitize untrusted strings or turn a command into an argv list.
 
 `wezmacs.color_scheme()` lazily resolves the selected theme. The current built-in
-lookup is `wezterm.color.get_builtin_schemes()`. The default Rose Pine theme has
-an optional plugin dependency; the mux module does not. See the README.
+lookup is `wezterm.color.get_builtin_schemes()`. The default `tokyonight-storm`
+is bundled with WezTerm. Explicitly selecting `Rose Pine` retains its optional
+plugin dependency; the mux module has none. Resolved palettes are copied per
+caller. Per-color native overrides belong in a module setup callback, not the
+generic option merge: native ColorSpec variants must replace atomically.
 
 `mux/workspaces.lua` and `mux/hosts.lua` own their respective source collection
 and native selection actions. They perform discovery when the picker opens,

@@ -10,7 +10,7 @@ local M = {}
 
 -- Default global configuration
 M.defaults = {
-	color_scheme = "Rose Pine", -- Default theme
+	color_scheme = "tokyonight-storm", -- Built-in; no plugin required
 	term_mod = "CTRL|SHIFT", -- Default modifier for bindings
 	gui_mod = "SUPER", -- Modifier for gui commands
 	ctrl_mod = "CTRL", -- Modifier for control commands

@@ -1,6 +1,6 @@
 --[[
   Module: window
-  Description: Window decorations, padding, scrolling, and cursor behavior
+  Description: Theme application, window chrome, spacing, and UI fonts
 ]]
 
 local wezterm = require("wezterm")
@@ -9,7 +9,7 @@ local wezmacs = require("wezmacs")
 
 return {
 	name = "window",
-	description = "Window behavior, padding, and cursor settings",
+	description = "Theme, window chrome, spacing, and UI fonts",
 
 	opts = function()
 		return {
@@ -18,6 +18,10 @@ return {
 			padding = 16,
 			decorations = "RESIZE",
 			close_confirmation = "NeverPrompt",
+			window_background_opacity = 1,
+			text_background_opacity = 1,
+			inactive_pane_hsb = { saturation = 1, brightness = 0.9 },
+			adjust_window_size_when_changing_font_size = false,
 
 			-- Keybindings
 			term_mod = wezmacs.config.term_mod,
@@ -37,14 +41,24 @@ return {
 
 	setup = function(config, opts)
 		-- Window decorations and behavior
-		config.colors = wezmacs.color_scheme()
+		local colors = wezmacs.color_scheme()
+		config.colors = colors
 		config.window_decorations = opts.decorations
 		config.window_close_confirmation = opts.close_confirmation
+		config.window_background_opacity = opts.window_background_opacity
+		config.text_background_opacity = opts.text_background_opacity
+		config.inactive_pane_hsb = opts.inactive_pane_hsb
+		config.adjust_window_size_when_changing_font_size = opts.adjust_window_size_when_changing_font_size
 
 		local window_frame = config.window_frame or {}
-		window_frame = window_frame or {}
-		window_frame.inactive_titlebar_bg = window_frame.inactive_titlebar_bg or config.colors.background
-		window_frame.active_titlebar_bg = window_frame.active_titlebar_bg or config.colors.background
+		local bar = colors.tab_bar or {}
+		local background = bar.background or colors.background
+		window_frame.inactive_titlebar_bg = window_frame.inactive_titlebar_bg or background
+		window_frame.active_titlebar_bg = window_frame.active_titlebar_bg or background
+		window_frame.active_titlebar_fg = window_frame.active_titlebar_fg or colors.foreground
+		window_frame.inactive_titlebar_fg = window_frame.inactive_titlebar_fg
+			or (bar.inactive_tab and bar.inactive_tab.fg_color)
+			or colors.foreground
 		config.window_frame = window_frame
 
 		-- Window padding (equal on all sides)
@@ -59,8 +73,7 @@ return {
 		-- UI fonts (for UI elements) - only if configured
 		if opts.font then
 			local ui_font = wezterm.font({ family = opts.font })
-			-- config.char_select_font = ui_font
-			-- config.command_palette_font = ui_font
+			-- Native palettes/selectors inherit this font unless explicitly overridden.
 			config.window_frame.font = ui_font
 		end
 

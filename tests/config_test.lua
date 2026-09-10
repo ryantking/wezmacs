@@ -20,6 +20,11 @@ local function with_file(source, run)
 	assert(ok, err)
 end
 
+test(
+	"default theme is the plugin-free built-in Tokyo Night Storm",
+	function() assert(config.load().color_scheme == "tokyonight-storm", "default theme requires an optional plugin") end
+)
+
 test("missing optional config uses defaults", function()
 	local path = os.tmpname()
 	assert(os.remove(path))

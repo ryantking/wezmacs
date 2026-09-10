@@ -49,53 +49,17 @@ M.config = load_config()
 -- Usage: wezmacs.module.list()
 M.module = require("wezmacs.module")(M.config_dir)
 
--- Color scheme (computed from config.color_scheme)
--- Access via: wezmacs.color_scheme (returns the theme object or nil)
--- This is computed lazily when accessed
+-- Access via wezmacs.color_scheme(); cache resolution, never caller-owned tables.
+local theme = require("wezmacs.theme")
 local color_scheme = nil
 local color_scheme_name = nil
 
-local function color_tab_bar()
-	if color_scheme == nil then
-		error("unset color scheme")
-	end
-
-	local active_tab = {
-		bg_color = color_scheme.ansi[1],
-		fg_color = color_scheme.foreground,
-	}
-	local inactive_tab = {
-		bg_color = color_scheme.background,
-		fg_color = color_scheme.brights[1],
-	}
-
-	local tab_bar = color_scheme.tab_bar or {}
-	tab_bar.background = tab_bar.background or color_scheme.background
-	tab_bar.inactive_tab_edge = tab_bar.inactive_tab_edge or color_scheme.brights[1]
-	tab_bar.active_tab = tab_bar.active_tab or active_tab
-	tab_bar.inactive_tab = tab_bar.inactive_tab or inactive_tab
-	tab_bar.inactive_tab_hover = tab_bar.inactive_tab_hover or active_tab
-	tab_bar.new_tab = tab_bar.new_tab or inactive_tab
-	tab_bar.new_tab_hover = tab_bar.new_tab_hover or active_tab
-	color_scheme.tab_bar = tab_bar
-end
-
 function M.color_scheme()
 	if not color_scheme or M.config.color_scheme ~= color_scheme_name then
-		if M.config.color_scheme == "Rose Pine" then
-			local theme = wezterm.plugin.require("https://github.com/neapsix/wezterm").main
-			color_scheme = theme.colors()
-			color_scheme_name = "Rose Pine"
-			color_tab_bar()
-		else
-			local color_schemes = wezterm.color.get_builtin_schemes()
-			color_scheme = color_schemes[M.config.color_scheme]
-			color_scheme_name = M.config.color_scheme
-			color_tab_bar()
-		end
+		color_scheme = theme.resolve(wezterm, M.config.color_scheme)
+		color_scheme_name = M.config.color_scheme
 	end
-
-	return color_scheme
+	return theme.copy(color_scheme)
 end
 
 -- Keybindings API (lazy load)
