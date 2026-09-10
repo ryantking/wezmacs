@@ -21,12 +21,21 @@ search. Pane direction/resize shortcuts and other modules are unchanged.
 The picker combines, in priority order:
 
 1. Active WezTerm workspaces. In the terminal picker, the current workspace
-   comes first with `[current]`; other live workspaces show `[running]`.
-   Folder candidates have no running marker. This uses native mux inventory,
-   not a sessionizer dependency.
+   comes first with a green left-margin workspace icon; other live workspaces
+   use the same icon in blue. Folder candidates reserve a blank icon slot so
+   their labels align. This uses native mux inventory, not a sessionizer dependency.
 2. Existing, readable directories from `zoxide query -l`, in zoxide's order.
 3. Directories at exactly the first and second levels below `~/Workspaces`,
    sorted by path: `~/Workspaces/group` and `~/Workspaces/group/project`.
+
+The icon is `md_dock_window` (`󱂬`), matching smart_workspace_switcher's glyph,
+with a plain `*` fallback when the Nerd Fonts entry is unavailable. Icon colors
+use the window's effective ANSI green/blue palette entries, falling back to
+native ANSI Green/Blue when those entries are absent. Native `wezterm.format`
+resets the foreground after the icon, keeping workspace names in the default
+text color. Blank slots use the icon's terminal column width. No plugin or
+framework-global configuration is loaded by the shared helper; its `get_choices`
+API remains undecorated for Raycast and other callers.
 
 All sources are refreshed on opening. The scan omits dot-directories and the
 common generated-directory names `node_modules`, `target`, `build`, `dist`,
@@ -206,6 +215,14 @@ WEZMACSDIR="$PWD/test" just smoke
 WEZMACSDIR="$HOME/.config/wezmacs" just smoke
 ```
 
+`bash scripts/native-regressions.sh` additionally exercises the workspace picker
+through real `wezterm.emit` callbacks and native `InputSelector`/format conversion.
+Directory/query inputs and window/pane boundaries are stubbed; no GUI, external
+discovery or zoxide writes are used. It checks green/blue icons, default-foreground
+labels, aligned blank slots, missing icon/palette fallbacks and unchanged opaque
+IDs, then requires a strict config and rendered sentinel. Headless validation
+does not prove the selected GUI font's glyph appearance or fuzzy-search rendering.
+
 A headless native config check validates embedded Lua and native actions, not
 actual key routing, GUI focus, authentication or network reachability. The local
 verification additionally exercises actual filesystem/zoxide/SSH/Tailscale
@@ -217,6 +234,8 @@ Manual acceptance, in order:
 1. Reload with Cmd-r. Open Leader-s and verify both a familiar zoxide path and a
    first-/second-level project you have not visited. Escape once: no workspace
    should be created.
+   Check that the current icon is green, other live icons are blue, and directory
+   labels align with workspace names without trailing status suffixes.
 2. Open a project. Confirm its cwd, switch elsewhere, then use Leader-S twice.
    Check that it toggles back and forth and the status follows the active
    workspace. Selecting an already open project should reuse that workspace.
@@ -234,6 +253,7 @@ Manual acceptance, in order:
 ## References
 
 - [WezTerm workspace action](https://wezterm.org/config/lua/keyassignment/SwitchToWorkspace.html)
+- [smart_workspace_switcher icon source](https://github.com/MLFlexer/smart_workspace_switcher.wezterm/blob/main/plugin/init.lua)
 - [Native SSH command](https://wezterm.org/cli/ssh.html)
 - [SSH configuration enumeration](https://wezterm.org/config/lua/wezterm/enumerate_ssh_hosts.html)
 - [SSH domains and plain-vs-mux configuration](https://wezterm.org/config/lua/SshDomain.html)

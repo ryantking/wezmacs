@@ -18,6 +18,9 @@ local function window(id, current)
 	local win = { actions = {}, current = current }
 	function win:window_id() return id end
 	function win:active_workspace() return self.current end
+	function win:effective_config()
+		return { colors = { ansi = { "#000000", "#aa0000", "#12ab34", "#aaaa00", "#5678ef" } } }
+	end
 	function win:perform_action(action, pane)
 		self.actions[#self.actions + 1] = { action = action, pane = pane }
 		if action.kind == "switch" then
@@ -28,8 +31,18 @@ local function window(id, current)
 end
 
 local function fixture()
-	local state = { names = { "~", "ssh:server" }, calls = {}, reads = {}, dirs = {}, output = "" }
+	local state = { names = { "~", "ssh:server" }, calls = {}, reads = {}, dirs = {}, output = "", formats = {} }
 	local wezterm = {
+		nerdfonts = { md_dock_window = "󱂬" },
+		column_width = function(text) return text == "󱂬" and 2 or #text end,
+		format = function(items)
+			state.formats[#state.formats + 1] = items
+			local text = ""
+			for _, item in ipairs(items) do
+				text = text .. (item.Text or "")
+			end
+			return text
+		end,
 		home_dir = "/home/test",
 		target_triple = "aarch64-apple-darwin",
 		GLOBAL = {},
@@ -55,7 +68,7 @@ local function fixture()
 	return mod, state, wezterm
 end
 
-test("picker marks running workspaces and promotes current without changing IDs", function()
+test("picker colors only workspace icons and aligns directories without changing IDs", function()
 	local mod, state = fixture()
 	state.names = { "alpha", "~" }
 	state.output = "/ranked\n"
@@ -64,10 +77,38 @@ test("picker marks running workspaces and promotes current without changing IDs"
 	mod.switch_workspace()(win, {})
 	local choices = win.actions[1].action.value.choices
 	equal(choices[1].id, "~")
-	equal(choices[1].label, "~ [current]")
+	equal(choices[1].label, "󱂬 ~")
 	equal(choices[2].id, "alpha")
-	equal(choices[2].label, "alpha [running]")
-	equal(choices[3].label, "/ranked")
+	equal(choices[2].label, "󱂬 alpha")
+	equal(choices[3].id, "/ranked")
+	equal(choices[3].label, "   /ranked")
+	equal(state.formats[1][1].Foreground.Color, "#5678ef", "other live icon uses effective blue")
+	equal(state.formats[2][1].Foreground.Color, "#12ab34", "current icon uses effective green")
+	for _, items in ipairs({ state.formats[1], state.formats[2] }) do
+		equal(items[2].Text, "󱂬")
+		equal(items[3].Foreground, "Default", "workspace text must not inherit icon color")
+	end
+	local plain = mod.get_choices()
+	equal(plain[1].label, "alpha", "shared API stays undecorated and unpromoted")
+	equal(plain[2].label, "~")
+	equal(plain[3].label, "/ranked")
+end)
+
+test("picker falls back to ASCII icons and ANSI colors without optional font or palette data", function()
+	local mod, state, wezterm = fixture()
+	wezterm.nerdfonts = nil
+	state.output = "/ranked\n"
+	state.dirs["/ranked"] = {}
+	local win = window(1, "~")
+	function win:effective_config() return {} end
+	mod.switch_workspace()(win, {})
+	local choices = win.actions[1].action.value.choices
+	equal(choices[1].label, "* ~")
+	equal(choices[2].label, "* ssh:server")
+	equal(choices[3].label, "  /ranked")
+	equal(state.formats[1][1].Foreground.AnsiColor, "Green")
+	equal(state.formats[2][1].Foreground.AnsiColor, "Blue")
+	equal(state.formats[1][3].Foreground, "Default")
 end)
 
 test("explicit live inventory is isolated from the native mux, including an empty list", function()

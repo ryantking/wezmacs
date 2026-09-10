@@ -129,12 +129,26 @@ function M.switch_workspace(opts)
 			running[name] = true
 		end
 		local current_index
+		local ansi = (window:effective_config().colors or {}).ansi or {}
+		-- Same dock-window glyph as smart_workspace_switcher, without its plugin.
+		local icon = (wezterm.nerdfonts and wezterm.nerdfonts.md_dock_window) or "*"
+		local blank = string.rep(" ", wezterm.column_width(icon))
 		for index, choice in ipairs(choices) do
 			if running[choice.id] then
-				choice.label = choice.label .. (choice.id == current and " [current]" or " [running]")
+				local color = ansi[choice.id == current and 3 or 5]
+				choice.label = wezterm.format({
+					{ Foreground = color and { Color = color } or { AnsiColor = choice.id == current and "Green" or "Blue" } },
+					{ Text = icon },
+					-- Native Default is valid; the community FormatItem annotation omits it.
+					---@diagnostic disable-next-line: assign-type-mismatch
+					{ Foreground = "Default" },
+					{ Text = " " .. choice.label },
+				})
 				if choice.id == current then
 					current_index = index
 				end
+			else
+				choice.label = wezterm.format({ { Text = blank .. " " .. choice.label } })
 			end
 		end
 		if current_index then
