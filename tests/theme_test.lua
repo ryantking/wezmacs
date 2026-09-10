@@ -113,17 +113,20 @@ local storm = {
 }
 schemes["tokyonight-storm"] = storm
 
-test("Tokyo Night Storm lifts inactive contrast without replacing native active or hover colors", function()
+test("Tokyo Night Storm uses a dark strip with blue active text and foreground hover", function()
 	framework.config.color_scheme = "tokyonight-storm"
 	local tabs = framework.color_scheme().tab_bar
-	assert(tabs.inactive_tab.fg_color == storm.ansi[8], "inactive tabs still use dim comment text")
-	assert(tabs.inactive_tab.bg_color == storm.tab_bar.inactive_tab.bg_color)
-	for key, value in pairs(storm.tab_bar.active_tab) do
-		assert(tabs.active_tab[key] == value, "native active state changed: " .. key)
+	for _, name in ipairs({ "active_tab", "inactive_tab", "inactive_tab_hover", "new_tab", "new_tab_hover" }) do
+		assert(tabs[name].bg_color == tabs.background, name .. " must blend into the dark strip")
 	end
-	assert(tabs.inactive_tab_hover.fg_color == storm.ansi[5])
-	assert(tabs.new_tab.fg_color == storm.ansi[8] and tabs.new_tab_hover.fg_color == storm.ansi[5])
+	assert(tabs.active_tab.fg_color == storm.ansi[5], "active tab must use palette blue text")
+	assert(tabs.inactive_tab.fg_color == storm.ansi[8], "inactive tabs still use dim comment text")
+	assert(tabs.inactive_tab_hover.fg_color == storm.foreground)
+	assert(tabs.new_tab.fg_color == storm.ansi[8] and tabs.new_tab_hover.fg_color == storm.foreground)
+	assert(tabs.active_tab.intensity == storm.tab_bar.active_tab.intensity)
+	assert(storm.tab_bar.active_tab.bg_color == "#7aa2f7", "native active state mutated")
 	assert(storm.tab_bar.inactive_tab.fg_color == "#545c7e", "native inactive state mutated")
+	assert(storm.tab_bar.inactive_tab_hover.fg_color == "#7aa2f7", "native hover state mutated")
 end)
 
 test("missing interaction colors derive from the selected palette using native color variants", function()

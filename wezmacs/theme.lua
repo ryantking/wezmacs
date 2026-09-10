@@ -57,14 +57,21 @@ function M.resolve(wezterm, name)
 
 	state("active_tab", ansi[1] or colors.background, colors.foreground)
 	state("inactive_tab", colors.background, ansi[8] or colors.foreground)
-	-- Storm's native inactive label uses its dim comment color. Use ANSI white
-	-- for readability, retaining its background and all other explicit states.
-	if name == "tokyonight-storm" then
-		tab_bar.inactive_tab.fg_color = ansi[8] or colors.foreground
-	end
 	state("inactive_tab_hover", tab_bar.inactive_tab.bg_color, ansi[5] or colors.foreground)
 	state("new_tab", tab_bar.inactive_tab.bg_color, tab_bar.inactive_tab.fg_color)
 	state("new_tab_hover", tab_bar.inactive_tab_hover.bg_color, tab_bar.inactive_tab_hover.fg_color)
+	-- Storm uses one dark strip; state is conveyed by text rather than a blue fill.
+	-- Other schemes retain their explicit native styling.
+	if name == "tokyonight-storm" then
+		for _, key in ipairs({ "active_tab", "inactive_tab", "inactive_tab_hover", "new_tab", "new_tab_hover" }) do
+			tab_bar[key].bg_color = tab_bar.background
+		end
+		tab_bar.active_tab.fg_color = ansi[5] or colors.foreground
+		tab_bar.inactive_tab.fg_color = ansi[8] or colors.foreground
+		tab_bar.new_tab.fg_color = tab_bar.inactive_tab.fg_color
+		tab_bar.inactive_tab_hover.fg_color = colors.foreground
+		tab_bar.new_tab_hover.fg_color = colors.foreground
+	end
 	colors.tab_bar = tab_bar
 
 	local accent = ansi[5] or colors.foreground

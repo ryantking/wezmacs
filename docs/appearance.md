@@ -17,12 +17,12 @@ return { color_scheme = "tokyonight-storm" }
 This is distinct from `Tokyo Night` and the Gogh variants. We retain the native
 ANSI, cursor, selection and split colors instead of reproducing the palette.
 The theme helper fills missing UI colors and returns independent palette copies.
-Storm's inactive tab text uses ANSI white rather than the low-contrast comment
-color; the active tab retains its blue background and dark text. Explicit native
-hover/new-tab colors are retained. Missing new-tab states fall back to inactive
-tab colors, with the palette accent for hover. Copy-mode and quick-select highlights
-also derive from the selected palette. Other built-in schemes remain selectable;
-`Rose Pine` retains its opt-in plugin dependency.
+Storm's tabs share the dark strip background: active text uses palette blue,
+hover text uses the normal foreground, and inactive/new-tab text uses ANSI white
+rather than the low-contrast comment color. This applies to both fancy and retro
+bars; other schemes retain their explicit native tab styling. Copy-mode and
+quick-select highlights also derive from the selected palette. Other built-in
+schemes remain selectable; `Rose Pine` retains its opt-in plugin dependency.
 
 The fancy tab-bar frame uses the same background as the retro strip. Windows and
 text are opaque; inactive panes retain their saturation at 90% brightness so a
@@ -88,8 +88,10 @@ invent agent progress or install shell/editor hooks.
 ## Verification boundary
 
 `just check` covers formatting, LuaLS, regressions and strict native configuration
-validation. Unit cases cover title precedence, missing metadata, path handling,
-zoom/output markers and title-width behavior. They do not prove GUI rendering or
+validation. Embedded-runtime appearance tests also cover dark Storm tab states
+and atomic ColorSpec replacements through the real module loader. Unit cases
+cover title precedence, missing metadata, path handling, zoom/output markers and
+title-width behavior. These checks do not prove GUI rendering or
 agent session integration. Visual acceptance should use a disposable window,
 clean Neovim and clearly labelled synthetic OSC-title/output fixtures, never type
 into an existing session or launch a billable agent simply to test appearance.

@@ -44,6 +44,7 @@ lint:
 test:
     @for file in tests/*_test.lua; do bash scripts/lua.sh "$file"; done
     bash tests/tooling_test.sh
+    bash scripts/native-regressions.sh
 
 # Offline core fixture; WEZMACSDIR may select another config for plugin coverage.
 smoke:
