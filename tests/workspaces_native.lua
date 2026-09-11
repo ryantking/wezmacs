@@ -34,10 +34,14 @@ local ok, config = xpcall(function()
 	assert(selector.description == "Select a workspace")
 	local icon = assert(wezterm.nerdfonts.md_dock_window)
 	assert(icon == "󱂬", "must match upstream smart_workspace_switcher glyph")
+	local icon_width = wezterm.column_width(icon)
+	assert(icon_width == 1 or icon_width == 2, "expected a one- or two-column workspace icon")
+	local gap = icon_width == 1 and "  " or " "
+	assert(wezterm.column_width(icon .. gap) == 3, "reserve two icon columns and a separate path separator")
 	local function label(color, name)
 		return wezterm.format({
 			{ Foreground = { Color = color } },
-			{ Text = icon .. " " .. name },
+			{ Text = icon .. gap .. name },
 			-- Native Default is omitted from the community FormatItem annotation.
 			---@diagnostic disable-next-line: assign-type-mismatch
 			{ Foreground = "Default" },
@@ -48,7 +52,7 @@ local ok, config = xpcall(function()
 	assert(choices[1].id == "~" and choices[2].id == "remote/" and choices[3].id == "/ranked")
 	assert(choices[1].label == label("#12ab34", "~"), "current label must have green icon and name")
 	assert(choices[2].label == label("#5678ef", "remote/"), "other live label must have blue icon and name")
-	local blank = string.rep(" ", wezterm.column_width(icon)) .. " /ranked"
+	local blank = "   /ranked"
 	assert(choices[3].label == wezterm.format({ { Text = blank } }), "inactive icon slot must align")
 	io.stderr:write("native green label: ", string.format("%q", choices[1].label), "\n")
 	io.stderr:write("native blue label: ", string.format("%q", choices[2].label), "\n")

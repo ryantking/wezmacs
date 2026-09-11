@@ -132,13 +132,17 @@ function M.switch_workspace(opts)
 		local ansi = (window:effective_config().colors or {}).ansi or {}
 		-- Same dock-window glyph as smart_workspace_switcher, without its plugin.
 		local icon = (wezterm.nerdfonts and wezterm.nerdfonts.md_dock_window) or "*"
-		local blank = string.rep(" ", wezterm.column_width(icon))
+		local icon_width = wezterm.column_width(icon)
+		-- Square Nerd Font glyphs may overflow one cell into a following space.
+		local slot_width = icon == "*" and icon_width or math.max(2, icon_width)
+		local gap = string.rep(" ", slot_width - icon_width + 1)
+		local blank = string.rep(" ", slot_width)
 		for index, choice in ipairs(choices) do
 			if running[choice.id] then
 				local color = ansi[choice.id == current and 3 or 5]
 				choice.label = wezterm.format({
 					{ Foreground = color and { Color = color } or { AnsiColor = choice.id == current and "Green" or "Blue" } },
-					{ Text = icon .. " " .. choice.label },
+					{ Text = icon .. gap .. choice.label },
 					-- Reset after the complete row, not between its icon and name.
 					---@diagnostic disable-next-line: assign-type-mismatch
 					{ Foreground = "Default" },

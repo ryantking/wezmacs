@@ -33,7 +33,10 @@ with a plain `*` fallback when the Nerd Fonts entry is unavailable. Live-row col
 use the window's effective ANSI green/blue palette entries, falling back to
 native ANSI Green/Blue when those entries are absent. Native `wezterm.format`
 resets the foreground after the complete icon-and-name row, preventing color
-from leaking into subsequent text. Blank slots use the icon's terminal column width. No plugin or
+from leaking into subsequent text. Nerd Font icons reserve at least two columns
+plus a separating space, so square glyph overflow cannot consume the path gap.
+Directory rows reserve the same blank prefix; the ASCII fallback keeps one icon
+column plus one separator. No plugin or
 framework-global configuration is loaded by the shared helper; its `get_choices`
 API remains undecorated for Raycast and other callers.
 

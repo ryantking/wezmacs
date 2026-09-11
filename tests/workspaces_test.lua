@@ -95,6 +95,26 @@ test("picker colors complete live rows and aligns directories without changing I
 	equal(plain[3].label, "/ranked")
 end)
 
+test("picker reserves icon overflow room before the path separator", function()
+	local mod, state, wezterm = fixture()
+	-- Native md_dock_window is one column but may render into the next space.
+	wezterm.column_width = function() return 1 end
+	state.names = { "~/current", "~/other" }
+	state.output = "/ranked\n"
+	state.dirs["/ranked"] = {}
+	local win = window(1, "~/current")
+	mod.switch_workspace()(win, {})
+	local choices = win.actions[1].action.value.choices
+	equal(choices[1].label, "󱂬  ~/current", "reserve overflow room and a separate space")
+	equal(choices[2].label, "󱂬  ~/other")
+	equal(choices[3].label, "   /ranked", "directory paths align with live names")
+	equal(choices[1].id, "~/current")
+	equal(choices[2].id, "~/other")
+	for _, items in ipairs({ state.formats[1], state.formats[2] }) do
+		equal(items[3].Foreground, "Default", "reset stays after the complete padded row")
+	end
+end)
+
 test("picker falls back to ASCII icons and ANSI colors without optional font or palette data", function()
 	local mod, state, wezterm = fixture()
 	wezterm.nerdfonts = nil
