@@ -37,18 +37,17 @@ local ok, config = xpcall(function()
 	local function label(color, name)
 		return wezterm.format({
 			{ Foreground = { Color = color } },
-			{ Text = icon },
+			{ Text = icon .. " " .. name },
 			-- Native Default is omitted from the community FormatItem annotation.
 			---@diagnostic disable-next-line: assign-type-mismatch
 			{ Foreground = "Default" },
-			{ Text = " " .. name },
 		})
 	end
 	local choices = selector.choices
 	assert(#choices == 3)
 	assert(choices[1].id == "~" and choices[2].id == "remote/" and choices[3].id == "/ranked")
-	assert(choices[1].label == label("#12ab34", "~"), "current label must have green icon and default text")
-	assert(choices[2].label == label("#5678ef", "remote/"), "other live label must have blue icon and default text")
+	assert(choices[1].label == label("#12ab34", "~"), "current label must have green icon and name")
+	assert(choices[2].label == label("#5678ef", "remote/"), "other live label must have blue icon and name")
 	local blank = string.rep(" ", wezterm.column_width(icon)) .. " /ranked"
 	assert(choices[3].label == wezterm.format({ { Text = blank } }), "inactive icon slot must align")
 	io.stderr:write("native green label: ", string.format("%q", choices[1].label), "\n")
@@ -73,10 +72,9 @@ local ok, config = xpcall(function()
 		local name = index == 1 and "~" or "remote/"
 		assert(fallback.choices[index].label == wezterm.format({
 			{ Foreground = { AnsiColor = color } },
-			{ Text = "*" },
+			{ Text = "* " .. name },
 			---@diagnostic disable-next-line: assign-type-mismatch
 			{ Foreground = "Default" },
-			{ Text = " " .. name },
 		}), "missing optional font/palette data must use ASCII and ANSI state colors")
 	end
 	assert(fallback.choices[3].label == wezterm.format({ { Text = "  /ranked" } }))

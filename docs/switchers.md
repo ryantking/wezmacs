@@ -21,19 +21,19 @@ search. Pane direction/resize shortcuts and other modules are unchanged.
 The picker combines, in priority order:
 
 1. Active WezTerm workspaces. In the terminal picker, the current workspace
-   comes first with a green left-margin workspace icon; other live workspaces
-   use the same icon in blue. Folder candidates reserve a blank icon slot so
-   their labels align. This uses native mux inventory, not a sessionizer dependency.
+   comes first with its entire row (icon and name) in green; other live workspace
+   rows use blue. Folder candidates keep default text and reserve a blank icon
+   slot so their labels align. This uses native mux inventory, not a sessionizer dependency.
 2. Existing, readable directories from `zoxide query -l`, in zoxide's order.
 3. Directories at exactly the first and second levels below `~/Workspaces`,
    sorted by path: `~/Workspaces/group` and `~/Workspaces/group/project`.
 
 The icon is `md_dock_window` (`󱂬`), matching smart_workspace_switcher's glyph,
-with a plain `*` fallback when the Nerd Fonts entry is unavailable. Icon colors
+with a plain `*` fallback when the Nerd Fonts entry is unavailable. Live-row colors
 use the window's effective ANSI green/blue palette entries, falling back to
 native ANSI Green/Blue when those entries are absent. Native `wezterm.format`
-resets the foreground after the icon, keeping workspace names in the default
-text color. Blank slots use the icon's terminal column width. No plugin or
+resets the foreground after the complete icon-and-name row, preventing color
+from leaking into subsequent text. Blank slots use the icon's terminal column width. No plugin or
 framework-global configuration is loaded by the shared helper; its `get_choices`
 API remains undecorated for Raycast and other callers.
 
@@ -218,8 +218,8 @@ WEZMACSDIR="$HOME/.config/wezmacs" just smoke
 `bash scripts/native-regressions.sh` additionally exercises the workspace picker
 through real `wezterm.emit` callbacks and native `InputSelector`/format conversion.
 Directory/query inputs and window/pane boundaries are stubbed; no GUI, external
-discovery or zoxide writes are used. It checks green/blue icons, default-foreground
-labels, aligned blank slots, missing icon/palette fallbacks and unchanged opaque
+discovery or zoxide writes are used. It checks green/blue live rows, default-foreground
+directory labels, aligned blank slots, missing icon/palette fallbacks and unchanged opaque
 IDs, then requires a strict config and rendered sentinel. Headless validation
 does not prove the selected GUI font's glyph appearance or fuzzy-search rendering.
 
@@ -234,7 +234,7 @@ Manual acceptance, in order:
 1. Reload with Cmd-r. Open Leader-s and verify both a familiar zoxide path and a
    first-/second-level project you have not visited. Escape once: no workspace
    should be created.
-   Check that the current icon is green, other live icons are blue, and directory
+   Check that the current row is green, other live rows are blue, and directory
    labels align with workspace names without trailing status suffixes.
 2. Open a project. Confirm its cwd, switch elsewhere, then use Leader-S twice.
    Check that it toggles back and forth and the status follows the active

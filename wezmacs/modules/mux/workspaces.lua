@@ -138,11 +138,10 @@ function M.switch_workspace(opts)
 				local color = ansi[choice.id == current and 3 or 5]
 				choice.label = wezterm.format({
 					{ Foreground = color and { Color = color } or { AnsiColor = choice.id == current and "Green" or "Blue" } },
-					{ Text = icon },
-					-- Native Default is valid; the community FormatItem annotation omits it.
+					{ Text = icon .. " " .. choice.label },
+					-- Reset after the complete row, not between its icon and name.
 					---@diagnostic disable-next-line: assign-type-mismatch
 					{ Foreground = "Default" },
-					{ Text = " " .. choice.label },
 				})
 				if choice.id == current then
 					current_index = index

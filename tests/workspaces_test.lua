@@ -68,7 +68,7 @@ local function fixture()
 	return mod, state, wezterm
 end
 
-test("picker colors only workspace icons and aligns directories without changing IDs", function()
+test("picker colors complete live rows and aligns directories without changing IDs", function()
 	local mod, state = fixture()
 	state.names = { "alpha", "~" }
 	state.output = "/ranked\n"
@@ -82,12 +82,13 @@ test("picker colors only workspace icons and aligns directories without changing
 	equal(choices[2].label, "󱂬 alpha")
 	equal(choices[3].id, "/ranked")
 	equal(choices[3].label, "   /ranked")
-	equal(state.formats[1][1].Foreground.Color, "#5678ef", "other live icon uses effective blue")
-	equal(state.formats[2][1].Foreground.Color, "#12ab34", "current icon uses effective green")
-	for _, items in ipairs({ state.formats[1], state.formats[2] }) do
-		equal(items[2].Text, "󱂬")
-		equal(items[3].Foreground, "Default", "workspace text must not inherit icon color")
+	equal(state.formats[1][1].Foreground.Color, "#5678ef", "other live row uses effective blue")
+	equal(state.formats[2][1].Foreground.Color, "#12ab34", "current row uses effective green")
+	for index, items in ipairs({ state.formats[1], state.formats[2] }) do
+		equal(items[2].Text, "󱂬 " .. (index == 1 and "alpha" or "~"), "icon and name share the row color")
+		equal(items[3].Foreground, "Default", "reset foreground only after the complete row")
 	end
+	equal(#state.formats[3], 1, "directory row must remain uncolored")
 	local plain = mod.get_choices()
 	equal(plain[1].label, "alpha", "shared API stays undecorated and unpromoted")
 	equal(plain[2].label, "~")
@@ -108,7 +109,10 @@ test("picker falls back to ASCII icons and ANSI colors without optional font or 
 	equal(choices[3].label, "  /ranked")
 	equal(state.formats[1][1].Foreground.AnsiColor, "Green")
 	equal(state.formats[2][1].Foreground.AnsiColor, "Blue")
+	equal(state.formats[1][2].Text, "* ~")
+	equal(state.formats[2][2].Text, "* ssh:server")
 	equal(state.formats[1][3].Foreground, "Default")
+	equal(state.formats[2][3].Foreground, "Default")
 end)
 
 test("explicit live inventory is isolated from the native mux, including an empty list", function()
