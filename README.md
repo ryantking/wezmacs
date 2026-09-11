@@ -62,8 +62,8 @@ search directory or dependency installer hidden behind this interface.
 | `edit` | Editor, IDE, Yazi and file-search launchers |
 | `git` | Lazygit and related Git tool launchers |
 
-The old agent/worktree integration has been removed. Claude Code/OpenCode can
-run as ordinary terminal programs; their global settings and notifications are
+The old agent orchestration/worktree lifecycle integration has been removed.
+Claude Code/OpenCode can run as ordinary terminal programs; their global settings and notifications are
 outside this repository. No agent binaries, credentials, hooks or MCP servers
 are installed by WezMacs.
 
@@ -97,6 +97,14 @@ advanced-domain shortcuts (`D`, `|`, `_`) are unbound; native domain configurati
 and `wezterm connect` remain available without a plugin. See
 [switcher behavior, configuration and manual tests](docs/switchers.md).
 
+## Git
+
+Under **Leader g**, `g`/`G` open Lazygit beside the current pane/in a new tab,
+`d`/`D` select an explicit comparison, and `w` discovers the current repository's
+Git worktrees and opens or reuses their WezTerm workspaces. Worktree locations
+remain app-owned; no worktree creation, pruning, agent setup, or automatic
+`direnv allow` is performed. See [Git tools, comparisons and worktrees](docs/git.md).
+
 ## Raycast launcher
 
 The optional [Wezterm Raycast extension](raycast/README.md) lives in `raycast/`
@@ -110,7 +118,9 @@ Mac; Raycast Cloud Sync is not a source-code deployment mechanism.
 ## Development
 
 The runtime is WezTerm's embedded **Lua 5.4**, not LuaJIT or Neovim Lua.
-The lean development stack is **Lua 5.4 + StyLua + LuaLS + just**.
+The lean development stack is **Lua 5.4 + StyLua + LuaLS + just**. Python 3
+(standard library only) supports disposable Git safety fixtures; it is not a
+runtime dependency of the configuration.
 
 ```sh
 just deps       # macOS/Homebrew development tools + pinned type annotations

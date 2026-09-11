@@ -8,5 +8,5 @@
 - Add a failing regression before changing framework behavior. Use real code and a minimal native-API stub where unavoidable.
 - Use an isolated worktree for larger changes; preserve personal overrides in `~/.config/wezmacs`.
 - Preserve unrelated shortcuts/appearance; do not launch agents or type into an existing pane as a test.
-- No automatic commits, worktree manager, repository MCP setup or agent hooks. Use ordinary Git when requested.
+- No automatic commits, worktree lifecycle management, repository MCP setup or agent hooks. Read-only Git worktree discovery and terminal workspace switching belong to the Git module. Use ordinary Git when requested.
 - Keep secrets and transient research out of the repository. Document GUI tests separately from headless checks.

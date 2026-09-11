@@ -1,48 +1,44 @@
---[[
-  Module: git
-  Description: Lazygit integration with smart splitting and git utilities
-]]
-
-local wezterm = require("wezterm")
-local act = wezterm.action
-local wezmacs = require("wezmacs")
-
+-- Composition only; native discovery happens when a callback opens.
+local actions = require("wezmacs.modules.git.actions")
 return {
 	name = "git",
-	description = "Lazygit integration with smart splitting and git utilities",
-
-	deps = { "lazygit", "delta", "git", "broot" },
-
+	description = "Native Git comparisons, worktrees and terminal tools",
 	opts = {
-		diff_branches = { "main", "master", "origin/main", "origin/master" },
+		split_direction = "Right",
+		split_size = 0.5,
+		comparison_mode = "working_tree",
+		commit_limit = 50,
+		direnv = "auto",
+		broot = false,
+		lazyjj = false,
 	},
-
-	keys = function(opts)
-		local diff_cmds = {}
-		for i, branch in ipairs(opts.diff_branches) do
-			diff_cmds[i] = ("git diff %s 2>/dev/null"):format(branch)
+	deps = function(opts)
+		local deps = { "git", "lazygit", "delta", "gh" }
+		if opts.broot then
+			deps[#deps + 1] = "broot"
 		end
-		table.insert(diff_cmds, "git diff")
-		local diff_cmd = table.concat(diff_cmds, " || ")
-
-		return {
-			LEADER = {
-				g = {
-					{
-						key = "g",
-						action = wezmacs.action.SmartSplit("lazygit -sm half"),
-						desc = "lazygit/split",
-					},
-					{ key = "G", action = wezmacs.action.NewTab("lazygit"), desc = "lazygit/tab" },
-					{ key = "j", action = wezmacs.action.SmartSplit("lazyjj"), desc = "lazyjj/split" },
-					{ key = "s", action = wezmacs.action.SmartSplit("br -ghc :gs"), desc = "status/split" },
-					{ key = "S", action = wezmacs.action.NewTab("br -ghc :gs"), desc = "status/tab" },
-					{ key = "d", action = wezmacs.action.SmartSplit(diff_cmd), desc = "diff/split" },
-					{ key = "D", action = wezmacs.action.NewWindow(diff_cmd), desc = "diff/window" },
-					{ key = "h", action = wezmacs.action.SmartSplit("gh dash"), desc = "github/split" },
-					{ key = "H", action = wezmacs.action.NewTab("gh dash"), desc = "github/split" },
-				},
-			},
+		if opts.lazyjj then
+			deps[#deps + 1] = "lazyjj"
+		end
+		return deps
+	end,
+	keys = function(opts)
+		local keys = {
+			{ key = "g", action = actions.lazygit(opts), desc = "lazygit/split" },
+			{ key = "G", action = actions.lazygit(opts, "tab"), desc = "lazygit/tab" },
+			{ key = "d", action = actions.compare(opts), desc = "compare/split" },
+			{ key = "D", action = actions.compare(opts, "tab"), desc = "compare/tab" },
+			{ key = "w", action = actions.switch_worktree(opts), desc = "worktrees" },
+			{ key = "h", action = actions.tool("gh", opts), desc = "github/split" },
+			{ key = "H", action = actions.tool("gh", opts, "tab"), desc = "github/tab" },
 		}
+		if opts.broot then
+			keys[#keys + 1] = { key = "s", action = actions.tool("broot", opts), desc = "status/split" }
+			keys[#keys + 1] = { key = "S", action = actions.tool("broot", opts, "tab"), desc = "status/tab" }
+		end
+		if opts.lazyjj then
+			keys[#keys + 1] = { key = "j", action = actions.tool("lazyjj", opts), desc = "lazyjj/split" }
+		end
+		return { LEADER = { g = keys } }
 	end,
 }

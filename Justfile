@@ -11,7 +11,7 @@ default:
 
 # Explicit development setup; no runtime Lua packages and no global Lua relink.
 deps:
-    brew install lua@5.4 stylua lua-language-server just
+    brew install lua@5.4 stylua lua-language-server just python
     just types
 
 # Fetch a pinned annotation-only library; never put it on runtime package.path.
@@ -45,6 +45,8 @@ test:
     @for file in tests/*_test.lua; do bash scripts/lua.sh "$file"; done
     bash tests/tooling_test.sh
     bash scripts/native-regressions.sh
+    bash tests/git_integration.sh
+    bash tests/git_safety.sh
 
 # Offline core fixture; WEZMACSDIR may select another config for plugin coverage.
 smoke:

@@ -53,7 +53,7 @@ binary availability checker.
 return {
   "app",
   { "term", opts = { scrollback_lines = 10000 } },
-  { "git", opts = { diff_branches = { "main" } } },
+  { "git", opts = { commit_limit = 100 } },
 }
 ```
 
@@ -93,8 +93,8 @@ return {
 Keep data shapes distinct:
 
 - Option maps recursively merge. Scalar values replace defaults.
-- Sequence/numeric option tables replace as a whole: a shorter `diff_branches`
-  list does not retain the old tail. An explicit empty table clears a default
+- Sequence/numeric option tables replace as a whole: a shorter list does not
+  retain the old tail. An explicit empty table clears a default
   sequence, while an empty map override leaves named defaults intact.
 - Inputs are copied rather than shared with cached module defaults.
 - Key maps merge named groups. A supplied numeric binding list replaces that
@@ -168,6 +168,14 @@ plugins in that subprocess. Raycast workspace acceptance launches a verified app
 bundle as a new independent local GUI process; it never switches an existing GUI.
 There is no workspace mailbox, background polling, host daemon, tailnet manager,
 or remote mux provisioning. See [switchers](docs/switchers.md) and the [Raycast guide](raycast/README.md).
+
+`git/repository.lua` provides read-only checkout, revision, diff-argument and
+worktree discovery, independent of personal configuration. `git/actions.lua`
+adds native pickers and guarded local terminal launches; `git/init.lua` is the
+binding/options composition point. Native Git queries are lazy and use argv;
+terminal rendering/direnv activation happen only after explicit selection. There
+is no Git worktree lifecycle manager or agent-provider registry. See the
+[Git module guide](docs/git.md).
 
 Native WezTerm objects are not interchangeable: a Pane, MuxTab, MuxWindow and GUI
 Window expose different methods. Keep mocks narrow and retain real native
