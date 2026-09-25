@@ -13,8 +13,8 @@ local function picker()
 	assert(selected, "picker was not opened")
 	return selected
 end
-local aliases, runs, spawns, toasts = {}, {}, {}, {}
-local status, run_error, spawn_error, json_error, enumerate_error, run_success
+local aliases, runs, spawns, actions, toasts = {}, {}, {}, {}, {}
+local status, run_error, spawn_error, json_error, enumerate_error, run_success, action_error
 local wezterm = {
 	home_dir = "/nonexistent-host-test-home",
 	executable_dir = "/Applications/WezTerm.app/Contents/MacOS",
@@ -44,17 +44,32 @@ local wezterm = {
 		spawns[#spawns + 1] = argv
 	end,
 	action_callback = function(fn) return fn end,
-	action = { InputSelector = function(spec) return spec end },
+	action = {
+		InputSelector = function(spec) return spec end,
+		SplitPane = function(spec) return { SplitPane = spec } end,
+		SpawnCommandInNewTab = function(spec) return { SpawnCommandInNewTab = spec } end,
+	},
 }
 package.loaded.wezterm = wezterm
 local hosts = require("wezmacs.modules.mux.hosts")
 local window = {
-	perform_action = function(_, action) selected = action end,
+	perform_action = function(_, action)
+		if action_error and (action.SplitPane or action.SpawnCommandInNewTab) then
+			error(action_error)
+		end
+		actions[#actions + 1] = action
+		if action.choices then
+			selected = action
+		end
+	end,
 	toast_notification = function(_, _, message) toasts[#toasts + 1] = message end,
 }
+local pane = { domain = "local" }
+function pane:get_domain_name() return self.domain end
 local count = 0
 local function test(name, fn)
-	aliases, runs, spawns, selected, toasts = {}, {}, {}, nil, {}
+	aliases, runs, spawns, actions, selected, toasts = {}, {}, {}, {}, nil, {}
+	pane.domain, action_error = "local", nil
 	status, run_error, spawn_error, json_error, enumerate_error, run_success = nil, nil, nil, nil, nil, nil
 	fn()
 	count = count + 1
@@ -302,21 +317,21 @@ test("each picker open refreshes the current account and cancel never spawns", f
 	local action = hosts.switch_host(opts)
 	equal(#runs, 0, "construction is lazy")
 	status = tailnet("alpha")
-	action(window, {})
+	action(window, pane)
 	assert(picker().title:find("alpha", 1, true))
 	equal(picker().fuzzy, true)
 	equal(picker().fuzzy_description, "SSH hosts: ")
 	equal(picker().description, "Select an SSH host")
 	local first = picker()
 	status = tailnet("beta")
-	action(window, {})
+	action(window, pane)
 	assert(picker().title:find("beta", 1, true) and not picker().title:find("alpha", 1, true))
 	for _, choice in ipairs(picker().choices) do
 		assert(not choice.label:find("alpha", 1, true))
 	end
 	equal(#runs, 2)
-	first.action(window, {}, nil, nil)
-	picker().action(window, {}, nil, nil)
+	first.action(window, pane, nil, nil)
+	picker().action(window, pane, nil, nil)
 	equal(#runs, 2, "cancel does not even recheck")
 	equal(#spawns, 0)
 end)
@@ -340,22 +355,105 @@ local function choice_id(text)
 	error("missing fixture choice " .. text)
 end
 
-test("explicit alias selection launches only safe native argv and preserves alias", function()
+local function last_command()
+	local placement = actions[#actions]
+	local spec = placement.SplitPane or placement.SpawnCommandInNewTab
+	assert(spec, "selection should create a placement action")
+	return (spec.command or spec).args, spec
+end
+
+test("explicit alias selection launches only safe OpenSSH argv and preserves alias", function()
 	aliases = { Work = { hostname = "server.example", user = "deploy", port = "2222", identityfile = "/fixture/key" } }
-	hosts.switch_host({ tailscale = false, known_hosts_files = {} })(window, {})
+	hosts.switch_host({ tailscale = false, known_hosts_files = {} })(window, pane)
 	local id = choice_id("Work")
-	picker().action(window, {}, "forged;id", "malicious")
+	picker().action(window, pane, "forged;id", "malicious")
 	equal(#spawns, 0)
 	aliases = {}
-	picker().action(window, {}, id, ";not-used")
-	equal(#spawns, 1)
-	local argv = spawns[1]
-	equal(#argv, 4)
-	equal(argv[1], wezterm.executable_dir .. "/wezterm")
-	equal(argv[2], "ssh")
-	equal(argv[3], "--")
-	equal(argv[4], "Work")
+	picker().action(window, pane, id, ";not-used")
+	equal(#actions, 2)
+	local argv = last_command()
+	equal(#argv, 3)
+	equal(argv[1], "ssh")
+	equal(argv[2], "--")
+	equal(argv[3], "Work")
 	equal(#runs, 0, "static selection never checks a remote or tailnet")
+end)
+
+test("OpenSSH planner pins raw endpoints without changing native planning", function()
+	aliases = { Deploy = { hostname = "redirected.example", port = "2200", proxycommand = "trusted config" } }
+	local alias = assert(hosts.openssh_args({ target = "Deploy", source = "alias" }))
+	equal(table.concat(alias, " | "), "ssh | -- | Deploy")
+	local raw = assert(hosts.openssh_args({ target = "Alice@server.example:2200", source = "known-host" }))
+	equal(
+		table.concat(raw, " | "),
+		"ssh | -o | HostName=server.example | -p | 2200 | -o | ProxyCommand=none | -o | ProxyJump=none | -- | Alice@server.example"
+	)
+	local default_port = assert(hosts.openssh_args({ target = "server.example", source = "known-host" }))
+	equal(default_port[5], "22", "raw OpenSSH always receives an explicit default port")
+	for _, row in ipairs({
+		{ target = "-oProxyCommand=bad", source = "known-host" },
+		{ target = "[2001:db8::1]", source = "known-host" },
+		{ target = "server.example:0", source = "known-host" },
+	}) do
+		local argv, err = hosts.openssh_args(row)
+		assert(not argv and type(err) == "string", "invalid OpenSSH rows must be rejected")
+	end
+	local native = assert(hosts.launch_args({ target = "Deploy", source = "alias" }))
+	equal(table.concat(native, " | "), wezterm.executable_dir .. "/wezterm | ssh | -- | Deploy")
+end)
+
+test("OpenSSH tailnet planning preserves the short destination for SSH User rules", function()
+	status = tailnet("alpha")
+	status.Peer = { p1 = status.Peer.p1 }
+	local _, meta = hosts.get_choices(opts)
+	local row = targets(meta).desktop
+	local argv = assert(hosts.openssh_args(row, opts))
+	equal(argv[3], "HostName=desktop.alpha.ts.net", "transport uses the verified full peer host")
+	equal(argv[5], "22", "tailnet transport always pins the default port")
+	equal(argv[11], "desktop", "destination keeps the short Host rule used for authentication")
+end)
+
+test("local domain is required at picker opening and submission", function()
+	aliases = { Work = {} }
+	local action = hosts.switch_host({ tailscale = false, known_hosts_files = {} })
+	pane.domain = "SSH"
+	action(window, pane)
+	equal(#actions, 0, "remote opening does not perform discovery or open a picker")
+	equal(#runs, 0)
+	assert(toasts[#toasts]:find("local", 1, true))
+	pane.domain = "local"
+	action(window, pane)
+	local id = choice_id("Work")
+	pane.domain = "remote"
+	picker().action(window, pane, id, nil)
+	equal(#actions, 1, "remote submission does not create a placement")
+	assert(toasts[#toasts]:find("local", 1, true))
+end)
+
+test("unknown selections and unreadable domains fail closed", function()
+	aliases = { Work = {} }
+	local action = hosts.switch_host({ tailscale = false, known_hosts_files = {} })
+	local original_domain = pane.get_domain_name
+	pane.get_domain_name = function() error("domain unavailable") end
+	action(window, pane)
+	equal(#actions, 0, "an unreadable domain does not open the picker")
+	equal(#runs, 0, "an unreadable domain does not discover hosts")
+	assert(toasts[#toasts]:find("local", 1, true))
+	pane.get_domain_name = original_domain
+	action(window, pane)
+	local before = #actions
+	picker().action(window, pane, "unknown-id", nil)
+	equal(#actions, before, "an unknown row does not create a placement")
+	assert(toasts[#toasts]:find("Invalid SSH selection", 1, true))
+end)
+
+test("tab placement uses the same direct OpenSSH argv", function()
+	aliases = { Work = {} }
+	hosts.switch_host({ tailscale = false, known_hosts_files = {} }, "tab")(window, pane)
+	picker().action(window, pane, choice_id("Work"), nil)
+	local argv, spec = last_command()
+	assert(spec and not spec.size, "tab placement must not carry split sizing")
+	equal(table.concat(argv, " | "), "ssh | -- | Work")
 end)
 
 test("HOSTS-004 IPv6 and malformed resolved HostNames never claim alias spelling", function()
@@ -395,13 +493,14 @@ test("HOSTS-004 IPv6 and malformed resolved HostNames never claim alias spelling
 					.. "alias:desktop.alpha.ts.net, "
 					.. source
 					.. (source == "tailscale" and ":desktop" or ":desktop.alpha.ts.net")
-				hosts.switch_host(options)(window, {})
-				local before = #spawns
-				picker().action(window, {}, choice_id("desktop.alpha.ts.net [alias]"), nil)
-				equal(#spawns, before + 1, "IPv6 resolution does not block configured-alias launch")
+				hosts.switch_host(options)(window, pane)
+				local before = #actions
+				picker().action(window, pane, choice_id("desktop.alpha.ts.net [alias]"), nil)
+				equal(#actions, before + 1, "IPv6 resolution does not block configured-alias launch")
+				local argv = last_command()
 				equal(
-					table.concat(spawns[#spawns], " | "),
-					wezterm.executable_dir .. "/wezterm | ssh | -- | desktop.alpha.ts.net",
+					table.concat(argv, " | "),
+					"ssh | -- | desktop.alpha.ts.net",
 					"configured alias is passed literally without raw overrides"
 				)
 			end
@@ -435,25 +534,25 @@ test("HOSTS-003 both raw sources disable an inherited redirected ProxyCommand", 
 				tailscale = case.tailscale,
 				tailscale_path = opts.tailscale_path,
 				known_hosts_files = { path },
-			})(window, {})
-			picker().action(window, {}, choice_id(case.label), nil)
-			raw_argv[#raw_argv + 1] = table.concat(spawns[#spawns], " | ")
-			picker().action(window, {}, choice_id("desktop.alpha.ts.net [alias]"), nil)
+			})(window, pane)
+			picker().action(window, pane, choice_id(case.label), nil)
+			raw_argv[#raw_argv + 1] = table.concat(last_command(), " | ")
+			picker().action(window, pane, choice_id("desktop.alpha.ts.net [alias]"), nil)
 			equal(
-				table.concat(spawns[#spawns], " | "),
-				wezterm.executable_dir .. "/wezterm | ssh | -- | desktop.alpha.ts.net",
+				table.concat(last_command(), " | "),
+				"ssh | -- | desktop.alpha.ts.net",
 				"configured proxy alias stays literal without overrides"
 			)
 		end
 	end)
-	local expected = wezterm.executable_dir
-		.. "/wezterm | ssh | -o | HostName=desktop.alpha.ts.net | -o | ProxyCommand=none | -- | desktop.alpha.ts.net:22"
+	local expected =
+		"ssh | -o | HostName=desktop.alpha.ts.net | -p | 22 | -o | ProxyCommand=none | -o | ProxyJump=none | -- | desktop.alpha.ts.net"
 	equal(
 		table.concat(raw_argv, "\n"),
-		expected:gsub("%-%- | desktop.alpha.ts.net:22$", "-- | desktop:22") .. "\n" .. expected,
+		expected:gsub("%-%- | desktop.alpha.ts.net$", "-- | desktop") .. "\n" .. expected,
 		"Tailscale and known-host raw argv"
 	)
-	equal(#spawns, 4, "each raw endpoint and alias launches once into the stub")
+	equal(#actions, 6, "each raw endpoint and alias launches once into the stub")
 	equal(#runs, 2, "only Tailscale opening and submission read local status")
 	equal(#toasts, 0)
 end)
@@ -468,33 +567,33 @@ test("HOSTS-001 raw destinations override a same-named alias HostName", function
 			{ tailscale = false, label = "desktop.alpha.ts.net [known-host]", target = "desktop.alpha.ts.net:22" },
 			{ tailscale = false, label = "desktop.alpha.ts.net:2200 [known-host]", target = "desktop.alpha.ts.net:2200" },
 		}) do
-			local before, run_before = #spawns, #runs
 			hosts.switch_host({
 				tailscale = case.tailscale,
 				tailscale_path = opts.tailscale_path,
 				known_hosts_files = { path },
-			})(window, {})
-			picker().action(window, {}, choice_id(case.label), "redirected.example")
-			equal(#spawns, before + 1, "raw selection launches once")
-			equal(#runs, run_before + (case.tailscale and 2 or 0), "only tailnet selection rechecks local status")
-			local argv = spawns[#spawns]
-			equal(argv[1], wezterm.executable_dir .. "/wezterm")
-			equal(argv[2], "ssh")
-			equal(argv[3], "-o", "raw destination needs a native SSH option")
-			equal(argv[4], "HostName=desktop.alpha.ts.net", "validated represented host overrides redirected HostName")
-			equal(argv[5], "-o")
-			equal(argv[6], "ProxyCommand=none")
-			equal(argv[7], "--")
-			equal(argv[8], case.target, "represented port is explicit")
-			equal(#argv, 8)
-			picker().action(window, {}, choice_id("desktop.alpha.ts.net [alias]"), nil)
-			local alias_argv = spawns[#spawns]
-			equal(#spawns, before + 2, "redirected alias remains selectable")
-			equal(#alias_argv, 4, "alias launch gains no overrides")
-			equal(alias_argv[1], wezterm.executable_dir .. "/wezterm")
-			equal(alias_argv[2], "ssh")
-			equal(alias_argv[3], "--")
-			equal(alias_argv[4], "desktop.alpha.ts.net", "configured alias stays exact")
+			})(window, pane)
+			local before, run_before = #actions, #runs
+			picker().action(window, pane, choice_id(case.label), "redirected.example")
+			equal(#actions, before + 1, "raw selection launches once")
+			equal(#runs, run_before + (case.tailscale and 1 or 0), "only tailnet selection rechecks local status")
+			local argv = last_command()
+			equal(argv[1], "ssh")
+			equal(argv[2], "-o", "raw destination needs an OpenSSH option")
+			equal(argv[3], "HostName=desktop.alpha.ts.net", "validated represented host overrides redirected HostName")
+			equal(argv[4], "-p")
+			equal(argv[6], "-o")
+			equal(argv[7], "ProxyCommand=none")
+			equal(argv[8], "-o")
+			equal(argv[9], "ProxyJump=none")
+			equal(argv[10], "--")
+			local expected_port = case.target:match(":(%d+)$") or "22"
+			equal(argv[5], expected_port)
+			equal(argv[11], case.tailscale and "desktop" or "desktop.alpha.ts.net")
+			equal(#argv, 11)
+			picker().action(window, pane, choice_id("desktop.alpha.ts.net [alias]"), nil)
+			local alias_argv = last_command()
+			equal(#actions, before + 2, "redirected alias remains selectable")
+			equal(table.concat(alias_argv, " | "), "ssh | -- | desktop.alpha.ts.net", "configured alias stays exact")
 			equal(#toasts, 0)
 		end
 	end)
@@ -511,20 +610,22 @@ test("tailnet selection rechecks identity and exact peer endpoint before launch"
 	}
 	for _, change in ipairs(changes) do
 		status, run_error = tailnet("alpha"), nil
-		hosts.switch_host(opts)(window, {})
+		local action_before = #actions
+		hosts.switch_host(opts)(window, pane)
 		local id = choice_id("desktop")
 		change()
 		local before = #runs
-		picker().action(window, {}, id, nil)
-		equal(#spawns, 0, "stale selection must not spawn")
+		picker().action(window, pane, id, nil)
+		equal(#actions, action_before + 1, "stale selection must not create a placement")
 		equal(#runs, before + 1, "submission reads only current local status")
 		assert(toasts[#toasts]:find("changed or unavailable", 1, true))
 	end
 	status, run_error = tailnet("alpha"), nil
-	hosts.switch_host(opts)(window, {})
-	picker().action(window, {}, choice_id("desktop"), nil)
-	equal(#spawns, 1, "unchanged current peer can launch")
-	equal(spawns[1][#spawns[1]], "desktop:22")
+	local action_before = #actions
+	hosts.switch_host(opts)(window, pane)
+	picker().action(window, pane, choice_id("desktop"), nil)
+	equal(#actions, action_before + 2, "unchanged current peer can launch")
+	equal(last_command()[#last_command()], "desktop")
 end)
 
 test("optional discovery failures preserve static hosts with clear status", function()
@@ -557,35 +658,40 @@ end)
 test("raw default-port selection cannot inherit a configured nondefault port", function()
 	status = tailnet("alpha")
 	aliases = { ["phone.alpha.ts.net"] = { hostname = "phone.alpha.ts.net", port = "2222" } }
-	hosts.switch_host(opts)(window, {})
+	hosts.switch_host(opts)(window, pane)
 	for _, choice in ipairs(picker().choices) do
 		if choice.label:find("phone", 1, true) == 1 then
-			picker().action(window, {}, choice.id, nil)
+			picker().action(window, pane, choice.id, nil)
 		end
 	end
 	local sent = {}
-	for _, argv in ipairs(spawns) do
+	for _, action in ipairs(actions) do
+		local argv = action.SplitPane and action.SplitPane.command.args
+		if not argv then
+			goto continue
+		end
 		sent[argv[#argv]] = true
+		::continue::
 	end
 	assert(sent["phone.alpha.ts.net"], "alias stays exact for SSH config")
-	assert(sent["phone:22"], "raw default endpoint explicitly overrides SSH config Port")
+	assert(sent["phone.alpha.ts.net"], "raw default endpoint pins the canonical host")
 	fixture("[phone.alpha.ts.net]:22 ssh-ed25519 AAAA\n", function(path)
-		hosts.switch_host({ tailscale = false, known_hosts_files = { path } })(window, {})
+		hosts.switch_host({ tailscale = false, known_hosts_files = { path } })(window, pane)
 		for _, choice in ipairs(picker().choices) do
 			if choice.label:find("known-host", 1, true) then
-				picker().action(window, {}, choice.id, nil)
+				picker().action(window, pane, choice.id, nil)
 			end
 		end
-		equal(spawns[#spawns][#spawns[#spawns]], "phone.alpha.ts.net:22")
+		equal(last_command()[#last_command()], "phone.alpha.ts.net")
 	end)
 end)
 
-test("immediate native spawn errors toast rather than escape the callback", function()
+test("immediate placement errors toast rather than escape the callback", function()
 	aliases = { Work = {} }
-	hosts.switch_host({ tailscale = false, known_hosts_files = {} })(window, {})
-	spawn_error = "cannot spawn"
-	local ok = pcall(picker().action, window, {}, choice_id("Work"), nil)
-	assert(ok, "spawn failure must be protected")
+	hosts.switch_host({ tailscale = false, known_hosts_files = {} })(window, pane)
+	action_error = "cannot split"
+	local ok = pcall(picker().action, window, pane, choice_id("Work"), nil)
+	assert(ok, "placement failure must be protected")
 	equal(#spawns, 0)
 	assert(toasts[#toasts]:find("Could not start", 1, true))
 end)
@@ -631,9 +737,9 @@ end)
 
 test("unsupported native IPv6 literal transport is explicit and never misconnects", function()
 	fixture("[2001:db8::1]:2200 ssh-ed25519 AAAA\n", function(path)
-		hosts.switch_host({ tailscale = false, known_hosts_files = { path } })(window, {})
+		hosts.switch_host({ tailscale = false, known_hosts_files = { path } })(window, pane)
 		assert(picker().choices[1].label:find("IPv6: use SSH alias", 1, true))
-		picker().action(window, {}, picker().choices[1].id, nil)
+		picker().action(window, pane, picker().choices[1].id, nil)
 		equal(#spawns, 0)
 		assert(toasts[#toasts]:find("IPv6", 1, true))
 	end)

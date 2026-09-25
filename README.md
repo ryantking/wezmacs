@@ -89,12 +89,16 @@ With the default macOS leader, press **Cmd-Space**, release, then the final key:
 |---|---|
 | `s` | Workspaces: active sessions, ranked zoxide paths, then two levels below `~/Workspaces` |
 | `S` (Shift-s) | Toggle to the previous workspace |
-| `d` | SSH hosts: SSH aliases, readable known hosts and current-tailnet peers; native SSH in a new window |
+| `d` | SSH hosts: SSH aliases, readable known hosts and current-tailnet peers; direct OpenSSH in a Right/50% split |
+| `D` (Shift-d) | Direct OpenSSH in a new tab of the current window |
 
 Both main pickers refresh when opened. Type to fuzzy-filter, Enter to select,
-Escape to cancel. Leader-Space remains the file-search launcher. The former
-advanced-domain shortcuts (`D`, `|`, `_`) are unbound; native domain configuration
-and `wezterm connect` remain available without a plugin. See
+Escape to cancel. Terminal SSH actions require a local source pane before opening
+and on submission, then use direct system OpenSSH with normal config/authentication:
+aliases remain literal, while raw transport is pinned and freshness-checked. Every
+new OpenSSH pane remains local. Leader-Space remains the file-search launcher. The
+former advanced-domain shortcuts (`|`, `_`) are unbound; native domain
+configuration and `wezterm connect` remain available without a plugin. See
 [switcher behavior, configuration and manual tests](docs/switchers.md).
 
 ## Git
@@ -108,11 +112,14 @@ remain app-owned; no worktree creation, pruning, agent setup, or automatic
 ## Raycast launcher
 
 The optional [Wezterm Raycast extension](raycast/README.md) lives in `raycast/`
-and exposes **Open Workspace** and **SSH to Host**. It uses the same Lua discovery
-and SSH planning helpers as the terminal pickers, with explicit typed directory
-and SSH-target fallbacks. **Open Workspace always opens a fresh local shell in a
+and exposes **Open Workspace** and **SSH to Host**. It shares Lua discovery and
+selection validation with the terminal pickers, but uses transport-specific
+launch planning, with explicit typed directory and SSH-target fallbacks. **Open
+Workspace always opens a fresh local shell in a
 new independent window**, leaving existing windows unchanged. It does not clone
-workspace layouts. It is a local extension: install it separately on each
+workspace layouts. Raycast **SSH to Host** likewise retains the native
+`wezterm ssh` separate-window behavior; it is independent of the terminal `d`/`D`
+bindings. It is a local extension: install it separately on each
 Mac; Raycast Cloud Sync is not a source-code deployment mechanism.
 
 ## Development

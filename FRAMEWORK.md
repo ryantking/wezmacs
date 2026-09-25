@@ -166,6 +166,15 @@ point and owns workspace status. The optional `raycast/` extension calls
 validated SSH argument planning. It does not load personal configuration or
 plugins in that subprocess. Raycast workspace acceptance launches a verified app
 bundle as a new independent local GUI process; it never switches an existing GUI.
+Terminal `leader d` and `leader D` use direct system OpenSSH argv in the current
+GUI: `d` creates a Right/50% split and `D` creates a tab. Both require a readable
+local source pane before discovery and at submission; created OpenSSH panes remain
+local. Literal aliases use normal OpenSSH configuration/authentication, while raw
+transport pins the validated `HostName` and explicit port, disables
+`ProxyCommand`/`ProxyJump`, preserves the logical destination used by `Host`/`User`
+rules, and revalidates fresh peer identity. Raw IPv6 literals retain the current
+unsupported limitation. Raycast SSH remains the separate native `wezterm ssh`
+window path; its new-window focus behavior does not describe the terminal bindings.
 There is no workspace mailbox, background polling, host daemon, tailnet manager,
 or remote mux provisioning. See [switchers](docs/switchers.md) and the [Raycast guide](raycast/README.md).
 

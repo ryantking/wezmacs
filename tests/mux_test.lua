@@ -28,7 +28,7 @@ package.loaded["wezmacs.modules.mux.workspaces"] = {
 	switch_to_prev_workspace = function() return { previous = true } end,
 }
 package.loaded["wezmacs.modules.mux.hosts"] = {
-	switch_host = function(opts) return { host_opts = opts } end,
+	switch_host = function(opts, placement) return { host_opts = opts, placement = placement } end,
 }
 local getenv, focus_marker = os.getenv, nil
 rawset(os, "getenv", function(name)
@@ -66,15 +66,19 @@ print("PASS move-pane action focuses the GUI window")
 assert(plugin_loads == 0, "building mux keys must not load plugins or query sources")
 assert(by_key.s.action.workspace_opts == opts.workspaces, "workspace binding must receive source options")
 assert(by_key.S.action.previous, "previous workspace shortcut must remain")
-assert(by_key.d and by_key.d.action.host_opts == opts.hosts, "Leader+d must open the native SSH host picker")
-assert(by_key.d.desc == "ssh-host-switch", "host binding needs command palette metadata")
+assert(by_key.d and by_key.d.action.host_opts == opts.hosts, "Leader+d must open the SSH host picker")
+assert(by_key.d.action.placement == "split", "Leader+d must use the split placement")
+assert(by_key.d.desc == "ssh-host-switch/split", "split host binding needs command palette metadata")
+assert(by_key.D and by_key.D.action.host_opts == opts.hosts, "Leader+D must open the SSH host picker")
+assert(by_key.D.action.placement == "tab", "Leader+D must use the tab placement")
+assert(by_key.D.desc == "ssh-host-switch/tab", "tab host binding needs command palette metadata")
 print("PASS switcher bindings route options without loading plugins")
 local config = { keys = { { existing = true } } }
 mod.setup(config, opts)
 assert(plugin_loads == 0, "mux setup must not load a domain plugin")
 assert(opts.quick_domains == nil, "removed plugin options must not be exposed")
 assert(#config.keys == 1 and config.keys[1].existing, "setup preserves existing keys")
-assert(not by_key.D and not by_key["|"] and not by_key._, "removed domain shortcuts stay unbound")
+assert(not by_key["|"] and not by_key._, "removed domain shortcuts stay unbound")
 assert(config.default_workspace == opts.default_workspace)
 assert(events["update-status"], "one workspace status callback must work without theme colors")
 local status

@@ -168,8 +168,14 @@ return {
 			{
 				key = "d",
 				mods = "LEADER",
-				action = hosts.switch_host(opts.hosts),
-				desc = "ssh-host-switch",
+				action = hosts.switch_host(opts.hosts, "split"),
+				desc = "ssh-host-switch/split",
+			},
+			{
+				key = "D",
+				mods = "LEADER",
+				action = hosts.switch_host(opts.hosts, "tab"),
+				desc = "ssh-host-switch/tab",
 			},
 		}
 	end,

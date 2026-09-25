@@ -300,8 +300,7 @@ function M.get_choices(opts)
 	return choices, meta
 end
 
--- Plan only: callers decide when to launch the native executable.
-function M.launch_args(row, opts)
+local function validated_selection(row, opts)
 	opts = opts or {}
 	if type(row) == "table" and row.input ~= nil then
 		if type(row.input) ~= "string" or row.target ~= nil or row.source ~= nil then
@@ -328,6 +327,8 @@ function M.launch_args(row, opts)
 	if not parsed then
 		return nil, "Invalid SSH target."
 	end
+	---@type { host: string, user: string? }
+	local logical = { host = parsed.host, user = parsed.user }
 	-- c7f4b081 cannot safely represent literal IPv6 in remote_address.
 	if parsed.host:find(":", 1, true) then
 		return nil, "Native IPv6 literals unsupported; use an SSH-config alias."
@@ -351,48 +352,126 @@ function M.launch_args(row, opts)
 			return nil, "Tailnet or peer changed or unavailable; reopen the picker."
 		end
 	end
-	local target = row.target .. (row.source ~= "alias" and not row.target:match(":%d+$") and ":22" or "")
+	return row, parsed, logical
+end
+
+-- Plan only: callers decide when to launch the native executable.
+function M.launch_args(row, opts)
+	local selection, parsed_or_error = validated_selection(row, opts)
+	if not selection then
+		return nil, parsed_or_error
+	end
+	local parsed = parsed_or_error
 	local argv = { wezterm.executable_dir .. "/wezterm", "ssh" }
-	if row.source ~= "alias" then
+	if selection.source ~= "alias" then
 		table.insert(argv, "-o")
 		table.insert(argv, "HostName=" .. parsed.host)
 		table.insert(argv, "-o")
 		table.insert(argv, "ProxyCommand=none")
 	end
 	table.insert(argv, "--")
-	table.insert(argv, target)
+	table.insert(
+		argv,
+		selection.target .. (selection.source ~= "alias" and not selection.target:match(":%d+$") and ":22" or "")
+	)
 	return argv
 end
 
-function M.switch_host(opts)
+function M.openssh_args(row, opts)
+	local selection, parsed_or_error, logical = validated_selection(row, opts)
+	if not selection then
+		return nil, parsed_or_error
+	end
+	if selection.source == "alias" then
+		return { "ssh", "--", selection.target }
+	end
+	local parsed = parsed_or_error
+	logical = assert(logical, "validated SSH destination missing")
+	local destination = logical.user and (logical.user .. "@" .. logical.host) or logical.host
+	return {
+		"ssh",
+		"-o",
+		"HostName=" .. parsed.host,
+		"-p",
+		tostring(parsed.port),
+		"-o",
+		"ProxyCommand=none",
+		"-o",
+		"ProxyJump=none",
+		"--",
+		destination,
+	}
+end
+
+local function notify(window, message)
+	pcall(function() window:toast_notification("SSH hosts", tostring(message), nil, 5000) end)
+end
+
+local function require_local_pane(window, pane)
+	local ok, domain = pcall(function() return pane:get_domain_name() end)
+	if not ok or domain ~= "local" then
+		notify(window, "SSH shortcuts require a local pane.")
+		return false
+	end
+	return true
+end
+
+local function placement_action(argv, placement)
+	local command = { domain = "CurrentPaneDomain", args = argv }
+	if placement == "tab" then
+		return wezterm.action.SpawnCommandInNewTab(command)
+	end
+	return wezterm.action.SplitPane({ direction = "Right", size = { Percent = 50 }, command = command })
+end
+
+function M.switch_host(opts, placement)
 	opts = opts or {}
+	assert(placement == nil or placement == "split" or placement == "tab", "SSH placement must be split or tab")
+	placement = placement or "split"
 	return wezterm.action_callback(function(window, pane)
-		local choices, meta = M.get_choices(opts)
-		window:perform_action(
-			wezterm.action.InputSelector({
-				title = "SSH hosts — " .. meta.status,
-				description = "Select an SSH host",
-				fuzzy_description = "SSH hosts: ",
-				fuzzy = true,
-				choices = choices,
-				action = wezterm.action_callback(function(_, _, id)
-					local row = id and meta.targets[id]
-					if not row then
-						return
-					end
-					local argv, err = M.launch_args(row, opts)
-					if not argv then
-						window:toast_notification("SSH hosts", tostring(err), nil, 5000)
-						return
-					end
-					local started = pcall(wezterm.background_child_process, argv)
-					if not started then
-						window:toast_notification("SSH hosts", "Could not start native WezTerm SSH.", nil, 5000)
-					end
-				end),
-			}),
-			pane
-		)
+		if not require_local_pane(window, pane) then
+			return
+		end
+		local ok, choices, meta = pcall(M.get_choices, opts)
+		if not ok then
+			notify(window, "Could not discover SSH hosts: " .. tostring(choices))
+			return
+		end
+		local selector = wezterm.action.InputSelector({
+			title = "SSH hosts — " .. meta.status,
+			description = "Select an SSH host",
+			fuzzy_description = "SSH hosts: ",
+			fuzzy = true,
+			choices = choices,
+			action = wezterm.action_callback(function(inner_window, inner_pane, id)
+				if not id then
+					return
+				end
+				if not require_local_pane(inner_window, inner_pane) then
+					return
+				end
+				local row = meta.targets[id]
+				if not row then
+					notify(inner_window, "Invalid SSH selection.")
+					return
+				end
+				local argv, err = M.openssh_args(row, opts)
+				if not argv then
+					notify(inner_window, err)
+					return
+				end
+				local started, action_error = pcall(
+					function() inner_window:perform_action(placement_action(argv, placement), inner_pane) end
+				)
+				if not started then
+					notify(inner_window, "Could not start OpenSSH: " .. tostring(action_error))
+				end
+			end),
+		})
+		local opened, open_error = pcall(function() window:perform_action(selector, pane) end)
+		if not opened then
+			notify(window, "Could not open SSH hosts: " .. tostring(open_error))
+		end
 	end)
 end
 

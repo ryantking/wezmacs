@@ -9,12 +9,15 @@ then press the following key. Uppercase means Shift plus that letter.
 |---|---|
 | Cmd-Space, `s` | Main workspace picker |
 | Cmd-Space, `S` | Previous workspace, following native GUI-client workspace scope |
-| Cmd-Space, `d` | Fresh SSH host picker → native WezTerm SSH in a new window |
+| Cmd-Space, `d` | Fresh SSH host picker → direct system OpenSSH in a Right/50% split |
+| Cmd-Space, `D` | Fresh SSH host picker → direct system OpenSSH in a new tab of the current window |
 | Cmd-`r` | Reload configuration |
 
 Type immediately to fuzzy-filter; Enter accepts and Escape cancels. These are
 sequences, not simultaneous Cmd-Space-letter chords. Leader-Space remains file
-search. Pane direction/resize shortcuts and other modules are unchanged.
+search. The SSH picker requires the current pane to report the local domain both
+before discovery and again on submission; every OpenSSH pane it creates remains
+local. Pane direction/resize shortcuts and other modules are unchanged.
 
 ## Workspace behavior
 
@@ -92,22 +95,41 @@ peer results are not reused. If the tailnet/account or selected peer changes
 while the picker is open, submission is rejected and the user must reopen it.
 The picker never switches accounts, logs in, or modifies Tailscale settings.
 
-### Why native SSH is a new window
+### Terminal SSH placement
 
-Aliases use an argv invocation of `wezterm ssh -- target`, not a nested OpenSSH
-process in a terminal pane. Raw discovered endpoints also receive an explicit
-`HostName` override and port so a matching SSH-config alias cannot redirect the
-represented destination. Inherited `ProxyCommand` is disabled for these raw,
-direct destinations. Use a configured alias for a bastion/proxy route;
+The terminal bindings use direct system OpenSSH argv, not a shell wrapper,
+`wezterm ssh`, background process or new GUI window. `d` creates a Right/50%
+split in the current tab; `D` creates a tab in the current window. Both actions
+fail closed with a notification if the source pane is not local or its domain
+cannot be read.
+
+Configured aliases are passed literally, so normal OpenSSH configuration and
+authentication apply, including the alias's `User`, `IdentityFile` and deliberate
+proxy settings. Raw endpoints instead receive explicit `HostName`, `-p` (including
+22), `ProxyCommand=none` and `ProxyJump=none`, followed by `--` and the logical
+validated destination. For example, a short Tailscale destination remains
+`desktop` for `Host desktop`/`User` matching while its verified FQDN is pinned as
+the transport `HostName`. Discovery is fresh on every opening and peer identity
+and address are revalidated on submission. Raw IPv6 literals remain unsupported;
+use a DNS name or SSH alias backed by IPv6.
+
+### Raycast SSH windows
+
+This section applies to Raycast's SSH launcher, not the terminal `d`/`D` bindings.
+Raycast aliases use an argv invocation of `wezterm ssh -- target`, not a nested
+OpenSSH process in a terminal pane. Raw discovered endpoints also receive an
+explicit `HostName` override and port so a matching SSH-config alias cannot
+redirect the represented destination. Inherited `ProxyCommand` is disabled for
+these raw, direct destinations. Use a configured alias for a bastion/proxy route;
 aliases retain their original settings.
 On the validated build
 `20250703-070941-c7f4b081`, that command starts a separate native WezTerm window
 with plain SSH (`multiplexing = "None"`). The remote does not need WezTerm.
-For SSH, `gui-attached` focuses the new active-workspace window.
+For Raycast SSH, `gui-attached` focuses the new active-workspace window.
 On macOS it also activates that exact GUI process through an AppKit helper
 addressed to its parent PID; native window focus alone does not make a background
 process frontmost. This runs at startup only, not on status updates or config
-reloads, and is shared by the terminal picker and Raycast launcher.
+reloads, and belongs to the Raycast launcher only.
 Remote sessions in that separate process are not workspaces in the original
 local process; this is native CLI behavior, not a second multiplexer added by
 WezMacs.
@@ -242,16 +264,19 @@ Manual acceptance, in order:
 2. Open a project. Confirm its cwd, switch elsewhere, then use Leader-S twice.
    Check that it toggles back and forth and the status follows the active
    workspace. Selecting an already open project should reuse that workspace.
-3. Open Leader-d. Verify the tailnet, host names and online/offline labels, then
-   Escape. Select an intended **personal** host only when ready to authenticate;
-   expect a separate native SSH window. Do not use employer systems for agent
-   validation.
+3. From a local pane, open Leader-d. Verify the tailnet, host names and
+   online/offline labels, then Escape. Select an intended **personal** host only
+   when ready to authenticate; expect a Right/50% OpenSSH split in the current
+   tab. Repeat with Leader-D and expect a new tab in the same window. From a
+   remote or unreadable-domain pane, expect a notice and no picker. Do not use
+   employer systems for agent validation.
 4. After manually switching tailnets, reopen Leader-d: its tailnet-derived rows
    should be replaced, not merged with a cached prior network. If the picker was
    left open during the switch, selecting a stale peer should refuse and request
    reopening. Static SSH aliases/known-host entries remain intentionally static.
 5. Check normal pane shortcuts still behave as before. The former advanced-domain
-   shortcuts `D`, `|`, `_` are no longer supplied by this module.
+   shortcuts `|` and `_` are no longer supplied by this module; `D` is the SSH
+   new-tab binding described above.
 
 ## References
 
