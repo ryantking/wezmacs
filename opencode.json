@@ -1,0 +1,65 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "instructions": [
+    ".opencode/instructions.md"
+  ],
+  "permission": {
+    "skill": {
+      "openspec-*": "allow",
+      "wezmacs-*": "allow"
+    },
+    "bash": {
+      "just check": "allow",
+      "just test": "allow",
+      "just smoke": "allow",
+      "just lint": "allow",
+      "just fmt-check": "allow",
+      "bash scripts/lua.sh *": "allow",
+      "bash scripts/native-regressions.sh": "allow",
+      "bash tests/git_integration.sh": "allow",
+      "bash tests/git_safety.sh": "allow",
+      "DEVELOPER_DIR=/Library/Developer/CommandLineTools just check": "allow"
+    }
+  },
+  "agent": {
+    "explore": {
+      "permission": {
+        "bash": {
+          "*": "deny",
+          "git status*": "ask",
+          "git diff*": "ask",
+          "git log*": "ask",
+          "git show*": "ask"
+        }
+      }
+    },
+    "astra": {
+      "permission": {
+        "edit": {
+          "*": "deny",
+          "openspec/changes/*.md": "allow",
+          "openspec/specs/*/spec.md": "allow"
+        },
+        "bash": {
+          "*": "deny",
+          "openspec list*": "allow",
+          "openspec context*": "allow",
+          "openspec status*": "allow",
+          "openspec instructions*": "allow",
+          "openspec templates*": "allow",
+          "openspec schemas*": "allow",
+          "openspec show*": "allow",
+          "openspec validate*": "allow",
+          "git status*": "ask",
+          "git diff*": "ask",
+          "git log*": "ask",
+          "git show*": "ask",
+          "openspec new change *": "allow",
+          "openspec archive *": "ask",
+          "openspec *--store*": "deny",
+          "openspec *--config*": "deny"
+        }
+      }
+    }
+  }
+}

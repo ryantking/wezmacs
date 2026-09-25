@@ -1,0 +1,51 @@
+schema: spec-driven
+
+context: |
+  WezMacs is a lean, flat Lua configuration framework for WezTerm, not an editor,
+  agent manager, worktree lifecycle manager, or second multiplexer.
+  Read AGENTS.md, FRAMEWORK.md, CONTRIBUTING.md and relevant docs before planning.
+  Portable engineering skills live in .agents/skills/wezmacs-*/SKILL.md;
+  OpenSpec-generated OpenCode skills live in .opencode/skills/openspec-*.
+  Runtime is WezTerm embedded Lua 5.4. Use bash scripts/lua.sh for standalone tests.
+  Framework checkout and personal ~/.config/wezmacs overrides are separate.
+  Keep private paths, SSH identities, host inventories, credentials and logs out of artifacts.
+  just check gates StyLua, LuaLS, standalone regressions, native headless tests,
+  and disposable real-Git integration/safety fixtures. Native exit zero alone
+  is not success: retain strict builders, completion markers and rendered sentinels.
+  Headless checks do not prove GUI rendering, focus, SSH authentication or Nix shells.
+  Optional Raycast checks run in raycast/: npm test, npm run typecheck,
+  npm run format:check, npm run build. Build stays in dist; no import or settings edits.
+  No runtime source or personal configuration changes during planning.
+  Astra owns specification and orchestration; Luna xhigh owns implementation
+  and separate independent testing; Sol xhigh is escalation, not automatic failover.
+  This is role guidance for the configured OpenCode workflow, not a model dependency
+  of the terminal framework. Other agents may follow the same role separation.
+
+rules:
+  proposal:
+    - Include explicit scope, non-goals, affected modules and compatibility boundaries.
+    - Ground the proposal in current code; do not present deferred audit items as implemented features.
+  specs:
+    - Use SHALL/MUST requirements and WHEN/THEN scenarios, including failure and cancellation paths.
+    - Include a substantive Purpose section for new capabilities so archive does not create placeholder main-spec purpose text.
+    - Preserve literal argv, identity freshness, local-domain checks and no-side-effect discovery where applicable.
+    - Distinguish headless evidence from GUI or network acceptance requirements.
+  design:
+    - Preserve the flat module contract and existing keyboard grammar; avoid speculative framework layers.
+    - Name exact source files and regression seams; explain native-version-sensitive APIs and tradeoffs.
+  tasks:
+    - Use checkbox tasks with stable IDs, owned paths, acceptance criteria and exact check commands.
+    - Sequence failing regression, implementation, independent verification and documentation.
+    - Include a separate GUI acceptance task only when the change needs it; blocked is not passed.
+
+operations:
+  apply:
+    guidance:
+      - Follow AGENTS.md and docs/agent-workflow.md. Astra delegates implementation to coder then verification to tester; only one writing worker per worktree.
+      - Pass change paths, task IDs, relevant skills, ownership, acceptance criteria and prior failures explicitly; subagents do not inherit the full conversation.
+      - Persist decisions and evidence in the change's handoff.md and verification.md. Do not mark a task done from a worker summary alone.
+      - Stop for scope changes; never weaken acceptance criteria silently. Do not commit, push, publish, import Raycast or connect to hosts without explicit authorization.
+  archive:
+    guidance:
+      - Require independent verification evidence and no unresolved required checks. CLI validation checks artifacts, not actual behavior.
+      - Archive only on explicit user request after reviewing spec synchronization; do not auto-archive after implementation.
